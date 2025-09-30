@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Form - FarmTrails</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #108f386d, #0972209c);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    h1 {
+      color: #0d883a;
+      margin-bottom: 5px;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-container h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      color: #555;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border 0.3s;
+    }
+
+    .form-group input:focus {
+      border-color: #0d883a;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(13, 136, 58, 0.2);
+    }
+
+    .password-container {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 38px;
+      cursor: pointer;
+      color: #777;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #0d883a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      background-color: #00b365;
+    }
+
+    .login-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #777;
+      font-size: 14px;
+    }
+
+    .footer a {
+      color: #0d883a;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .forgot-password {
+      display: block;
+      text-align: right;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .remember-me input {
+      margin-right: 8px;
+    }
+
+    .demo-credentials {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .demo-credentials h3 {
+      margin-top: 0;
+      color: #0d883a;
+      font-size: 14px;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>FarmTrails</h1>
+    <h2>Login to Your Account</h2>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="example@gmail.com" required />
+        <div class="error-message" id="email-error">Please enter a valid email address</div>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-container">
+          <input type="password" id="password" name="password" placeholder="Enter your password" required />
+          <span class="toggle-password" id="togglePassword">👁️</span>
+        </div>
+        <div class="error-message" id="password-error">Password must be at least 6 characters</div>
+        <a href="#" class="forgot-password">Forgot Password?</a>
+      </div>
+      
+      <div class="remember-me">
+        <input type="checkbox" id="remember" name="remember">
+        <label for="remember">Remember me</label>
+      </div>
+      
+      <button type="submit" class="login-btn" id="loginBtn">
+        <span id="btnText">Login</span>
+        <span class="loader" id="loader"></span>
+      </button>
+    </form>
+    
+    <div class="footer">
+      Don't have an account? <a href="signup.html">Sign up</a>
+    </div>
+    
+    <div class="demo-credentials">
+      <h3>Demo Credentials (for testing):</h3>
+      <p>Email: demo@farmtrails.com<br>
+      Password: demo123</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const loginForm = document.getElementById('loginForm');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const emailError = document.getElementById('email-error');
+      const passwordError = document.getElementById('password-error');
+      const togglePassword = document.getElementById('togglePassword');
+      const loginBtn = document.getElementById('loginBtn');
+      const btnText = document.getElementById('btnText');
+      const loader = document.getElementById('loader');
+      
+      // Toggle password visibility
+      togglePassword.addEventListener('click', function() {
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          togglePassword.textContent = '🔒';
+        } else {
+          passwordInput.type = 'password';
+          togglePassword.textContent = '👁️';
+        }
+      });
+      
+      // Form validation
+      emailInput.addEventListener('blur', function() {
+        if (!validateEmail(emailInput.value)) {
+          emailError.style.display = 'block';
+        } else {
+          emailError.style.display = 'none';
+        }
+      });
+      
+      passwordInput.addEventListener('blur', function() {
+        if (passwordInput.value.length < 6) {
+          passwordError.style.display = 'block';
+        } else {
+          passwordError.style.display = 'none';
+        }
+      });
+      
+      // Form submission
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        
+        // Validate email
+        if (!validateEmail(emailInput.value)) {
+          emailError.style.display = 'block';
+          isValid = false;
+        } else {
+          emailError.style.display = 'none';
+        }
+        
+        // Validate password
+        if (passwordInput.value.length < 6) {
+          passwordError.style.display = 'block';
+          isValid = false;
+        } else {
+          passwordError.style.display = 'none';
+        }
+        
+        if (isValid) {
+          // Show loading state
+          btnText.style.display = 'none';
+          loader.style.display = 'inline-block';
+          loginBtn.disabled = true;
+          
+          // Simulate API call (replace with actual authentication)
+          setTimeout(function() {
+            // For demo purposes, check for specific credentials
+            if (emailInput.value === 'demo@farmtrails.com' && passwordInput.value === 'demo123') {
+              window.location.href = 'index.html';
+            } else {
+              alert('Invalid credentials. Please try again.\n\nUse demo@farmtrails.com / demo123 for testing');
+              btnText.style.display = 'inline-block';
+              loader.style.display = 'none';
+              loginBtn.disabled = false;
+            }
+          }, 1500);
+        }
+      });
+      
+      // Email validation function
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+      
+      // Check if there are saved credentials
+      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      if (rememberedEmail) {
+        emailInput.value = rememberedEmail;
+        document.getElementById('remember').checked = true;
+      }
+    });
+  </script>
+</body>
+</html>
