@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FarmTrail Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary: #1565c0;
+            --secondary-dark: #0d47a1;
+            --accent: #ff9800;
+            --light: #e8f5e9;
+            --dark: #1b5e20;
+            --text: #212121;
+            --text-light: #757575;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5fcf7;
+            background-image: linear-gradient(to bottom, #cbf5dd, #e8f5e9);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+        }
+        
+        .logo h1 {
+            margin: 0;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-top: 40px;
+            margin-bottom: 30px;
+            font-size: 2.2rem;
+        }
+        
+        .profile-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .profile-container {
+            flex: 1;
+            min-width: 350px;
+            max-width: 450px;
+        }
+        
+        .profile-card {
+            background-color: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .profile-header {
+            background-color: var(--primary);
+            padding: 25px 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .profile-image-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid var(--white);
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .profile-image:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+        
+        .edit-profile {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: var(--accent);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .profile-info {
+            padding: 25px 20px;
+        }
+        
+        .full-name {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--primary-dark);
+            text-align: center;
+        }
+        
+        .role {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+        
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .contact-item {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: var(--light);
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .contact-item:hover {
+            background-color: #d7eedf;
+        }
+        
+        .contact-item span {
+            margin-right: 15px;
+            font-size: 1.3rem;
+            color: var(--primary);
+            width: 30px;
+            text-align: center;
+        }
+        
+        .contact-details {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .contact-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: 1rem;
+        }
+        
+        .contact-value {
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent);
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .stats-container {
+            flex: 1;
+            min-width: 350px;
+            max-width: 450px;
+        }
+        
+        .stats-title {
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .recent-activities {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .activities-title {
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--light);
+            transition: background-color 0.3s;
+        }
+        
+        .activity-item:hover {
+            background-color: #d7eedf;
+        }
+        
+        .activity-icon {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        @media (max-width: 768px) {
+            .profile-section {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .nav-links {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>FarmTrails</h1>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="index.html"><i class="fas fa-shopping-basket"></i> Marketplace</a>
+                <a href="help.html"><i class="fas fa-question-circle"></i> Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>My FarmTrail Profile</h1>
+        
+        <div class="profile-section">
+            <div class="profile-container">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-image-container">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile Image" class="profile-image" />
+                            <div class="edit-profile">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <h2 class="full-name">Akira Tanaka</h2>
+                        <p class="role">Organic Farmer since 2018</p>
+                        
+                        <div class="contact-list">
+                            <div class="contact-item">
+                                <span>📞</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">Phone Number</span>
+                                    <span class="contact-value">+91 98XXXXXX52</span>
+                                </div>
+                            </div>
+                            
+                            <div class="contact-item">
+                                <span>📧</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">Email Address</span>
+                                    <span class="contact-value">akira.tanaka@example.com</span>
+                                </div>
+                            </div>
+                            
+                            <div class="contact-item">
+                                <span>🆔</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">Aadhar Number</span>
+                                    <span class="contact-value">XXXX XXXX 9012</span>
+                                </div>
+                            </div>
+                            
+                            <div class="contact-item">
+                                <span>📍</span>
+                                <div class="contact-details">
+                                    <span class="contact-label">Farm Location</span>
+                                    <span class="contact-value">Chennai, Tamil Nadu</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="#" class="btn btn-primary"><i class="fas fa-edit"></i> Edit Profile</a>
+                    <a href="login.html" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+</body>
+
+</html>
