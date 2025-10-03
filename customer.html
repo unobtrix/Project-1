@@ -618,17 +618,16 @@
             color: #ddd;
         }
         
-        /* Search Results Summary */
-        #searchResultsSummary {
+        /* Offline Mode Indicator */
+        .offline-indicator {
+            background: #ff9800;
+            color: white;
+            padding: 8px 16px;
             text-align: center;
-            padding: 1rem;
-            background: var(--light);
-            margin: 1rem auto;
-            border-radius: var(--radius);
-            max-width: 700px;
             font-size: 0.9rem;
-            color: var(--dark);
-            border-left: 4px solid var(--primary);
+            position: sticky;
+            top: 70px;
+            z-index: 99;
         }
         
         /* Responsive Design */
@@ -725,6 +724,11 @@
         </div>
     </header>
 
+    <!-- Offline Mode Indicator -->
+    <div class="offline-indicator" id="offlineIndicator" style="display: none;">
+        <i class="fas fa-wifi"></i> You're viewing demo content. Some features may be limited.
+    </div>
+
     <!-- Cart Modal -->
     <div class="overlay" id="overlay"></div>
     <div class="cart-modal" id="cartModal">
@@ -742,7 +746,7 @@
             <span>Total:</span>
             <span id="totalAmount">₹0</span>
         </div>
-        <a href="payment.html" class="checkout-btn" id="checkoutBtn" style="display: none;">Proceed to Checkout</a>
+        <a href="#" class="checkout-btn" id="checkoutBtn" style="display: none;" onclick="handleCheckout()">Proceed to Checkout</a>
     </div>
 
     <!-- Hero Section -->
@@ -874,46 +878,87 @@
     </nav>
 
     <script>
-        // Customer API Service - Updated for Netlify Functions
+        // Enhanced Customer API Service with better error handling
         class CustomerAPIService {
             constructor() {
                 this.baseURL = '';
+                this.useDemoData = false;
+                this.timeout = 5000; // 5 second timeout
             }
 
-            // Get all products from Netlify Function
+            async fetchWithTimeout(resource, options = {}) {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), this.timeout);
+                
+                try {
+                    const response = await fetch(resource, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    clearTimeout(id);
+                    return response;
+                } catch (error) {
+                    clearTimeout(id);
+                    throw error;
+                }
+            }
+
+            // Get all products with fallback to demo data
             async getProducts() {
+                // First try Netlify function
                 try {
-                    const response = await fetch('/.netlify/functions/get-all-products');
+                    console.log('Attempting to fetch products from Netlify function...');
+                    const response = await this.fetchWithTimeout('/.netlify/functions/get-all-products');
+                    
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    
                     const data = await response.json();
-                    return data.products || [];
+                    console.log('Successfully fetched products from API:', data);
+                    
+                    if (data.products && Array.isArray(data.products)) {
+                        this.useDemoData = false;
+                        return data.products;
+                    } else {
+                        throw new Error('Invalid data format from API');
+                    }
                 } catch (error) {
-                    console.error('Error fetching products:', error);
-                    // Fallback to sample data
-                    return this.getSampleProducts();
+                    console.warn('API fetch failed, using demo data:', error.message);
+                    this.useDemoData = true;
+                    return this.getDemoProducts();
                 }
             }
 
-            // Get all tours from Netlify Function
+            // Get all tours with fallback to demo data
             async getTours() {
+                // First try Netlify function
                 try {
-                    const response = await fetch('/.netlify/functions/get-all-tours');
+                    console.log('Attempting to fetch tours from Netlify function...');
+                    const response = await this.fetchWithTimeout('/.netlify/functions/get-all-tours');
+                    
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    
                     const data = await response.json();
-                    return data.tours || [];
+                    console.log('Successfully fetched tours from API:', data);
+                    
+                    if (data.tours && Array.isArray(data.tours)) {
+                        this.useDemoData = false;
+                        return data.tours;
+                    } else {
+                        throw new Error('Invalid data format from API');
+                    }
                 } catch (error) {
-                    console.error('Error fetching tours:', error);
-                    // Fallback to sample data
-                    return this.getSampleTours();
+                    console.warn('API fetch failed, using demo data:', error.message);
+                    this.useDemoData = true;
+                    return this.getDemoTours();
                 }
             }
 
-            // Sample data as fallback
-            getSampleProducts() {
+            // Demo data as fallback
+            getDemoProducts() {
                 return [
                     {
                         _id: '1',
@@ -1044,7 +1089,7 @@
                 ];
             }
 
-            getSampleTours() {
+            getDemoTours() {
                 return [
                     {
                         _id: 'tour1',
@@ -1112,6 +1157,10 @@
                     }
                 ];
             }
+
+            isUsingDemoData() {
+                return this.useDemoData;
+            }
         }
 
         // Initialize API service
@@ -1130,7 +1179,7 @@
             }
         };
 
-        // Cart functionality
+        // DOM Elements
         const cartIcon = document.getElementById('cartIcon');
         const cartModal = document.getElementById('cartModal');
         const overlay = document.getElementById('overlay');
@@ -1143,8 +1192,9 @@
         const checkoutBtn = document.getElementById('checkoutBtn');
         const bottomCartBtn = document.getElementById('bottomCartBtn');
         const bottomCartCount = document.getElementById('bottomCartCount');
+        const offlineIndicator = document.getElementById('offlineIndicator');
         
-        // Open cart
+        // Cart functionality
         if (cartIcon) {
             cartIcon.addEventListener('click', openCart);
         }
@@ -1268,8 +1318,20 @@
             }
         }
         
+        // Handle checkout
+        function handleCheckout() {
+            if (customerAPI.isUsingDemoData()) {
+                showNotification('Checkout is disabled in demo mode. Please connect to the server for real purchases.', 5000);
+                return false;
+            }
+            
+            // In a real app, this would redirect to payment page
+            showNotification('Redirecting to payment...');
+            return true;
+        }
+        
         // Show notification
-        function showNotification(message) {
+        function showNotification(message, duration = 3000) {
             // Create notification element
             const notification = document.createElement('div');
             notification.className = 'notification';
@@ -1286,6 +1348,7 @@
                 z-index: 1000;
                 transform: translateX(100%);
                 transition: transform 0.3s ease;
+                max-width: 300px;
             `;
             
             document.body.appendChild(notification);
@@ -1299,9 +1362,11 @@
             setTimeout(() => {
                 notification.style.transform = 'translateX(100%)';
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
-            }, 3000);
+            }, duration);
         }
         
         // Render products
@@ -1326,11 +1391,12 @@
                 return `
                     <div class="card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${product._id}">
                         <div class="card-img">
-                            <img src="${product.images[0]}" alt="${product.name}">
+                            <img src="${product.images[0]}" alt="${product.name}" 
+                                 onerror="this.src='https://via.placeholder.com/300x200?text=Product+Image'">
                         </div>
                         <div class="card-content">
                             <h3>${product.name}</h3>
-                            <p>${product.description}</p>
+                            <p>${product.description.substring(0, 100)}...</p>
                             <div class="card-price">₹${product.price} / ${product.unit}</div>
                             ${isLowStock ? `<div class="stock-low">Only ${product.stock} left in stock</div>` : ''}
                             <div class="card-actions">
@@ -1340,10 +1406,7 @@
                                     price: ${product.price},
                                     image: '${product.images[0]}'
                                 })" ${isOutOfStock ? 'disabled' : ''}>
-                                    <i class="fas fa-cart-plus"></i> Add to Cart
-                                </button>
-                                <button class="btn btn-outline">
-                                    <i class="far fa-heart"></i>
+                                    <i class="fas fa-cart-plus"></i> ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                                 </button>
                             </div>
                         </div>
@@ -1370,31 +1433,30 @@
             container.innerHTML = tours.map(tour => `
                 <div class="card" data-id="${tour._id}">
                     <div class="card-img">
-                        <img src="${tour.images[0]}" alt="${tour.name}">
+                        <img src="${tour.images[0]}" alt="${tour.name}"
+                             onerror="this.src='https://via.placeholder.com/300x200?text=Tour+Image'">
                     </div>
                     <div class="card-content">
                         <h3>${tour.name}</h3>
-                        <p>${tour.description}</p>
+                        <p>${tour.description.substring(0, 100)}...</p>
                         <div class="card-price">₹${tour.price} / person</div>
+                        <div style="font-size: 0.8rem; color: var(--gray); margin-bottom: 0.8rem;">
+                            <i class="fas fa-clock"></i> ${tour.duration} • 
+                            <i class="fas fa-users"></i> ${tour.capacity}
+                        </div>
                         <div class="card-actions">
-                            <button class="btn btn-primary" onclick="bookTour('${tour._id}')">
+                            <button class="btn btn-primary" onclick="addToCart({
+                                id: '${tour._id}',
+                                name: '${tour.name}',
+                                price: ${tour.price},
+                                image: '${tour.images[0]}'
+                            })">
                                 <i class="fas fa-calendar-check"></i> Book Now
-                            </button>
-                            <button class="btn btn-outline">
-                                <i class="far fa-heart"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
-        }
-        
-        // Book tour function
-        function bookTour(tourId) {
-            const tour = allTours.find(t => t._id === tourId);
-            if (tour) {
-                showNotification(`Tour "${tour.name}" booked successfully!`);
-            }
         }
         
         // Search products and tours
@@ -1406,13 +1468,6 @@
                 currentSearchState.isSearching = false;
                 renderProducts(allProducts);
                 renderTours(allTours);
-                
-                // Remove search results summary if exists
-                const existingSummary = document.getElementById('searchResultsSummary');
-                if (existingSummary) {
-                    existingSummary.remove();
-                }
-                
                 return;
             }
             
@@ -1423,17 +1478,17 @@
             const filteredProducts = allProducts.filter(product => 
                 product.name.toLowerCase().includes(searchTerm) || 
                 product.description.toLowerCase().includes(searchTerm) ||
-                product.category.toLowerCase().includes(searchTerm) ||
-                product.farmer.name.toLowerCase().includes(searchTerm) ||
-                product.farmer.farm.toLowerCase().includes(searchTerm)
+                (product.category && product.category.toLowerCase().includes(searchTerm)) ||
+                (product.farmer && product.farmer.name.toLowerCase().includes(searchTerm)) ||
+                (product.farmer && product.farmer.farm.toLowerCase().includes(searchTerm))
             );
             
             const filteredTours = allTours.filter(tour => 
                 tour.name.toLowerCase().includes(searchTerm) || 
                 tour.description.toLowerCase().includes(searchTerm) ||
-                tour.category.toLowerCase().includes(searchTerm) ||
-                tour.farmer.name.toLowerCase().includes(searchTerm) ||
-                tour.farmer.farm.toLowerCase().includes(searchTerm)
+                (tour.category && tour.category.toLowerCase().includes(searchTerm)) ||
+                (tour.farmer && tour.farmer.name.toLowerCase().includes(searchTerm)) ||
+                (tour.farmer && tour.farmer.farm.toLowerCase().includes(searchTerm))
             );
             
             currentSearchState.searchResults.products = filteredProducts;
@@ -1443,53 +1498,41 @@
             renderProducts(filteredProducts);
             renderTours(filteredTours);
             
-            // Show search results summary
-            showSearchResultsSummary(searchTerm, filteredProducts.length + filteredTours.length);
-        }
-        
-        // Show search results summary
-        function showSearchResultsSummary(searchTerm, resultCount) {
-            // Remove existing summary if exists
-            const existingSummary = document.getElementById('searchResultsSummary');
-            if (existingSummary) {
-                existingSummary.remove();
-            }
-            
-            // Create and insert summary
-            const summary = document.createElement('div');
-            summary.id = 'searchResultsSummary';
-            summary.innerHTML = `
-                <strong>${resultCount}</strong> results found for "<strong>${searchTerm}</strong>"
-                <button onclick="clearSearch()" style="margin-left: 10px; background: none; border: none; color: var(--primary); cursor: pointer;">
-                    <i class="fas fa-times"></i> Clear
-                </button>
-            `;
-            
-            // Insert after hero section
-            const heroSection = document.querySelector('.hero');
-            heroSection.parentNode.insertBefore(summary, heroSection.nextSibling);
-        }
-        
-        // Clear search
-        function clearSearch() {
-            document.getElementById('globalSearch').value = '';
-            currentSearchState.isSearching = false;
-            renderProducts(allProducts);
-            renderTours(allTours);
-            
-            // Remove search results summary
-            const existingSummary = document.getElementById('searchResultsSummary');
-            if (existingSummary) {
-                existingSummary.remove();
+            // Show search notification
+            if (filteredProducts.length === 0 && filteredTours.length === 0) {
+                showNotification(`No results found for "${searchTerm}"`);
+            } else {
+                showNotification(`Found ${filteredProducts.length + filteredTours.length} results for "${searchTerm}"`);
             }
         }
         
         // Initialize the app
         async function initApp() {
             try {
+                // Show offline indicator initially
+                if (offlineIndicator) {
+                    offlineIndicator.style.display = 'block';
+                }
+                
                 // Load products and tours
                 allProducts = await customerAPI.getProducts();
                 allTours = await customerAPI.getTours();
+                
+                // Update offline indicator based on data source
+                if (offlineIndicator) {
+                    if (customerAPI.isUsingDemoData()) {
+                        offlineIndicator.innerHTML = '<i class="fas fa-wifi-slash"></i> Using demo data. Some features may be limited.';
+                        offlineIndicator.style.background = '#ff9800';
+                    } else {
+                        offlineIndicator.innerHTML = '<i class="fas fa-wifi"></i> Connected to server';
+                        offlineIndicator.style.background = '#4CAF50';
+                        
+                        // Hide after 3 seconds if connected
+                        setTimeout(() => {
+                            offlineIndicator.style.display = 'none';
+                        }, 3000);
+                    }
+                }
                 
                 // Render initial data
                 renderProducts(allProducts);
@@ -1506,28 +1549,18 @@
                     }
                 });
                 
+                console.log('App initialized successfully');
+                
             } catch (error) {
                 console.error('Error initializing app:', error);
                 
-                // Show error state
-                const productsContainer = document.getElementById('productsContainer');
-                const toursContainer = document.getElementById('toursContainer');
+                // Show error state but with demo data
+                showNotification('Using demo data. Some features may be limited.', 5000);
                 
-                productsContainer.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Failed to load products</h3>
-                        <p>Please check your connection and try again</p>
-                    </div>
-                `;
-                
-                toursContainer.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Failed to load tours</h3>
-                        <p>Please check your connection and try again</p>
-                    </div>
-                `;
+                if (offlineIndicator) {
+                    offlineIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Connection failed. Using demo data.';
+                    offlineIndicator.style.background = '#f44336';
+                }
             }
         }
         
