@@ -601,486 +601,202 @@
         </div>
     </footer>
 
-    <script>
-        // Complete product database
-        const productsDatabase = [
-            {
-                _id: '1',
-                name: 'Organic Turmeric Powder',
-                description: 'Freshly harvested from our organic farm. This turmeric is grown without any chemical pesticides or fertilizers, ensuring the purest and most potent product. Rich in curcumin, it has powerful anti-inflammatory effects and is a very strong antioxidant. Perfect for cooking, medicinal purposes, and beauty treatments.',
-                price: 350,
-                unit: '500gm',
-                image: 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                category: 'spices',
-                stock: 45,
-                farmer: {
-                    name: 'Rajesh Kumar',
-                    farm: 'Green Valley Organic Farm',
-                    location: 'Punjab, India',
-                    experience: '15 years',
-                    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
-                    rating: 4.8,
-                    totalProducts: 12,
-                    joined: '2018',
-                    description: 'Passionate about organic farming and sustainable agriculture practices.'
-                },
-                specifications: {
-                    'Origin': 'Punjab, India',
-                    'Shelf Life': '24 months',
-                    'Storage': 'Cool, dry place',
-                    'Certification': 'Organic Certified'
-                },
-                reviews: [
-                    {
-                        name: 'Priya Sharma',
-                        date: '2023-10-15',
-                        rating: 5,
-                        text: 'Excellent quality turmeric! The color and aroma are amazing. Will definitely buy again.',
-                        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    },
-                    {
-                        name: 'Amit Patel',
-                        date: '2023-09-22',
-                        rating: 4,
-                        text: 'Good product, fresh and pure. Packaging could be better though.',
-                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    },
-                    {
-                        name: 'Neha Gupta',
-                        date: '2023-08-30',
-                        rating: 5,
-                        text: 'Best turmeric I have ever used. The flavor is so rich and authentic.',
-                        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    }
-                ]
-            },
-            {
-                _id: '2',
-                name: 'Pure Forest Honey',
-                description: 'Fresh honey collected from our farms. Our bees collect nectar from wildflowers in the pristine forests surrounding our farm. This raw, unfiltered honey retains all its natural enzymes, antioxidants, and nutritional value. It has a rich, complex flavor with floral notes and natural sweetness.',
-                price: 450,
-                unit: '500gm',
-                image: 'https://images.unsplash.com/photo-1559715546-f66295d5aaa5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=200&q=80',
-                category: 'dairy',
-                stock: 32,
-                farmer: {
-                    name: 'Sunita Devi',
-                    farm: 'Sunny Bee Farms',
-                    location: 'Himachal Pradesh, India',
-                    experience: '8 years',
-                    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
-                    rating: 4.9,
-                    totalProducts: 8,
-                    joined: '2019',
-                    description: 'Dedicated beekeeper practicing sustainable honey harvesting methods.'
-                },
-                specifications: {
-                    'Origin': 'Himachal Pradesh, India',
-                    'Shelf Life': '18 months',
-                    'Storage': 'Room temperature',
-                    'Type': 'Multiflora Honey'
-                },
-                reviews: [
-                    {
-                        name: 'Rahul Verma',
-                        date: '2023-11-05',
-                        rating: 5,
-                        text: 'Authentic taste! This honey is so different from the commercial ones.',
-                        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    },
-                    {
-                        name: 'Sneha Joshi',
-                        date: '2023-10-18',
-                        rating: 5,
-                        text: 'Love the texture and flavor. Perfect for my morning tea.',
-                        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    }
-                ]
-            },
-            {
-                _id: '3',
-                name: 'Natural Jaggery',
-                description: '100% natural jaggery from farms. Made from organic sugarcane juice without any chemical processing. Rich in minerals like iron, magnesium, and potassium. Perfect natural sweetener for your desserts and beverages. It has a distinctive caramel-like flavor that enhances traditional Indian sweets.',
-                price: 300,
-                unit: 'kg',
-                image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Sa-indian-gud.jpg/800px-Sa-indian-gud.jpg',
-                category: 'sweets',
-                stock: 28,
-                farmer: {
-                    name: 'Vikram Singh',
-                    farm: 'Sweet Cane Organics',
-                    location: 'Maharashtra, India',
-                    experience: '12 years',
-                    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
-                    rating: 4.7,
-                    totalProducts: 6,
-                    joined: '2016',
-                    description: 'Traditional jaggery maker using age-old techniques.'
-                },
-                specifications: {
-                    'Origin': 'Maharashtra, India',
-                    'Shelf Life': '12 months',
-                    'Storage': 'Airtight container',
-                    'Process': 'Traditional wood-fired'
-                },
-                reviews: [
-                    {
-                        name: 'Anita Desai',
-                        date: '2023-09-10',
-                        rating: 4,
-                        text: 'Good quality jaggery. Less processed than store-bought ones.',
-                        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    },
-                    {
-                        name: 'Rohit Mehta',
-                        date: '2023-08-25',
-                        rating: 5,
-                        text: 'Excellent product! The taste is authentic and natural.',
-                        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    }
-                ]
-            },
-            {
-                _id: '4',
-                name: 'Organic Tomatoes',
-                description: 'Fresh, pesticide-free tomatoes grown in our organic farms. These tomatoes are rich in lycopene, vitamin C, and other antioxidants. Grown using traditional farming methods with natural fertilizers. Perfect for salads, cooking, and making sauces with their rich, tangy flavor.',
-                price: 80,
-                unit: 'kg',
-                image: 'https://images.unsplash.com/photo-1546470427-e212b7d310ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80',
-                category: 'vegetables',
-                stock: 15,
-                farmer: {
-                    name: 'Anil Reddy',
-                    farm: 'Red Earth Farms',
-                    location: 'Karnataka, India',
-                    experience: '10 years',
-                    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
-                    rating: 4.6,
-                    totalProducts: 15,
-                    joined: '2017',
-                    description: 'Specialized in organic vegetable cultivation.'
-                },
-                specifications: {
-                    'Origin': 'Karnataka, India',
-                    'Shelf Life': '7 days',
-                    'Storage': 'Refrigerate',
-                    'Variety': 'Desi Tomato'
-                },
-                reviews: [
-                    {
-                        name: 'Kavita Nair',
-                        date: '2023-11-12',
-                        rating: 5,
-                        text: 'These tomatoes are so flavorful! Perfect for salads and cooking.',
-                        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    },
-                    {
-                        name: 'Sanjay Kumar',
-                        date: '2023-10-28',
-                        rating: 4,
-                        text: 'Fresh and tasty. Better than supermarket tomatoes.',
-                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    }
-                ]
-            },
-            {
-                _id: '5',
-                name: 'Fresh Cow Milk',
-                description: 'Pure farm fresh milk from grass-fed cows. Our cows are raised in open pastures and fed a natural diet. The milk is collected daily and minimally processed to retain its natural goodness and flavor. Rich in calcium, protein, and essential nutrients for your family.',
-                price: 60,
-                unit: 'liter',
-                image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80',
-                category: 'dairy',
-                stock: 20,
-                farmer: {
-                    name: 'Gopal Yadav',
-                    farm: 'Happy Cow Dairy',
-                    location: 'Uttar Pradesh, India',
-                    experience: '20 years',
-                    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
-                    rating: 4.9,
-                    totalProducts: 5,
-                    joined: '2010',
-                    description: 'Third-generation dairy farmer committed to animal welfare.'
-                },
-                specifications: {
-                    'Origin': 'Uttar Pradesh, India',
-                    'Shelf Life': '3 days',
-                    'Storage': 'Refrigerate',
-                    'Fat Content': '4.5%'
-                },
-                reviews: [
-                    {
-                        name: 'Meera Iyer',
-                        date: '2023-11-08',
-                        rating: 5,
-                        text: 'The milk is so creamy and fresh! My family loves it.',
-                        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    },
-                    {
-                        name: 'Arun Malhotra',
-                        date: '2023-10-15',
-                        rating: 5,
-                        text: 'Best milk I have ever tasted. Reminds me of childhood.',
-                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'
-                    }
-                ]
-            }
-        ];
+<script>
+    // Current product
+    let currentProduct = null;
 
-        // Tours database
-        const toursDatabase = [
-            {
-                id: 'tour1',
-                name: 'Organic Vegetable Farm Tour',
-                description: 'Join us for a guided tour of our organic farm and learn about sustainable farming practices. You will get to see various organic vegetables being grown and learn about the techniques we use to maintain soil health and biodiversity without the use of chemical pesticides and fertilizers. Includes hands-on activities and farm-fresh lunch.',
-                price: 499,
-                image: 'https://images.unsplash.com/photo-1520052203542-d3095f1b6cf0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=200&q=80',
-                duration: '2 hours',
-                capacity: '15 people',
-                category: 'tours',
-                includes: ['Guided farm tour', 'Vegetable picking', 'Organic lunch', 'Take-home produce'],
-                farmer: {
-                    name: 'Rajesh Kumar',
-                    farm: 'Green Valley Organic Farm',
-                    location: 'Punjab, India',
-                    experience: '15 years',
-                    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
-                    rating: 4.8
-                }
-            }
-        ];
-
-        // Current product
-        let currentProduct = null;
-
-        // Load product details
-        async function loadProductDetails() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
+    // Load product details from Netlify Function
+    async function loadProductDetails() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        
+        console.log('Loading product with ID:', productId);
+        
+        if (!productId) {
+            showError('Product ID is missing from URL');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/.netlify/functions/get-product-by-id?id=${productId}`);
             
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Combine products and tours
-            const allItems = [...productsDatabase, ...toursDatabase];
-            currentProduct = allItems.find(item => item._id === productId || item.id === productId);
-            
-            if (!currentProduct) {
-                document.getElementById('loading').innerHTML = `
-                    <i class="fas fa-exclamation-triangle fa-3x" style="color: var(--secondary); margin-bottom: 1rem;"></i>
-                    <h3>Product Not Found</h3>
-                    <p>The product you're looking for doesn't exist.</p>
-                    <button class="back-btn" onclick="window.location.href='index.html'" style="margin-top: 1rem;">
-                        <i class="fas fa-home"></i>
-                        Back to Home
-                    </button>
-                `;
-                return;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Product not found');
             }
             
-            // Hide loading, show content
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('productSection').style.display = 'block';
-            document.getElementById('similarSection').style.display = 'block';
-            document.getElementById('bottomActions').style.display = 'flex';
+            currentProduct = await response.json();
+            console.log('Product loaded:', currentProduct);
             
-            // Load product details
             renderProductDetails();
             
-            // Load similar products
-            loadSimilarProducts(currentProduct.category, currentProduct._id || currentProduct.id);
-        }
-        
-        // Render product details
-        function renderProductDetails() {
-            const product = currentProduct;
+            // Show content, hide loading
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('productSection').style.display = 'block';
+            document.getElementById('bottomActions').style.display = 'flex';
             
-            document.getElementById('productDetails').innerHTML = `
-                <div>
-                    <img src="${product.image}" alt="${product.name}" class="product-image">
+        } catch (error) {
+            console.error('Error loading product:', error);
+            showError(error.message || 'Failed to load product details');
+        }
+    }
+
+    // Render product details
+    function renderProductDetails() {
+        const product = currentProduct;
+        
+        document.getElementById('productDetails').innerHTML = `
+            <div>
+                <img src="${product.image}" alt="${product.name}" class="product-image">
+            </div>
+            <div class="product-info">
+                <h1>${product.name}</h1>
+                <div class="product-price">₹${product.price} ${product.unit ? '/ ' + product.unit : ''}</div>
+                <div class="product-description">
+                    ${product.description}
                 </div>
-                <div class="product-info">
-                    <h1>${product.name}</h1>
-                    <div class="product-price">₹${product.price} ${product.unit ? '/ ' + product.unit : '/ person'}</div>
-                    <div class="product-description">
-                        ${product.description}
-                    </div>
-                    
-                    <div class="product-meta">
-                        ${product.category ? `<div class="meta-item">
-                            <span class="meta-label">Category</span>
-                            <span class="meta-value">${product.category.charAt(0).toUpperCase() + product.category.slice(1)}</span>
-                        </div>` : ''}
-                        ${product.stock ? `<div class="meta-item">
-                            <span class="meta-label">Stock Available</span>
-                            <span class="meta-value">${product.stock} ${product.unit || 'items'}</span>
-                        </div>` : ''}
-                        ${product.duration ? `<div class="meta-item">
-                            <span class="meta-label">Duration</span>
-                            <span class="meta-value">${product.duration}</span>
-                        </div>` : ''}
-                        ${product.capacity ? `<div class="meta-item">
-                            <span class="meta-label">Capacity</span>
-                            <span class="meta-value">${product.capacity}</span>
-                        </div>` : ''}
-                    </div>
-                    
-                    ${product.specifications ? `
-                    <div class="product-meta">
-                        ${Object.entries(product.specifications).map(([key, value]) => `
-                            <div class="meta-item">
-                                <span class="meta-label">${key}</span>
-                                <span class="meta-value">${value}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
-                    
-                    ${product.farmer ? `
-                    <div class="farmer-details">
-                        <h2>About the Farmer</h2>
-                        <div class="farmer-info">
-                            <img src="${product.farmer.avatar}" alt="${product.farmer.name}" class="farmer-avatar">
-                            <div class="farmer-bio">
-                                <h3>${product.farmer.name}</h3>
-                                <p>${product.farmer.farm} • ${product.farmer.location}</p>
-                                <p>${product.farmer.experience} of experience • ${product.farmer.rating} ★ Rating</p>
-                                ${product.farmer.description ? `<p>${product.farmer.description}</p>` : ''}
-                            </div>
+                
+                <div class="product-meta">
+                    ${product.category ? `<div class="meta-item">
+                        <span class="meta-label">Category</span>
+                        <span class="meta-value">${product.category.charAt(0).toUpperCase() + product.category.slice(1)}</span>
+                    </div>` : ''}
+                    ${product.stock !== undefined ? `<div class="meta-item">
+                        <span class="meta-label">Stock Available</span>
+                        <span class="meta-value">${product.stock} ${product.unit || 'items'}</span>
+                    </div>` : ''}
+                </div>
+                
+                ${product.specifications ? `
+                <div class="product-meta">
+                    ${Object.entries(product.specifications).map(([key, value]) => `
+                        <div class="meta-item">
+                            <span class="meta-label">${key}</span>
+                            <span class="meta-value">${value}</span>
                         </div>
-                        <div class="farmer-stats">
-                            <div class="stat-item">
-                                <span class="stat-value">${product.farmer.totalProducts || '12'}</span>
-                                <span class="stat-label">Products</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value">${product.farmer.rating}</span>
-                                <span class="stat-label">Rating</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value">${product.farmer.experience}</span>
-                                <span class="stat-label">Experience</span>
-                            </div>
+                    `).join('')}
+                </div>
+                ` : ''}
+                
+                ${product.farmer ? `
+                <div class="farmer-details">
+                    <h2>About the Farmer</h2>
+                    <div class="farmer-info">
+                        <img src="${product.farmer.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'}" 
+                             alt="${product.farmer.name}" class="farmer-avatar">
+                        <div class="farmer-bio">
+                            <h3>${product.farmer.name}</h3>
+                            <p>${product.farmer.farm} • ${product.farmer.location}</p>
+                            <p>${product.farmer.experience} of experience • ${product.farmer.rating} ★ Rating</p>
+                            ${product.farmer.description ? `<p>${product.farmer.description}</p>` : ''}
                         </div>
                     </div>
-                    ` : ''}
-                    
-                    ${product.reviews ? `
-                    <div class="reviews-section">
-                        <h2>Customer Reviews (${product.reviews.length})</h2>
-                        ${product.reviews.map(review => `
-                            <div class="review">
-                                <div class="review-header">
-                                    <div class="reviewer-info">
-                                        <img src="${review.avatar}" alt="${review.name}" class="reviewer-avatar">
-                                        <div>
-                                            <div class="reviewer-name">${review.name}</div>
-                                            <div class="review-date">${new Date(review.date).toLocaleDateString()}</div>
-                                        </div>
-                                    </div>
-                                    <div class="review-rating">
-                                        ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+                    <div class="farmer-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">${product.farmer.totalProducts || '12'}</span>
+                            <span class="stat-label">Products</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${product.farmer.rating}</span>
+                            <span class="stat-label">Rating</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${product.farmer.experience}</span>
+                            <span class="stat-label">Experience</span>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${product.reviews && product.reviews.length > 0 ? `
+                <div class="reviews-section">
+                    <h2>Customer Reviews (${product.reviews.length})</h2>
+                    ${product.reviews.map(review => `
+                        <div class="review">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <img src="${review.avatar || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80'}" 
+                                         alt="${review.name}" class="reviewer-avatar">
+                                    <div>
+                                        <div class="reviewer-name">${review.name}</div>
+                                        <div class="review-date">${new Date(review.date).toLocaleDateString()}</div>
                                     </div>
                                 </div>
-                                <div class="review-text">${review.text}</div>
+                                <div class="review-rating">
+                                    ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+                                </div>
                             </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
+                            <div class="review-text">${review.text}</div>
+                        </div>
+                    `).join('')}
                 </div>
-            `;
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Your existing functions
+    function addToCart() {
+        if (!currentProduct) return;
+        
+        let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+        const existingItemIndex = cartItems.findIndex(item => item.productId === currentProduct._id);
+        
+        if (existingItemIndex !== -1) {
+            cartItems[existingItemIndex].quantity += 1;
+        } else {
+            cartItems.push({
+                name: currentProduct.name,
+                price: currentProduct.price,
+                image: currentProduct.image,
+                productId: currentProduct._id,
+                quantity: 1
+            });
         }
         
-        // Load similar products
-        function loadSimilarProducts(category, currentProductId) {
-            const similarProducts = productsDatabase.filter(p => 
-                p.category === category && 
-                p._id !== currentProductId
-            ).slice(0, 4);
-            
-            if (similarProducts.length > 0) {
-                document.getElementById('similarProducts').innerHTML = similarProducts.map(product => `
-                    <div class="similar-product-card" onclick="window.location.href='product-details.html?id=${product._id}'">
-                        <div class="similar-product-img">
-                            <img src="${product.image}" alt="${product.name}">
-                        </div>
-                        <div class="similar-product-content">
-                            <div class="similar-product-name">${product.name}</div>
-                            <div class="similar-product-price">₹${product.price}</div>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                document.getElementById('similarProducts').innerHTML = '<p>No similar products found.</p>';
-            }
-        }
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        showNotification(`${currentProduct.name} added to cart!`);
+    }
+    
+    function buyNow() {
+        if (!currentProduct) return;
+        addToCart();
+        setTimeout(() => {
+            window.location.href = 'payment.html';
+        }, 1000);
+    }
+    
+    function showNotification(message) {
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
         
-        // Add to cart function
-        function addToCart() {
-            if (!currentProduct) return;
-            
-            // Get existing cart from localStorage
-            let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-            
-            // Check if item already exists in cart
-            const existingItemIndex = cartItems.findIndex(item => 
-                item.name === currentProduct.name
-            );
-            
-            if (existingItemIndex !== -1) {
-                cartItems[existingItemIndex].quantity += 1;
-            } else {
-                cartItems.push({
-                    name: currentProduct.name,
-                    price: currentProduct.price,
-                    image: currentProduct.image,
-                    productId: currentProduct._id || currentProduct.id,
-                    quantity: 1
-                });
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
-            
-            // Show notification
-            showNotification(`${currentProduct.name} added to cart!`);
-        }
+        notificationText.textContent = message;
+        notification.classList.add('show');
         
-        // Buy now function
-        function buyNow() {
-            if (!currentProduct) return;
-            
-            // Add to cart first
-            addToCart();
-            
-            // Redirect to checkout
-            setTimeout(() => {
-                window.location.href = 'payment.html';
-            }, 1000);
-        }
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+    
+    function showError(message) {
+        document.getElementById('loading').innerHTML = `
+            <i class="fas fa-exclamation-triangle fa-3x" style="color: var(--secondary); margin-bottom: 1rem;"></i>
+            <h3>Error</h3>
+            <p>${message}</p>
+            <button class="back-btn" onclick="window.location.href='index.html'" style="margin-top: 1rem;">
+                <i class="fas fa-home"></i>
+                Back to Home
+            </button>
+        `;
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProductDetails();
         
-        // Show notification
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            const notificationText = document.getElementById('notificationText');
-            
-            notificationText.textContent = message;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-        
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadProductDetails();
-            
-            // Add event listeners to bottom buttons
-            document.getElementById('addToCartBtn').addEventListener('click', addToCart);
-            document.getElementById('buyNowBtn').addEventListener('click', buyNow);
-        });
-    </script>
+        document.getElementById('addToCartBtn').addEventListener('click', addToCart);
+        document.getElementById('buyNowBtn').addEventListener('click', buyNow);
+    });
+</script>
 </body>
 </html>
