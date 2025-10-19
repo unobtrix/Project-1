@@ -185,4 +185,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
   console.log(`📦 Products API: http://localhost:${PORT}/api/products`);
-  console.log(`
+  console.log(`🎯 Tours API: http://localhost:${PORT}/api/tours`);
+});
