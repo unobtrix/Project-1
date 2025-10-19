@@ -1,0 +1,8 @@
+{
+  "name": "farmtrails-frontend",
+  "version": "1.0.0",
+  "description": "FarmTrails - Connecting farmers with customers",
+  "dependencies": {
+    "mongodb": "^5.0.0"
+  }
+}

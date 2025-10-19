@@ -1,30 +1,26 @@
-// ==================== IMPORTS ====================
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
+// Load from custom .env file name
+require('dotenv').config();
 
-// Load environment variables (Render/Vercel use system ENV)
-dotenv.config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
 
-// ==================== APP SETUP ====================
 const app = express();
 
 // CORS Configuration
-// Allow your Netlify frontend to connect to this backend globally
 const allowedOrigins = [
-  "https://unobtrix.netlify.app",  // ✅ Your Netlify domain
-  "http://localhost:5173",         // Optional: for local testing
+  'https://unobtrix.netlify.app',
+  'http://localhost:5173',
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
+      // allow requests with no origin (like Postman or server-to-server)
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return callback(null, true);
       }
+      return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
   })
@@ -32,21 +28,19 @@ app.use(
 
 app.use(express.json());
 
-// ==================== DEBUG INFO ====================
-console.log("🔍 Environment Check:");
-console.log("MONGODB_URI:", process.env.MONGODB_URI ? "✅ Loaded" : "❌ NOT LOADED");
+// Debug info
+console.log('🔍 Environment Check:');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✅ Loaded' : '❌ NOT LOADED');
 
-// ==================== DATABASE CONNECTION ====================
-console.log("🔗 Connecting to MongoDB Atlas...");
+// MongoDB Connection
+console.log('🔗 Connecting to MongoDB Atlas...');
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
-    console.log("💡 Tips: Check your .env credentials & Atlas IP whitelist");
+    console.error('❌ MongoDB connection error:', err.message);
+    console.log('💡 Tips: Check your .env credentials & Atlas IP whitelist');
   });
-
-// ==================== SCHEMAS ====================
 
 // Product Schema
 const productSchema = new mongoose.Schema({
@@ -67,7 +61,7 @@ const productSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now },
 });
 
-const Product = mongoose.model("Product", productSchema);
+const Product = mongoose.model('Product', productSchema);
 
 // Tour Schema
 const tourSchema = new mongoose.Schema({
@@ -82,47 +76,47 @@ const tourSchema = new mongoose.Schema({
   farmer: {
     name: String,
     farm: String,
+    location: String,
   },
   is_active: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now },
 });
 
-const Tour = mongoose.model("Tour", tourSchema);
+const Tour = mongoose.model('Tour', tourSchema);
 
 // ==================== API ROUTES ====================
 
-// Health Check
-app.get("/api/health", (req, res) => {
+// Health check
+app.get('/api/health', (req, res) => {
   res.json({
     success: true,
-    message: "🌍 FarmTrails API is running globally!",
-    database:
-      mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+    message: 'FarmTrails API is running!',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
     timestamp: new Date().toISOString(),
   });
 });
 
 // Get all products
-app.get("/api/products", async (req, res) => {
+app.get('/api/products', async (req, res) => {
   try {
     const { category, search, limit = 20 } = req.query;
+    const qLimit = parseInt(limit, 10) || 20;
     let query = { is_active: true };
 
-    if (category && category !== "all") query.category = category;
+    if (category && category !== 'all') {
+      query.category = category;
+    }
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { "farmer.name": { $regex: search, $options: "i" } },
-        { "farmer.farm": { $regex: search, $options: "i" } },
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { 'farmer.name': { $regex: search, $options: 'i' } },
+        { 'farmer.farm': { $regex: search, $options: 'i' } },
       ];
     }
 
-    const products = await Product.find(query)
-      .limit(parseInt(limit))
-      .sort({ created_at: -1 });
-
+    const products = await Product.find(query).limit(qLimit).sort({ created_at: -1 });
     res.json({ success: true, products });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -130,12 +124,10 @@ app.get("/api/products", async (req, res) => {
 });
 
 // Get product by ID
-app.get("/api/products/:id", async (req, res) => {
+app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product)
-      return res.status(404).json({ success: false, error: "Product not found" });
-
+    if (!product) return res.status(404).json({ success: false, error: 'Product not found' });
     res.json({ success: true, product });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -143,7 +135,7 @@ app.get("/api/products/:id", async (req, res) => {
 });
 
 // Add new product
-app.post("/api/products", async (req, res) => {
+app.post('/api/products', async (req, res) => {
   try {
     const product = new Product(req.body);
     await product.save();
@@ -154,24 +146,22 @@ app.post("/api/products", async (req, res) => {
 });
 
 // Get all tours
-app.get("/api/tours", async (req, res) => {
+app.get('/api/tours', async (req, res) => {
   try {
     const { search, limit = 10 } = req.query;
+    const qLimit = parseInt(limit, 10) || 10;
     let query = { is_active: true };
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { "farmer.name": { $regex: search, $options: "i" } },
-        { "farmer.farm": { $regex: search, $options: "i" } },
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { 'farmer.name': { $regex: search, $options: 'i' } },
+        { 'farmer.farm': { $regex: search, $options: 'i' } },
       ];
     }
 
-    const tours = await Tour.find(query)
-      .limit(parseInt(limit))
-      .sort({ created_at: -1 });
-
+    const tours = await Tour.find(query).limit(qLimit).sort({ created_at: -1 });
     res.json({ success: true, tours });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -179,7 +169,7 @@ app.get("/api/tours", async (req, res) => {
 });
 
 // Add new tour
-app.post("/api/tours", async (req, res) => {
+app.post('/api/tours', async (req, res) => {
   try {
     const tour = new Tour(req.body);
     await tour.save();
@@ -192,8 +182,7 @@ app.post("/api/tours", async (req, res) => {
 // ==================== SERVER START ====================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running globally on port ${PORT}`);
-  console.log(`🌐 Health check: /api/health`);
-  console.log(`📦 Products API: /api/products`);
-  console.log(`🎯 Tours API: /api/tours`);
-});
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📦 Products API: http://localhost:${PORT}/api/products`);
+  console.log(`
