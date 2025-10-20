@@ -291,50 +291,102 @@
             <h2>Payment Successful!</h2>
             <p id="payment-details">Your payment has been processed successfully.</p>
             <p id="payment-id"></p>
-            <button class="close-btn" id="close-popup">Continue Shopping</button>
+
+            <!-- Buttons: View invoice, Download invoice, Continue shopping -->
+            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap">
+                <button class="close-btn" id="view-invoice">View Invoice</button>
+                <button class="close-btn" id="download-invoice">Download Invoice</button>
+                <button class="close-btn" id="close-popup">Continue Shopping</button>
+            </div>
+
+            <!-- Hidden container used to render invoice for PDF generation -->
+            <div id="invoice-for-pdf" style="position:absolute; left:-9999px; top:0; width:800px;"></div>
         </div>
     </div>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('payment-form');
             const popup = document.getElementById('popup-overlay');
-            const closeBtn = document.getElementById('close-popup');
             const loading = document.getElementById('loading');
             const orderItemsContainer = document.getElementById('order-items');
             const totalAmountElement = document.getElementById('total-amount');
             
-            // Retrieve cart data from localStorage
-            let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+            // Keep last invoice data available
+            let lastInvoice = null;
             let totalAmount = 0;
+            
+            // Retrieve cart data from localStorage
+            function loadCartItems() {
+                let cartItems = [];
+                const rawCart = localStorage.getItem('cartItems');
+                if (rawCart) {
+                    try {
+                        // Try parsing once
+                        let parsed = JSON.parse(rawCart);
+                        
+                        // Handle case where it might be double-encoded
+                        if (typeof parsed === 'string') {
+                            try {
+                                parsed = JSON.parse(parsed);
+                            } catch (e) {
+                                console.warn('Double parsing failed, using string as is');
+                            }
+                        }
+                        
+                        // Ensure it's an array
+                        if (Array.isArray(parsed)) {
+                            cartItems = parsed;
+                        } else if (parsed && typeof parsed === 'object') {
+                            // If it's an object, try to extract items array
+                            cartItems = parsed.items || parsed.cartItems || [parsed];
+                        }
+                    } catch (err) {
+                        console.error('Error parsing cart items:', err);
+                        cartItems = [];
+                    }
+                }
+                console.log('Loaded cartItems:', cartItems);
+                return cartItems;
+            }
             
             // Display order items and calculate total
             function displayOrderItems() {
+                const cartItems = loadCartItems();
                 orderItemsContainer.innerHTML = '';
                 totalAmount = 0;
-                
-                if (cartItems.length === 0) {
+
+                if (!Array.isArray(cartItems) || cartItems.length === 0) {
                     orderItemsContainer.innerHTML = '<p>No items in cart</p>';
                     totalAmountElement.textContent = '₹0';
                     return;
                 }
-                
+
                 cartItems.forEach(item => {
-                    const itemTotal = item.price * item.quantity;
+                    // Support multiple possible property names
+                    const price = Number(item.price ?? item.unitPrice ?? item.amount ?? 0) || 0;
+                    const qty = Number(item.quantity ?? item.qty ?? item.count ?? 1) || 1;
+                    const name = item.name ?? item.title ?? 'Item';
+                    const itemTotal = Math.round(price * qty * 100) / 100;
                     totalAmount += itemTotal;
-                    
+
                     const itemElement = document.createElement('div');
                     itemElement.className = 'order-item';
                     itemElement.innerHTML = `
-                        <div>${item.name} x${item.quantity}</div>
-                        <div>₹${itemTotal}</div>
+                        <div>${escapeHtml(String(name))} x${qty}</div>
+                        <div>₹${itemTotal.toFixed(2)}</div>
                     `;
-                    
                     orderItemsContainer.appendChild(itemElement);
                 });
                 
-                totalAmountElement.textContent = `₹${totalAmount}`;
+                // Ensure totalAmount is a rounded number
+                totalAmount = Math.round(totalAmount * 100) / 100;
+                totalAmountElement.textContent = `₹${totalAmount.toFixed(2)}`;
+                
+                return cartItems;
             }
             
             // Initialize order display
@@ -345,9 +397,17 @@
                 e.preventDefault();
                 
                 if (validateForm()) {
+                    const cartItems = loadCartItems();
+                    
                     // Check if cart has items
                     if (cartItems.length === 0) {
                         alert('Your cart is empty. Please add items before proceeding to payment.');
+                        return;
+                    }
+                    
+                    // Check if total amount is valid
+                    if (totalAmount <= 0) {
+                        alert('Invalid total amount. Please check your cart items.');
                         return;
                     }
                     
@@ -361,20 +421,12 @@
                 }
             });
             
-            // Close popup
-            closeBtn.addEventListener('click', function() {
-                popup.classList.remove('show');
-                // Clear cart after successful payment
-                localStorage.removeItem('cartItems');
-                window.location.href = 'customer.html';
-            });
-            
             // Form validation
             function validateForm() {
                 let isValid = true;
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const phone = document.getElementById('phone').value;
+                const name = document.getElementById('name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
                 
                 // Reset errors
                 document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
@@ -414,10 +466,18 @@
             
             // Initiate Razorpay payment
             function initiatePayment() {
+                // Check if Razorpay is available
+                if (typeof Razorpay === 'undefined') {
+                    alert('Payment gateway not loaded. Please check your internet connection.');
+                    return;
+                }
+                
+                const cartItems = loadCartItems();
+                
                 // Razorpay options
                 const options = {
                     key: 'rzp_test_1DP5mmOlF5G5ag', // Test key - replace with your own
-                    amount: totalAmount * 100, // Amount in paise
+                    amount: Math.round(totalAmount * 100), // Amount in paise
                     currency: 'INR',
                     name: 'FarmTrails',
                     description: 'Payment for farm products and tours',
@@ -426,13 +486,13 @@
                         showSuccessPopup(response.razorpay_payment_id);
                     },
                     prefill: {
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        contact: document.getElementById('phone').value
+                        name: document.getElementById('name').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        contact: document.getElementById('phone').value.trim()
                     },
                     notes: {
                         order_type: 'FarmTrails Purchase',
-                        items: cartItems.map(item => `${item.name} x${item.quantity}`).join(', ')
+                        items: cartItems.map(item => `${item.name || 'Item'} x${item.quantity || 1}`).join(', ')
                     },
                     theme: {
                         color: '#528FF0'
@@ -444,26 +504,244 @@
                     }
                 };
                 
-                // Open Razorpay checkout
-                const rzp = new Razorpay(options);
-                rzp.open();
-                
-                // Handle payment failure
-                rzp.on('payment.failed', function(response) {
-                    alert(`Payment failed: ${response.error.description}`);
-                });
+                try {
+                    // Open Razorpay checkout
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                    
+                    // Handle payment failure
+                    rzp.on('payment.failed', function(response) {
+                        alert(`Payment failed: ${response.error.description}`);
+                    });
+                } catch (error) {
+                    console.error('Razorpay initialization error:', error);
+                    alert('Error initializing payment. Please try again.');
+                }
             }
             
             // Show success popup
             function showSuccessPopup(paymentId) {
-                document.getElementById('payment-id').textContent = `Payment ID: ${paymentId}`;
-                document.getElementById('payment-details').textContent = 
-                    `Your payment of ₹${totalAmount} has been processed successfully.`;
-                popup.classList.add('show');
+                const cartItems = loadCartItems();
                 
-                // Clear cart after successful payment
+                // Build invoice data BEFORE clearing cart
+                const name = document.getElementById('name').value.trim() || 'Guest';
+                const email = document.getElementById('email').value.trim() || '';
+                const phone = document.getElementById('phone').value.trim() || '';
+                const invoiceId = 'INV' + Date.now();
+                const date = new Date().toISOString();
+
+                const items = cartItems.map(it => {
+                    const unit = Number(it.price) || 0;
+                    const qty = Number(it.quantity) || 1;
+                    const name = it.name || it.title || 'Item';
+                    return {
+                        name: name,
+                        unitPrice: unit,
+                        qty: qty,
+                        lineTotal: unit * qty
+                    };
+                });
+
+                const subtotal = items.reduce((s, it) => s + it.lineTotal, 0);
+                const tax = Math.round(subtotal * 0.05); // 5%
+                const grandTotal = subtotal + tax;
+
+                lastInvoice = {
+                    invoiceId,
+                    date,
+                    billing: { name, email, phone },
+                    items,
+                    subtotal,
+                    tax,
+                    grandTotal,
+                    paymentId
+                };
+
+                // Save invoice to localStorage (invoices array)
+                try {
+                    const stored = JSON.parse(localStorage.getItem('invoices') || '[]');
+                    stored.push(lastInvoice);
+                    localStorage.setItem('invoices', JSON.stringify(stored));
+                } catch (e) {
+                    console.warn('Could not save invoice locally', e);
+                }
+
+                // Update popup texts
+                document.getElementById('payment-id').textContent = `Payment ID: ${paymentId || ''}`;
+                document.getElementById('payment-details').textContent =
+                    `Your payment of ₹${lastInvoice.grandTotal.toFixed(2)} has been processed successfully.`;
+
+                // Show popup
+                const popup = document.getElementById('popup-overlay');
+                popup.classList.add('show');
+
+                // Clear cart from localStorage (keep lastInvoice in memory and invoices saved)
                 localStorage.removeItem('cartItems');
             }
+
+            // Open invoice in a new tab (printable view)
+            function viewInvoiceInNewTab() {
+                if (!lastInvoice) {
+                    alert('Invoice not available.');
+                    return;
+                }
+
+                const html = buildInvoiceHtml(lastInvoice, true);
+                const w = window.open('', '_blank');
+                w.document.open();
+                w.document.write(html);
+                w.document.close();
+            }
+
+            // Build invoice HTML (returns string)
+            function buildInvoiceHtml(inv, forPrint = false) {
+                const itemsHtml = inv.items.map(it => `
+                    <tr>
+                        <td>${escapeHtml(it.name)}</td>
+                        <td style="text-align:right">₹${it.unitPrice.toFixed(2)}</td>
+                        <td style="text-align:center">${it.qty}</td>
+                        <td style="text-align:right">₹${it.lineTotal.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+
+                const css = `
+                    <style>
+                        body{font-family:Segoe UI,Arial;color:#222;padding:20px}
+                        .invoice{max-width:800px;margin:0 auto;background:#fff;padding:20px;border-radius:8px}
+                        table{width:100%;border-collapse:collapse}
+                        th,td{padding:8px;border-bottom:1px solid #eee}
+                        th{background:#f7f7f7}
+                        .right{text-align:right}
+                    </style>
+                `;
+
+                return `
+                    <!doctype html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8"/>
+                        <title>Invoice ${inv.invoiceId}</title>
+                        ${css}
+                    </head>
+                    <body>
+                        <div class="invoice">
+                            <h2>Invoice - ${inv.invoiceId}</h2>
+                            <div style="display:flex;justify-content:space-between">
+                                <div>
+                                    <strong>Billing To</strong><br/>
+                                    ${escapeHtml(inv.billing.name)}<br/>
+                                    ${escapeHtml(inv.billing.email)}<br/>
+                                    ${escapeHtml(inv.billing.phone)}
+                                </div>
+                                <div style="text-align:right">
+                                    <strong>FarmTrails</strong><br/>
+                                    123 Farm Road<br/>
+                                    Agricultural District<br/>
+                                    support@farmtrails.example<br/>
+                                    <small>${new Date(inv.date).toLocaleString()}</small>
+                                </div>
+                            </div>
+
+                            <table aria-label="Invoice Items" style="margin-top:12px">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th style="text-align:right">Unit Price</th>
+                                        <th style="text-align:center">Qty</th>
+                                        <th style="text-align:right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHtml}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" style="text-align:right">Subtotal</td>
+                                        <td style="text-align:right">₹${inv.subtotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" style="text-align:right">Tax (5%)</td>
+                                        <td style="text-align:right">₹${inv.tax.toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" style="text-align:right"><strong>Grand Total</strong></td>
+                                        <td style="text-align:right"><strong>₹${inv.grandTotal.toFixed(2)}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <p style="margin-top:18px">Payment ID: ${escapeHtml(inv.paymentId || '')}</p>
+
+                            ${forPrint ? `<script>window.onload=function(){ window.print(); }<\/script>` : ''}
+                        </div>
+                    </body>
+                    </html>
+                `;
+            }
+
+            // Download invoice as PDF using html2canvas + jsPDF
+            async function downloadInvoicePdf() {
+                if (!lastInvoice) {
+                    alert('Invoice not available.');
+                    return;
+                }
+
+                const holder = document.getElementById('invoice-for-pdf');
+                holder.innerHTML = buildInvoiceHtml(lastInvoice, false);
+
+                try {
+                    // Wait a tick for DOM
+                    await new Promise(r => setTimeout(r, 100));
+                    
+                    // Check if html2canvas is available
+                    if (typeof html2canvas === 'undefined') {
+                        throw new Error('html2canvas not loaded');
+                    }
+                    
+                    const canvas = await html2canvas(holder, { 
+                        scale: 2, 
+                        useCORS: true,
+                        logging: false 
+                    });
+                    const imgData = canvas.toDataURL('image/png');
+
+                    // Check if jsPDF is available
+                    if (typeof window.jspdf === 'undefined') {
+                        throw new Error('jsPDF not loaded');
+                    }
+
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const imgWidth = pageWidth - 20;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                    pdf.save(`${lastInvoice.invoiceId || 'invoice'}.pdf`);
+                } catch (err) {
+                    console.error('PDF generation error', err);
+                    alert('Failed to generate PDF. You can view the invoice and print it as a fallback.');
+                } finally {
+                    // cleanup
+                    holder.innerHTML = '';
+                }
+            }
+
+            // Simple HTML escape
+            function escapeHtml(s){ 
+                if (!s) return '';
+                return String(s).replace(/[&<>"']/g, c => 
+                    ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]
+                ); 
+            }
+
+            // Wire up event listeners
+            document.getElementById('view-invoice').addEventListener('click', viewInvoiceInNewTab);
+            document.getElementById('download-invoice').addEventListener('click', downloadInvoicePdf);
+            document.getElementById('close-popup').addEventListener('click', function() {
+                document.getElementById('popup-overlay').classList.remove('show');
+                window.location.href = 'customer.html';
+            });
         });
     </script>
 </body>
