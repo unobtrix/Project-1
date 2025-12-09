@@ -981,6 +981,10 @@ const API_BASE_URL = "https://unobtrix-project-backend.onrender.com";
 let consumerStream = null;
 let farmerStream = null;
 let currentConsumerPhotoMethod = 'camera';
+let currentStep = {
+    consumer: 1,
+    farmer: 1
+};
 
 // Account type switching
 document.getElementById('consumer-btn').addEventListener('click', function() {
@@ -1325,6 +1329,7 @@ function navigateToStep(formType, step) {
     });
     
     document.getElementById(`${formType}-step-${step}`).classList.add('active');
+    currentStep[formType] = step;
     updateProgressBar(formType);
     updateProgressText(formType, step);
 }
@@ -1528,30 +1533,18 @@ function addPreviewRow(container, label, value) {
 // Progress tracking
 function updateProgressBar(formType) {
     const form = document.getElementById(`${formType}-form`);
-    const inputs = form.querySelectorAll('input[required], select[required]');
-    let filledCount = 0;
+    const steps = document.querySelectorAll(`#${formType}-form .form-step`);
+    const currentStepIndex = currentStep[formType];
     
-    const photo = localStorage.getItem(`${formType}-photo`);
-    if (photo) filledCount++;
+    let progress = 0;
     
-    inputs.forEach(input => {
-        if (input.type === 'checkbox') {
-            const checkboxes = document.querySelectorAll(`#${formType}-form input[name="${input.name}"]`);
-            const atLeastOneChecked = Array.from(checkboxes).some(cb => cb.checked);
-            if (atLeastOneChecked) filledCount++;
-        } else if (input.value.trim() && 
-           (!input.id.includes('confirm-password') || 
-            input.value === document.getElementById(input.id.replace('confirm-', '')).value)) {
-            filledCount++;
-        }
-    });
+    if (formType === 'consumer') {
+        progress = (currentStepIndex / 4) * 100;
+    } else {
+        progress = (currentStepIndex / 5) * 100;
+    }
     
-    const terms = document.getElementById(`${formType}-terms`);
-    if (terms && terms.checked) filledCount++;
-    
-    const totalFields = inputs.length + 2;
-    const progress = (filledCount / totalFields) * 100;
-    document.getElementById('progress-bar').style.width = `${Math.min(progress, 100)}%`;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
 }
 
 function updateProgressText(formType, step) {
@@ -1905,7 +1898,7 @@ function autoFillOTP(prefix, otp) {
     }, 2000);
 }
 
-// Form validation and registration - FIXED VERSION
+// Form validation and registration
 function setupFormValidation() {
     // Consumer form
     document.getElementById('consumer-form').addEventListener('submit', async function(e) {
