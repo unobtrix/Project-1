@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FarmTrials - Registration Portal</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -28,7 +30,7 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             padding: 30px;
-            width: 500px;
+            width: 600px;
             max-width: 100%;
             text-align: center;
             transition: all 0.3s ease;
@@ -102,7 +104,7 @@
             font-size: 14px;
         }
 
-        input, select {
+        input, select, textarea {
             display: block;
             width: 100%;
             margin-bottom: 5px;
@@ -114,7 +116,7 @@
             font-size: 15px;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: #4CAF50;
             outline: none;
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
@@ -134,7 +136,6 @@
             background: none;
             border: none;
             font-size: 18px;
-            z-index: 10;
         }
 
         button {
@@ -153,12 +154,6 @@
 
         button:hover {
             background-color: #3e8e41;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        button:active {
-            transform: translateY(0);
         }
 
         .button-container {
@@ -196,14 +191,11 @@
             font-size: 1.2rem; 
             border: 2px solid #ddd; 
             border-radius: 8px;
-            transition: border-color 0.3s ease;
-            font-weight: bold;
         }
 
         .otp-input:focus {
             outline: none; 
             border-color: #4CAF50;
-            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
 
         .terms {
@@ -339,6 +331,58 @@
             font-size: 14px;
         }
 
+        .upload-section {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #0b7dda;
+        }
+
+        .upload-btn input {
+            display: none;
+        }
+
+        .photo-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .photo-option {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .photo-option:hover {
+            border-color: #4CAF50;
+            background: #f9f9f9;
+        }
+
+        .photo-option.active {
+            border-color: #4CAF50;
+            background: #f1f8e9;
+        }
+
         .verification-status {
             padding: 10px;
             border-radius: 8px;
@@ -359,12 +403,6 @@
             border: 1px solid #c3e6cb;
         }
 
-        .verification-failed {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
         .login-link {
             text-align: center;
             margin-top: 25px;
@@ -377,8 +415,113 @@
             font-weight: 600;
         }
 
-        .login-link a:hover {
-            text-decoration: underline;
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .form-navigation button {
+            width: auto;
+            margin-top: 0;
+        }
+
+        .preview-section {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .preview-title {
+            font-size: 18px;
+            color: #2e7d32;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .preview-content {
+            text-align: left;
+        }
+
+        .preview-row {
+            display: flex;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-label {
+            font-weight: bold;
+            width: 40%;
+            color: #555;
+        }
+
+        .preview-value {
+            width: 60%;
+            color: #333;
+        }
+
+        .preview-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 10px auto;
+            display: block;
+            border: 2px solid #4CAF50;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .bank-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .bank-details-grid .full-width {
+            grid-column: span 2;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 600px) {
@@ -388,7 +531,6 @@
             
             .account-type {
                 flex-direction: column;
-                gap: 10px;
             }
             
             .otp-input {
@@ -396,12 +538,20 @@
                 height: 40px;
             }
             
-            .camera-controls {
+            .camera-controls, .button-container, .form-navigation {
                 flex-direction: column;
             }
             
-            .button-container {
+            .preview-row {
                 flex-direction: column;
+            }
+            
+            .photo-options {
+                flex-direction: column;
+            }
+            
+            .bank-details-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -420,584 +570,1733 @@
             <div class="progress-bar">
                 <div class="progress" id="progress-bar"></div>
             </div>
-            <div class="progress-text" id="progress-text">Step 1 of 4: Photo Capture</div>
+            <div class="progress-text" id="progress-text">Step 1 of 4: Personal Details & Photo</div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your registration...</p>
         </div>
 
         <!-- Consumer Form -->
         <form id="consumer-form" class="form-section active">
-            <!-- Photo Capture Section -->
-            <div class="camera-section">
-                <h3 class="section-title">Step 1: Photo Capture</h3>
-                <div id="consumer-camera-placeholder" class="camera-placeholder">
-                    Click "Start Camera" to capture your photo
-                </div>
-                <video id="consumer-camera-preview" class="camera-preview" autoplay playsinline style="display: none;"></video>
-                <canvas id="consumer-captured-photo" class="captured-photo" style="display: none;"></canvas>
+            <!-- Step 1: Personal Details & Photo -->
+            <div class="form-step active" id="consumer-step-1">
+                <h3 class="section-title">Step 1: Personal Details & Profile Photo</h3>
                 
-                <div class="camera-controls">
-                    <button type="button" id="consumer-start-camera" class="secondary-button">Start Camera</button>
-                    <button type="button" id="consumer-capture-photo" class="secondary-button" style="display: none;">Capture Photo</button>
-                    <button type="button" id="consumer-retake-photo" class="secondary-button" style="display: none;">Retake Photo</button>
+                <label for="consumer-username">Username</label>
+                <input type="text" id="consumer-username" name="username" placeholder="Enter your username" required>
+                <div class="error" id="consumer-username-error">Username must be at least 3 characters</div>
+
+                <label for="consumer-email">Email Address</label>
+                <input type="email" id="consumer-email" name="email" placeholder="Enter your email" required>
+                <div class="error" id="consumer-email-error">Please enter a valid email address</div>
+
+                <label for="consumer-mobile">Mobile Number</label>
+                <input type="tel" id="consumer-mobile" name="mobile" placeholder="Enter your 10-digit mobile number" required pattern="[0-9]{10}">
+                <div class="error" id="consumer-mobile-error">Please enter a valid 10-digit mobile number</div>
+                
+                <!-- Profile Photo Section -->
+                <h3 class="section-title" style="margin-top: 30px;">Profile Photo</h3>
+                <p style="margin: 10px 0; font-size: 14px; color: #666;">Add a profile photo for your account</p>
+                
+                <div class="photo-options">
+                    <div class="photo-option active" id="consumer-camera-option">
+                        <div style="font-size: 24px; margin-bottom: 8px;">📷</div>
+                        <div>Take Photo</div>
+                    </div>
+                    <div class="photo-option" id="consumer-upload-option">
+                        <div style="font-size: 24px; margin-bottom: 8px;">📁</div>
+                        <div>Upload Photo</div>
+                    </div>
+                </div>
+                
+                <!-- Camera Section -->
+                <div class="camera-section" id="consumer-camera-section">
+                    <div id="consumer-camera-placeholder" class="camera-placeholder">
+                        Click "Start Camera" to capture your photo
+                    </div>
+                    <video id="consumer-camera-preview" class="camera-preview" autoplay playsinline style="display: none;"></video>
+                    <canvas id="consumer-captured-photo" style="display: none;"></canvas>
+                    <img id="consumer-captured-image" class="captured-photo" style="display: none;">
+                    
+                    <div class="camera-controls">
+                        <button type="button" id="consumer-start-camera" class="secondary-button">Start Camera</button>
+                        <button type="button" id="consumer-capture-photo" class="secondary-button" style="display: none;">Capture Photo</button>
+                        <button type="button" id="consumer-retake-photo" class="secondary-button" style="display: none;">Retake Photo</button>
+                    </div>
+                </div>
+                
+                <!-- Upload Section -->
+                <div class="upload-section" id="consumer-upload-section" style="display: none;">
+                    <label class="upload-btn">
+                        <input type="file" id="consumer-photo-upload" accept="image/*">
+                        📁 Choose Photo
+                    </label>
+                    <img id="consumer-uploaded-photo-preview" class="captured-photo" style="display: none;">
+                </div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" disabled>Previous</button>
+                    <button type="button" class="primary-button" id="consumer-next-1">Next</button>
                 </div>
             </div>
 
-            <!-- Personal Details Section -->
-            <h3 class="section-title">Step 2: Personal Details</h3>
-            
-            <label for="consumer-username">Username</label>
-            <input type="text" id="consumer-username" name="username" placeholder="Enter your username" required>
-            <div class="error" id="consumer-username-error">Username must be at least 3 characters</div>
+            <!-- Step 2: Security -->
+            <div class="form-step" id="consumer-step-2">
+                <h3 class="section-title">Step 2: Security</h3>
 
-            <label for="consumer-email">Email Address</label>
-            <input type="email" id="consumer-email" name="email" placeholder="Enter your email" required>
-            <div class="error" id="consumer-email-error">Please enter a valid email address</div>
+                <label for="consumer-password">Password</label>
+                <div class="password-container">
+                    <input type="password" id="consumer-password" name="password" placeholder="Create a strong password" required>
+                    <span class="toggle-password" onclick="togglePassword('consumer-password')">👁️</span>
+                </div>
+                <div class="password-strength" id="consumer-password-strength"></div>
 
-            <label for="consumer-mobile">Mobile Number</label>
-            <input type="tel" id="consumer-mobile" name="mobile" placeholder="Enter your 10-digit mobile number" required pattern="[0-9]{10}">
-            <div class="error" id="consumer-mobile-error">Please enter a valid 10-digit mobile number</div>
-
-            <!-- Security Section -->
-            <h3 class="section-title">Step 3: Security</h3>
-
-            <label for="consumer-password">Password</label>
-            <div class="password-container">
-                <input type="password" id="consumer-password" name="password" placeholder="Create a strong password" required>
-                <span class="toggle-password" onclick="togglePassword('consumer-password')">👁️</span>
-            </div>
-            <div class="password-strength" id="consumer-password-strength"></div>
-
-            <label for="consumer-confirm-password">Confirm Password</label>
-            <div class="password-container">
-                <input type="password" id="consumer-confirm-password" name="confirm-password" placeholder="Re-enter your password" required>
-                <span class="toggle-password" onclick="togglePassword('consumer-confirm-password')">👁️</span>
-            </div>
-            <div class="error" id="consumer-password-match-error">Passwords do not match</div>
-
-            <!-- Verification Section -->
-            <h3 class="section-title">Step 4: Verification</h3>
-
-            <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send a verification code to your mobile number</p>
-            
-            <div class="otp-container">
-                <input type="text" class="otp-input" id="consumer-otp-1" maxlength="1" onkeyup="moveToNext(this, 'consumer-otp-2')">
-                <input type="text" class="otp-input" id="consumer-otp-2" maxlength="1" onkeyup="moveToNext(this, 'consumer-otp-3')">
-                <input type="text" class="otp-input" id="consumer-otp-3" maxlength="1" onkeyup="moveToNext(this, 'consumer-otp-4')">
-                <input type="text" class="otp-input" id="consumer-otp-4" maxlength="1" onkeyup="moveToNext(this, 'consumer-otp-5')">
-                <input type="text" class="otp-input" id="consumer-otp-5" maxlength="1" onkeyup="moveToNext(this, 'consumer-otp-6')">
-                <input type="text" class="otp-input" id="consumer-otp-6" maxlength="1" onkeyup="moveToNext(this, '')">
-            </div>
-            
-            <div class="button-container">
-                <button type="button" id="consumer-send-otp" class="secondary-button">Send Code</button>
-                <button type="button" id="consumer-verify-otp" class="secondary-button">Verify Code</button>
+                <label for="consumer-confirm-password">Confirm Password</label>
+                <div class="password-container">
+                    <input type="password" id="consumer-confirm-password" name="confirm-password" placeholder="Re-enter your password" required>
+                    <span class="toggle-password" onclick="togglePassword('consumer-confirm-password')">👁️</span>
+                </div>
+                <div class="error" id="consumer-password-match-error">Passwords do not match</div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="consumer-prev-2">Previous</button>
+                    <button type="button" class="primary-button" id="consumer-next-2">Next</button>
+                </div>
             </div>
 
-            <div id="consumer-otp-status"></div>
+            <!-- Step 3: Verification -->
+            <div class="form-step" id="consumer-step-3">
+                <h3 class="section-title">Step 3: Verification</h3>
 
-            <!-- Terms & Conditions moved above Create Account button -->
-            <div class="terms">
-                <input type="checkbox" id="consumer-terms" name="terms" required>
-                <label for="consumer-terms">I agree to the Terms & Conditions and Privacy Policy</label>
+                <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send a verification code to your mobile number</p>
+                
+                <div class="otp-container">
+                    <input type="text" class="otp-input" id="consumer-otp-1" maxlength="1">
+                    <input type="text" class="otp-input" id="consumer-otp-2" maxlength="1">
+                    <input type="text" class="otp-input" id="consumer-otp-3" maxlength="1">
+                    <input type="text" class="otp-input" id="consumer-otp-4" maxlength="1">
+                    <input type="text" class="otp-input" id="consumer-otp-5" maxlength="1">
+                    <input type="text" class="otp-input" id="consumer-otp-6" maxlength="1">
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" id="consumer-send-otp" class="secondary-button">Send Code</button>
+                    <button type="button" id="consumer-verify-otp" class="secondary-button">Verify Code</button>
+                </div>
+
+                <div id="consumer-otp-status"></div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="consumer-prev-3">Previous</button>
+                    <button type="button" class="primary-button" id="consumer-next-3">Next</button>
+                </div>
             </div>
 
-            <button type="submit" id="consumer-submit">Create Account</button>
+            <!-- Step 4: Preview & Terms -->
+            <div class="form-step" id="consumer-step-4">
+                <h3 class="section-title">Step 4: Preview & Terms</h3>
+
+                <div class="preview-section" id="consumer-preview">
+                    <h3 class="preview-title">Registration Preview</h3>
+                    <div class="preview-content" id="consumer-preview-content"></div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="consumer-terms" name="terms" required>
+                    <label for="consumer-terms">I agree to the Terms & Conditions and Privacy Policy</label>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="consumer-prev-4">Previous</button>
+                    <button type="submit" class="primary-button">Create Account</button>
+                </div>
+            </div>
             
             <div class="login-link">
-                Already have an account? <a href="index.html">Login here</a>
+                Already have an account? <a href="#" id="consumer-login-link">Login here</a>
             </div>
         </form>
 
         <!-- Farmer Form -->
         <form id="farmer-form" class="form-section">
-            <!-- Photo Capture Section -->
-            <div class="camera-section">
-                <h3 class="section-title">Step 1: Photo Capture</h3>
-                <div id="farmer-camera-placeholder" class="camera-placeholder">
-                    Click "Start Camera" to capture your photo
-                </div>
-                <video id="farmer-camera-preview" class="camera-preview" autoplay playsinline style="display: none;"></video>
-                <canvas id="farmer-captured-photo" class="captured-photo" style="display: none;"></canvas>
+            <!-- Step 1: Personal Details & Photo -->
+            <div class="form-step active" id="farmer-step-1">
+                <h3 class="section-title">Step 1: Personal Details & Profile Photo</h3>
                 
-                <div class="camera-controls">
-                    <button type="button" id="farmer-start-camera" class="secondary-button">Start Camera</button>
-                    <button type="button" id="farmer-capture-photo" class="secondary-button" style="display: none;">Capture Photo</button>
-                    <button type="button" id="farmer-retake-photo" class="secondary-button" style="display: none;">Retake Photo</button>
+                <label for="farmer-username">Username</label>
+                <input type="text" id="farmer-username" name="username" placeholder="Enter your username" required>
+                <div class="error" id="farmer-username-error">Username must be at least 3 characters</div>
+
+                <label for="farmer-email">Email Address</label>
+                <input type="email" id="farmer-email" name="email" placeholder="Enter your email" required>
+                <div class="error" id="farmer-email-error">Please enter a valid email address</div>
+
+                <label for="farmer-aadhaar">Aadhaar Number</label>
+                <input type="text" id="farmer-aadhaar" name="aadhaar" placeholder="Enter your 12-digit Aadhaar number" required pattern="[0-9]{12}">
+                <div class="error" id="farmer-aadhaar-error">Please enter a valid 12-digit Aadhaar number</div>
+
+                <label for="farmer-mobile">Mobile Number</label>
+                <input type="tel" id="farmer-mobile" name="mobile" placeholder="Enter your 10-digit mobile number" required pattern="[0-9]{10}">
+                <div class="error" id="farmer-mobile-error">Please enter a valid 10-digit mobile number</div>
+                
+                <!-- Profile Photo Section -->
+                <h3 class="section-title" style="margin-top: 30px;">Profile Photo</h3>
+                <p style="margin: 10px 0; font-size: 14px; color: #666;">Take a live photo for your profile</p>
+                
+                <div class="camera-section" id="farmer-camera-section">
+                    <div id="farmer-camera-placeholder" class="camera-placeholder">
+                        Click "Start Camera" to capture your photo
+                    </div>
+                    <video id="farmer-camera-preview" class="camera-preview" autoplay playsinline style="display: none;"></video>
+                    <canvas id="farmer-captured-photo" style="display: none;"></canvas>
+                    <img id="farmer-captured-image" class="captured-photo" style="display: none;">
+                    
+                    <div class="camera-controls">
+                        <button type="button" id="farmer-start-camera" class="secondary-button">Start Camera</button>
+                        <button type="button" id="farmer-capture-photo" class="secondary-button" style="display: none;">Capture Photo</button>
+                        <button type="button" id="farmer-retake-photo" class="secondary-button" style="display: none;">Retake Photo</button>
+                    </div>
+                </div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" disabled>Previous</button>
+                    <button type="button" class="primary-button" id="farmer-next-1">Next</button>
                 </div>
             </div>
 
-            <!-- Personal Details Section -->
-            <h3 class="section-title">Step 2: Personal Details</h3>
-            
-            <label for="farmer-username">Username</label>
-            <input type="text" id="farmer-username" name="username" placeholder="Enter your username" required>
-            <div class="error" id="farmer-username-error">Username must be at least 3 characters</div>
+            <!-- Step 2: Farm Details -->
+            <div class="form-step" id="farmer-step-2">
+                <h3 class="section-title">Step 2: Farm Details</h3>
+                
+                <label for="farmer-farm-name">Farm Name</label>
+                <input type="text" id="farmer-farm-name" name="farm-name" placeholder="Enter your farm name" required>
+                <div class="error" id="farmer-farm-name-error">Farm name is required</div>
 
-            <label for="farmer-email">Email Address</label>
-            <input type="email" id="farmer-email" name="email" placeholder="Enter your email" required>
-            <div class="error" id="farmer-email-error">Please enter a valid email address</div>
+                <label for="farmer-farm-size">Farm Size (acres)</label>
+                <input type="number" id="farmer-farm-size" name="farm-size" placeholder="Enter farm size in acres" required min="0.1" step="0.1">
+                <div class="error" id="farmer-farm-size-error">Please enter a valid farm size</div>
 
-            <label for="farmer-aadhaar">Aadhaar Number</label>
-            <input type="text" id="farmer-aadhaar" name="aadhaar" placeholder="Enter your 12-digit Aadhaar number" required pattern="[0-9]{12}">
-            <div class="error" id="farmer-aadhaar-error">Please enter a valid 12-digit Aadhaar number</div>
+                <label for="farmer-specialization">Specialization</label>
+                <select id="farmer-specialization" name="specialization" required>
+                    <option value="">Select specialization</option>
+                    <option value="Organic vegetables">Organic vegetables</option>
+                    <option value="Spices">Spices</option>
+                    <option value="Dairy">Dairy</option>
+                    <option value="Mixed farming">Mixed farming</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="error" id="farmer-specialization-error">Please select a specialization</div>
 
-            <label for="farmer-mobile">Mobile Number</label>
-            <input type="tel" id="farmer-mobile" name="mobile" placeholder="Enter your 10-digit mobile number" required pattern="[0-9]{10}">
-            <div class="error" id="farmer-mobile-error">Please enter a valid 10-digit mobile number</div>
-            
-            <!-- Verification Section -->
-            <h3 class="section-title">Step 3: Verification</h3>
-
-            <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send verification codes to your Aadhaar-registered mobile number</p>
-            
-            <h4 style="margin: 15px 0 10px; color: #555;">Aadhaar Verification</h4>
-            <div class="otp-container">
-                <input type="text" class="otp-input" id="farmer-aadhaar-otp-1" maxlength="1" onkeyup="moveToNext(this, 'farmer-aadhaar-otp-2')">
-                <input type="text" class="otp-input" id="farmer-aadhaar-otp-2" maxlength="1" onkeyup="moveToNext(this, 'farmer-aadhaar-otp-3')">
-                <input type="text" class="otp-input" id="farmer-aadhaar-otp-3" maxlength="1" onkeyup="moveToNext(this, 'farmer-aadhaar-otp-4')">
-                <input type="text" class="otp-input" id="farmer-aadhaar-otp-4" maxlength="1" onkeyup="moveToNext(this, 'farmer-aadhaar-otp-5')">
-                <input type="text" class="otp-input" id="farmer-aadhaar-otp-5" maxlength="1" onkeyup="moveToNext(this, 'farmer-aadhaar-otp-6')">
-                <input type="text" class="otp-input" id="farmer-aadhaar-otp-6" maxlength="1" onkeyup="moveToNext(this, '')">
-            </div>
-            
-            <div class="button-container">
-                <button type="button" id="farmer-send-aadhaar-otp" class="secondary-button">Send Aadhaar Code</button>
-                <button type="button" id="farmer-verify-aadhaar-otp" class="secondary-button">Verify Aadhaar</button>
-            </div>
-
-            <div id="farmer-aadhaar-otp-status"></div>
-
-            <h4 style="margin: 20px 0 10px; color: #555;">Mobile Verification</h4>
-            <div class="otp-container">
-                <input type="text" class="otp-input" id="farmer-mobile-otp-1" maxlength="1" onkeyup="moveToNext(this, 'farmer-mobile-otp-2')">
-                <input type="text" class="otp-input" id="farmer-mobile-otp-2" maxlength="1" onkeyup="moveToNext(this, 'farmer-mobile-otp-3')">
-                <input type="text" class="otp-input" id="farmer-mobile-otp-3" maxlength="1" onkeyup="moveToNext(this, 'farmer-mobile-otp-4')">
-                <input type="text" class="otp-input" id="farmer-mobile-otp-4" maxlength="1" onkeyup="moveToNext(this, 'farmer-mobile-otp-5')">
-                <input type="text" class="otp-input" id="farmer-mobile-otp-5" maxlength="1" onkeyup="moveToNext(this, 'farmer-mobile-otp-6')">
-                <input type="text" class="otp-input" id="farmer-mobile-otp-6" maxlength="1" onkeyup="moveToNext(this, '')">
-            </div>
-            
-            <div class="button-container">
-                <button type="button" id="farmer-send-mobile-otp" class="secondary-button">Send Mobile Code</button>
-                <button type="button" id="farmer-verify-mobile-otp" class="secondary-button">Verify Mobile</button>
+                <label for="farmer-certifications">Certifications</label>
+                <div style="margin-bottom: 15px;">
+                    <input type="checkbox" id="farmer-cert-organic-india" name="certifications" value="Organic India">
+                    <label for="farmer-cert-organic-india" style="display: inline-block; margin: 0 15px 0 5px; font-weight: normal;">Organic India</label>
+                    
+                    <input type="checkbox" id="farmer-cert-fssai" name="certifications" value="FSSAI">
+                    <label for="farmer-cert-fssai" style="display: inline-block; margin: 0 15px 0 5px; font-weight: normal;">FSSAI</label>
+                    
+                    <input type="checkbox" id="farmer-cert-other" name="certifications" value="Other">
+                    <label for="farmer-cert-other" style="display: inline-block; margin: 0 15px 0 5px; font-weight: normal;">Other</label>
+                </div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="farmer-prev-2">Previous</button>
+                    <button type="button" class="primary-button" id="farmer-next-2">Next</button>
+                </div>
             </div>
 
-            <div id="farmer-mobile-otp-status"></div>
+            <!-- Step 3: Farm Location -->
+            <div class="form-step" id="farmer-step-3">
+                <h3 class="section-title">Step 3: Farm Location</h3>
+                
+                <label for="farmer-village">Village</label>
+                <input type="text" id="farmer-village" name="village" placeholder="Enter village name" required>
+                <div class="error" id="farmer-village-error">Village name is required</div>
 
-            <!-- Security Section -->
-            <h3 class="section-title">Step 4: Security</h3>
+                <label for="farmer-taluka">Taluka</label>
+                <input type="text" id="farmer-taluka" name="taluka" placeholder="Enter taluka name" required>
+                <div class="error" id="farmer-taluka-error">Taluka name is required</div>
 
-            <label for="farmer-password">Password</label>
-            <div class="password-container">
-                <input type="password" id="farmer-password" name="password" placeholder="Create a strong password" required>
-                <span class="toggle-password" onclick="togglePassword('farmer-password')">👁️</span>
+                <label for="farmer-district">District</label>
+                <input type="text" id="farmer-district" name="district" placeholder="Enter district name" required>
+                <div class="error" id="farmer-district-error">District name is required</div>
+
+                <label for="farmer-state">State</label>
+                <input type="text" id="farmer-state" name="state" placeholder="Enter state name" required>
+                <div class="error" id="farmer-state-error">State name is required</div>
+
+                <label for="farmer-pin">PIN Code</label>
+                <input type="text" id="farmer-pin" name="pin" placeholder="Enter PIN code" required pattern="[0-9]{6}">
+                <div class="error" id="farmer-pin-error">Please enter a valid 6-digit PIN code</div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="farmer-prev-3">Previous</button>
+                    <button type="button" class="primary-button" id="farmer-next-3">Next</button>
+                </div>
             </div>
-            <div class="password-strength" id="farmer-password-strength"></div>
 
-            <label for="farmer-confirm-password">Confirm Password</label>
-            <div class="password-container">
-                <input type="password" id="farmer-confirm-password" name="confirm-password" placeholder="Re-enter your password" required>
-                <span class="toggle-password" onclick="togglePassword('farmer-confirm-password')">👁️</span>
+            <!-- Step 4: Bank Details -->
+            <div class="form-step" id="farmer-step-4">
+                <h3 class="section-title">Step 4: Bank Details</h3>
+                
+                <div class="bank-details-grid">
+                    <div>
+                        <label for="farmer-account-holder">Account Holder Name</label>
+                        <input type="text" id="farmer-account-holder" name="account-holder" placeholder="Enter account holder name" required>
+                        <div class="error" id="farmer-account-holder-error">Account holder name is required</div>
+                    </div>
+                    
+                    <div>
+                        <label for="farmer-account-number">Account Number</label>
+                        <input type="text" id="farmer-account-number" name="account-number" placeholder="Enter account number" required>
+                        <div class="error" id="farmer-account-number-error">Account number is required</div>
+                    </div>
+                    
+                    <div>
+                        <label for="farmer-bank-name">Bank Name</label>
+                        <input type="text" id="farmer-bank-name" name="bank-name" placeholder="Enter bank name" required>
+                        <div class="error" id="farmer-bank-name-error">Bank name is required</div>
+                    </div>
+                    
+                    <div>
+                        <label for="farmer-ifsc-code">IFSC Code</label>
+                        <input type="text" id="farmer-ifsc-code" name="ifsc-code" placeholder="Enter IFSC code" required>
+                        <div class="error" id="farmer-ifsc-code-error">IFSC code is required</div>
+                    </div>
+                    
+                    <div class="full-width">
+                        <label for="farmer-branch">Branch Name</label>
+                        <input type="text" id="farmer-branch" name="branch" placeholder="Enter branch name" required>
+                        <div class="error" id="farmer-branch-error">Branch name is required</div>
+                    </div>
+                </div>
+                
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="farmer-prev-4">Previous</button>
+                    <button type="button" class="primary-button" id="farmer-next-4">Next</button>
+                </div>
             </div>
-            <div class="error" id="farmer-password-match-error">Passwords do not match</div>
 
-            <!-- Terms & Conditions moved above Create Account button -->
-            <div class="terms">
-                <input type="checkbox" id="farmer-terms" name="terms" required>
-                <label for="farmer-terms">I agree to the Terms & Conditions and Privacy Policy</label>
+            <!-- Step 5: Verification & Security -->
+            <div class="form-step" id="farmer-step-5">
+                <h3 class="section-title">Step 5: Verification & Security</h3>
+
+                <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send verification codes to your Aadhaar-registered mobile number</p>
+                
+                <h4 style="margin: 15px 0 10px; color: #555;">Aadhaar Verification</h4>
+                <div class="otp-container">
+                    <input type="text" class="otp-input" id="farmer-aadhaar-otp-1" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-aadhaar-otp-2" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-aadhaar-otp-3" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-aadhaar-otp-4" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-aadhaar-otp-5" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-aadhaar-otp-6" maxlength="1">
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" id="farmer-send-aadhaar-otp" class="secondary-button">Send Aadhaar Code</button>
+                    <button type="button" id="farmer-verify-aadhaar-otp" class="secondary-button">Verify Aadhaar</button>
+                </div>
+
+                <div id="farmer-aadhaar-otp-status"></div>
+
+                <h4 style="margin: 20px 0 10px; color: #555;">Mobile Verification</h4>
+                <div class="otp-container">
+                    <input type="text" class="otp-input" id="farmer-mobile-otp-1" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-mobile-otp-2" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-mobile-otp-3" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-mobile-otp-4" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-mobile-otp-5" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-mobile-otp-6" maxlength="1">
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" id="farmer-send-mobile-otp" class="secondary-button">Send Mobile Code</button>
+                    <button type="button" id="farmer-verify-mobile-otp" class="secondary-button">Verify Mobile</button>
+                </div>
+
+                <div id="farmer-mobile-otp-status"></div>
+
+                <h3 class="section-title" style="margin-top: 30px;">Security</h3>
+
+                <label for="farmer-password">Password</label>
+                <div class="password-container">
+                    <input type="password" id="farmer-password" name="password" placeholder="Create a strong password" required>
+                    <span class="toggle-password" onclick="togglePassword('farmer-password')">👁️</span>
+                </div>
+                <div class="password-strength" id="farmer-password-strength"></div>
+
+                <label for="farmer-confirm-password">Confirm Password</label>
+                <div class="password-container">
+                    <input type="password" id="farmer-confirm-password" name="confirm-password" placeholder="Re-enter your password" required>
+                    <span class="toggle-password" onclick="togglePassword('farmer-confirm-password')">👁️</span>
+                </div>
+                <div class="error" id="farmer-password-match-error">Passwords do not match</div>
+
+                <div class="preview-section" id="farmer-preview">
+                    <h3 class="preview-title">Registration Preview</h3>
+                    <div class="preview-content" id="farmer-preview-content"></div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="farmer-terms" name="terms" required>
+                    <label for="farmer-terms">I agree to the Terms & Conditions and Privacy Policy</label>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="secondary-button" id="farmer-prev-5">Previous</button>
+                    <button type="submit" class="primary-button">Create Account</button>
+                </div>
             </div>
-
-            <button type="submit" id="farmer-submit">Create Account</button>
             
             <div class="login-link">
-                Already have an account? <a href="login.html">Login here</a>
+                Already have an account? <a href="#" id="farmer-login-link">Login here</a>
             </div>
         </form>
+
+        <!-- Success Message -->
+        <div class="success-message" id="success-message">
+            <div class="success-icon">✓</div>
+            <h2>Registration Successful!</h2>
+            <p>Your account has been created successfully.</p>
+            <p>You can now login to your account.</p>
+            <button id="go-to-login" class="primary-button">Go to Login</button>
+        </div>
     </div>
+<script>
+// 🌐 Backend API URL
+const API_BASE_URL = "http://localhost:5000";
 
-    <script>
-        // Account type switching
-        document.getElementById('consumer-btn').addEventListener('click', function() {
-            switchAccountType('consumer');
-        });
+// Global variables
+let consumerStream = null;
+let farmerStream = null;
+let currentConsumerPhotoMethod = 'camera';
 
-        document.getElementById('farmer-btn').addEventListener('click', function() {
-            switchAccountType('farmer');
-        });
+// Account type switching
+document.getElementById('consumer-btn').addEventListener('click', function() {
+    switchAccountType('consumer');
+});
 
-        function switchAccountType(type) {
-            // Update buttons
-            document.getElementById('consumer-btn').classList.toggle('active', type === 'consumer');
-            document.getElementById('farmer-btn').classList.toggle('active', type === 'farmer');
-            
-            // Update forms
-            document.getElementById('consumer-form').classList.toggle('active', type === 'consumer');
-            document.getElementById('farmer-form').classList.toggle('active', type === 'farmer');
-            
-            // Reset progress bar
-            document.getElementById('progress-bar').style.width = '0%';
-            updateProgressText(type, 1);
-            
-            // Stop any active camera streams
-            stopAllCameras();
-        }
+document.getElementById('farmer-btn').addEventListener('click', function() {
+    switchAccountType('farmer');
+});
 
-        // Camera functionality
-        let consumerStream = null;
-        let farmerStream = null;
+function switchAccountType(type) {
+    // Update buttons
+    document.getElementById('consumer-btn').classList.toggle('active', type === 'consumer');
+    document.getElementById('farmer-btn').classList.toggle('active', type === 'farmer');
+    
+    // Update forms
+    if (type === 'consumer') {
+        document.getElementById('consumer-form').classList.add('active');
+        document.getElementById('farmer-form').classList.remove('active');
+    } else {
+        document.getElementById('consumer-form').classList.remove('active');
+        document.getElementById('farmer-form').classList.add('active');
+    }
+    
+    // Reset progress bar
+    document.getElementById('progress-bar').style.width = '0%';
+    updateProgressText(type, 1);
+    
+    // Reset to first step
+    navigateToStep(type, 1);
+    
+    // Stop any active camera streams
+    stopAllCameras();
+}
 
-        function setupCamera(formType) {
-            const startButton = document.getElementById(`${formType}-start-camera`);
-            const captureButton = document.getElementById(`${formType}-capture-photo`);
-            const retakeButton = document.getElementById(`${formType}-retake-photo`);
-            const preview = document.getElementById(`${formType}-camera-preview`);
-            const placeholder = document.getElementById(`${formType}-camera-placeholder`);
-            const canvas = document.getElementById(`${formType}-captured-photo`);
+// Camera functionality
+function setupConsumerCamera() {
+    const startButton = document.getElementById('consumer-start-camera');
+    const captureButton = document.getElementById('consumer-capture-photo');
+    const retakeButton = document.getElementById('consumer-retake-photo');
+    const preview = document.getElementById('consumer-camera-preview');
+    const placeholder = document.getElementById('consumer-camera-placeholder');
+    const canvas = document.getElementById('consumer-captured-photo');
+    const capturedImage = document.getElementById('consumer-captured-image');
 
-            startButton.addEventListener('click', async function() {
-                try {
-                    // Stop any existing stream
-                    if (formType === 'consumer' && consumerStream) {
-                        consumerStream.getTracks().forEach(track => track.stop());
-                    } else if (formType === 'farmer' && farmerStream) {
-                        farmerStream.getTracks().forEach(track => track.stop());
-                    }
-
-                    // Get user media
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { width: 320, height: 240, facingMode: 'user' } 
-                    });
-                    
-                    if (formType === 'consumer') {
-                        consumerStream = stream;
-                    } else {
-                        farmerStream = stream;
-                    }
-                    
-                    preview.srcObject = stream;
-                    placeholder.style.display = 'none';
-                    preview.style.display = 'block';
-                    captureButton.style.display = 'inline-block';
-                    startButton.style.display = 'none';
-                } catch (err) {
-                    console.error(`Error accessing camera for ${formType}:`, err);
-                    alert(`Could not access camera. Please check permissions and try again.`);
-                }
-            });
-
-            captureButton.addEventListener('click', function() {
-                const context = canvas.getContext('2d');
-                canvas.width = preview.videoWidth;
-                canvas.height = preview.videoHeight;
-                context.drawImage(preview, 0, 0, canvas.width, canvas.height);
-                
-                // Show the captured image
-                canvas.style.display = 'block';
-                preview.style.display = 'none';
-                captureButton.style.display = 'none';
-                retakeButton.style.display = 'inline-block';
-                
-                // Store the captured image data
-                const imageData = canvas.toDataURL('image/png');
-                localStorage.setItem(`${formType}-photo`, imageData);
-                
-                // Update progress
-                updateProgressBar(formType);
-            });
-
-            retakeButton.addEventListener('click', function() {
-                canvas.style.display = 'none';
-                preview.style.display = 'block';
-                captureButton.style.display = 'inline-block';
-                retakeButton.style.display = 'none';
-                localStorage.removeItem(`${formType}-photo`);
-            });
-        }
-
-        function stopAllCameras() {
+    startButton.addEventListener('click', async function() {
+        try {
             if (consumerStream) {
                 consumerStream.getTracks().forEach(track => track.stop());
-                consumerStream = null;
             }
+
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 320, height: 240, facingMode: 'user' } 
+            });
+            
+            consumerStream = stream;
+            
+            preview.srcObject = stream;
+            placeholder.style.display = 'none';
+            preview.style.display = 'block';
+            captureButton.style.display = 'inline-block';
+            startButton.style.display = 'none';
+            retakeButton.style.display = 'none';
+            capturedImage.style.display = 'none';
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            alert('Could not access camera. Please check permissions and try again.');
+        }
+    });
+
+    captureButton.addEventListener('click', function() {
+        const context = canvas.getContext('2d');
+        canvas.width = preview.videoWidth;
+        canvas.height = preview.videoHeight;
+        context.drawImage(preview, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = canvas.toDataURL('image/png');
+        capturedImage.src = imageData;
+        
+        canvas.style.display = 'none';
+        preview.style.display = 'none';
+        capturedImage.style.display = 'block';
+        captureButton.style.display = 'none';
+        retakeButton.style.display = 'inline-block';
+        
+        localStorage.setItem('consumer-photo', imageData);
+        updateProgressBar('consumer');
+    });
+
+    retakeButton.addEventListener('click', function() {
+        capturedImage.style.display = 'none';
+        preview.style.display = 'block';
+        captureButton.style.display = 'inline-block';
+        retakeButton.style.display = 'none';
+        localStorage.removeItem('consumer-photo');
+    });
+}
+
+function setupFarmerCamera() {
+    const startButton = document.getElementById('farmer-start-camera');
+    const captureButton = document.getElementById('farmer-capture-photo');
+    const retakeButton = document.getElementById('farmer-retake-photo');
+    const preview = document.getElementById('farmer-camera-preview');
+    const placeholder = document.getElementById('farmer-camera-placeholder');
+    const canvas = document.getElementById('farmer-captured-photo');
+    const capturedImage = document.getElementById('farmer-captured-image');
+
+    startButton.addEventListener('click', async function() {
+        try {
             if (farmerStream) {
                 farmerStream.getTracks().forEach(track => track.stop());
-                farmerStream = null;
             }
-        }
 
-        // Progress tracking
-        function updateProgressBar(formType) {
-            const form = document.getElementById(`${formType}-form`);
-            const inputs = form.querySelectorAll('input[required]');
-            let filledCount = 0;
-            
-            // Check photo
-            const photo = localStorage.getItem(`${formType}-photo`);
-            if (photo) filledCount++;
-            
-            // Check other required fields
-            inputs.forEach(input => {
-                if (input.value.trim() && 
-                   (!input.id.includes('confirm-password') || 
-                    input.value === document.getElementById(input.id.replace('confirm-', '')).value)) {
-                    filledCount++;
-                }
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 320, height: 240, facingMode: 'user' } 
             });
             
-            // Check terms
-            const terms = document.getElementById(`${formType}-terms`);
-            if (terms.checked) filledCount++;
+            farmerStream = stream;
             
-            const totalFields = inputs.length + 2; // +1 for photo, +1 for terms
-            const progress = (filledCount / totalFields) * 100;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
-            
-            // Update progress text based on completion
-            if (progress < 25) {
-                updateProgressText(formType, 1);
-            } else if (progress < 50) {
-                updateProgressText(formType, 2);
-            } else if (progress < 75) {
-                updateProgressText(formType, 3);
-            } else {
-                updateProgressText(formType, 4);
-            }
+            preview.srcObject = stream;
+            placeholder.style.display = 'none';
+            preview.style.display = 'block';
+            captureButton.style.display = 'inline-block';
+            startButton.style.display = 'none';
+            retakeButton.style.display = 'none';
+            capturedImage.style.display = 'none';
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            alert('Could not access camera. Please check permissions and try again.');
         }
+    });
+
+    captureButton.addEventListener('click', function() {
+        const context = canvas.getContext('2d');
+        canvas.width = preview.videoWidth;
+        canvas.height = preview.videoHeight;
+        context.drawImage(preview, 0, 0, canvas.width, canvas.height);
         
-        function updateProgressText(formType, step) {
-            const steps = [
-                "Step 1 of 4: Photo Capture",
-                "Step 2 of 4: Personal Details", 
-                "Step 3 of 4: Security",
-                "Step 4 of 4: Verification"
-            ];
-            document.getElementById('progress-text').textContent = steps[step-1];
-        }
+        const imageData = canvas.toDataURL('image/png');
+        capturedImage.src = imageData;
+        
+        canvas.style.display = 'none';
+        preview.style.display = 'none';
+        capturedImage.style.display = 'block';
+        captureButton.style.display = 'none';
+        retakeButton.style.display = 'inline-block';
+        
+        localStorage.setItem('farmer-photo', imageData);
+        updateProgressBar('farmer');
+    });
 
-        // Form validation and OTP functionality
-        function setupFormValidation(formId) {
-            const form = document.getElementById(formId);
-            const inputs = form.querySelectorAll('input[required]');
-            const formType = formId.replace('-form', '');
-            
-            inputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    validateField(this);
-                    updateProgressBar(formType);
-                });
-                
-                input.addEventListener('input', function() {
-                    updateProgressBar(formType);
-                    
-                    // Real-time password strength check
-                    if (this.type === 'password' && this.id.includes('password') && !this.id.includes('confirm')) {
-                        checkPasswordStrength(this.value, this.id.replace('password', 'password-strength'));
-                    }
-                    
-                    // Real-time password matching
-                    if (this.id.includes('confirm-password')) {
-                        const passwordFieldId = this.id.replace('confirm-', '');
-                        const password = document.getElementById(passwordFieldId).value;
-                        const confirmPassword = this.value;
-                        
-                        const errorElement = document.getElementById(this.id + '-error');
-                        if (password !== confirmPassword && confirmPassword !== '') {
-                            showError(errorElement, 'Passwords do not match');
-                        } else {
-                            hideError(errorElement);
-                        }
-                    }
-                });
-            });
-            
-            // Terms checkbox
-            const terms = document.getElementById(`${formType}-terms`);
-            terms.addEventListener('change', function() {
-                updateProgressBar(formType);
-            });
-            
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert(`${formType.charAt(0).toUpperCase() + formType.slice(1)} account created successfully!`);
-            });
-        }
+    retakeButton.addEventListener('click', function() {
+        capturedImage.style.display = 'none';
+        preview.style.display = 'block';
+        captureButton.style.display = 'inline-block';
+        retakeButton.style.display = 'none';
+        localStorage.removeItem('farmer-photo');
+    });
+}
 
-        function validateField(field) {
-            const errorElement = document.getElementById(field.id + '-error');
-            
-            // Check if field is empty
-            if (!field.value.trim()) {
-                showError(errorElement, 'This field is required');
-                return false;
-            }
-            
-            // Validate based on field type
-            switch(field.type) {
-                case 'email':
-                    if (!isValidEmail(field.value)) {
-                        showError(errorElement, 'Please enter a valid email address');
-                        return false;
-                    }
-                    break;
-                    
-                case 'tel':
-                    if (!isValidPhone(field.value)) {
-                        showError(errorElement, 'Please enter a valid phone number');
-                        return false;
-                    }
-                    break;
-                    
-                case 'text':
-                    if (field.id.includes('username') && field.value.length < 3) {
-                        showError(errorElement, 'Username must be at least 3 characters');
-                        return false;
-                    }
-                    
-                    if (field.id.includes('aadhaar') && !isValidAadhaar(field.value)) {
-                        showError(errorElement, 'Please enter a valid Aadhaar number');
-                        return false;
-                    }
-                    break;
-            }
-            
-            hideError(errorElement);
-            return true;
-        }
-
-        function showError(element, message) {
-            if (element) {
-                element.textContent = message;
-                element.style.display = 'block';
-            }
-        }
-
-        function hideError(element) {
-            if (element) {
-                element.style.display = 'none';
-            }
-        }
-
-        function isValidEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
-
-        function isValidPhone(phone) {
-            const re = /^[0-9]{10}$/;
-            return re.test(phone);
-        }
-
-        function isValidAadhaar(aadhaar) {
-            const re = /^[0-9]{12}$/;
-            return re.test(aadhaar);
-        }
-
-        function checkPasswordStrength(password, strengthElementId) {
-            const strengthElement = document.getElementById(strengthElementId);
-            if (!password) {
-                strengthElement.textContent = '';
+function setupConsumerPhotoUpload() {
+    const uploadInput = document.getElementById('consumer-photo-upload');
+    const preview = document.getElementById('consumer-uploaded-photo-preview');
+    
+    uploadInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Please select only JPEG or PNG images.');
+                this.value = '';
                 return;
             }
             
-            let strength = 0;
-            if (password.length >= 8) strength++;
-            if (/[A-Z]/.test(password)) strength++;
-            if (/[0-9]/.test(password)) strength++;
-            if (/[^A-Za-z0-9]/.test(password)) strength++;
-            
-            let strengthText = '';
-            let strengthClass = '';
-            
-            switch(strength) {
-                case 0:
-                case 1:
-                    strengthText = 'Weak';
-                    strengthClass = 'weak';
-                    break;
-                case 2:
-                case 3:
-                    strengthText = 'Medium';
-                    strengthClass = 'medium';
-                    break;
-                case 4:
-                    strengthText = 'Strong';
-                    strengthClass = 'strong';
-                    break;
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Please select an image smaller than 5MB.');
+                this.value = '';
+                return;
             }
             
-            strengthElement.textContent = `Password strength: ${strengthText}`;
-            strengthElement.className = `password-strength ${strengthClass}`;
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+                localStorage.setItem('consumer-photo', event.target.result);
+                updateProgressBar('consumer');
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file. Please try again.');
+                this.value = '';
+            };
+            
+            reader.readAsDataURL(file);
         }
+    });
+}
 
-        // OTP functionality
-        function setupOTP() {
-            // Consumer OTP
-            document.getElementById('consumer-send-otp').addEventListener('click', function() {
-                document.getElementById('consumer-otp-status').textContent = 'Verification code sent to your mobile';
-                document.getElementById('consumer-otp-status').className = 'verification-pending';
-            });
-            
-            document.getElementById('consumer-verify-otp').addEventListener('click', function() {
-                document.getElementById('consumer-otp-status').textContent = '✓ Mobile number verified successfully';
-                document.getElementById('consumer-otp-status').className = 'verification-success';
-            });
-            
-            // Farmer Aadhaar OTP
-            document.getElementById('farmer-send-aadhaar-otp').addEventListener('click', function() {
-                document.getElementById('farmer-aadhaar-otp-status').textContent = 'Aadhaar verification code sent via UIDAI API';
-                document.getElementById('farmer-aadhaar-otp-status').className = 'verification-pending';
-            });
-            
-            document.getElementById('farmer-verify-aadhaar-otp').addEventListener('click', function() {
-                document.getElementById('farmer-aadhaar-otp-status').textContent = '✓ Aadhaar verified successfully';
-                document.getElementById('farmer-aadhaar-otp-status').className = 'verification-success';
-            });
-            
-            // Farmer Mobile OTP
-            document.getElementById('farmer-send-mobile-otp').addEventListener('click', function() {
-                document.getElementById('farmer-mobile-otp-status').textContent = 'Verification code sent to your mobile';
-                document.getElementById('farmer-mobile-otp-status').className = 'verification-pending';
-            });
-            
-            document.getElementById('farmer-verify-mobile-otp').addEventListener('click', function() {
-                document.getElementById('farmer-mobile-otp-status').textContent = '✓ Mobile number verified successfully';
-                document.getElementById('farmer-mobile-otp-status').className = 'verification-success';
-            });
+function setupConsumerPhotoOptions() {
+    const cameraOption = document.getElementById('consumer-camera-option');
+    const uploadOption = document.getElementById('consumer-upload-option');
+    const cameraSection = document.getElementById('consumer-camera-section');
+    const uploadSection = document.getElementById('consumer-upload-section');
+    
+    cameraOption.addEventListener('click', function() {
+        cameraOption.classList.add('active');
+        uploadOption.classList.remove('active');
+        cameraSection.style.display = 'block';
+        uploadSection.style.display = 'none';
+        currentConsumerPhotoMethod = 'camera';
+        
+        document.getElementById('consumer-uploaded-photo-preview').style.display = 'none';
+        document.getElementById('consumer-photo-upload').value = '';
+    });
+    
+    uploadOption.addEventListener('click', function() {
+        uploadOption.classList.add('active');
+        cameraOption.classList.remove('active');
+        uploadSection.style.display = 'block';
+        cameraSection.style.display = 'none';
+        currentConsumerPhotoMethod = 'upload';
+        
+        if (consumerStream) {
+            consumerStream.getTracks().forEach(track => track.stop());
+            consumerStream = null;
         }
+        
+        document.getElementById('consumer-camera-preview').style.display = 'none';
+        document.getElementById('consumer-captured-photo').style.display = 'none';
+        document.getElementById('consumer-captured-image').style.display = 'none';
+        document.getElementById('consumer-camera-placeholder').style.display = 'flex';
+        document.getElementById('consumer-start-camera').style.display = 'inline-block';
+        document.getElementById('consumer-capture-photo').style.display = 'none';
+        document.getElementById('consumer-retake-photo').style.display = 'none';
+    });
+}
 
-        // Utility functions
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
+function stopAllCameras() {
+    if (consumerStream) {
+        consumerStream.getTracks().forEach(track => track.stop());
+        consumerStream = null;
+    }
+    if (farmerStream) {
+        farmerStream.getTracks().forEach(track => track.stop());
+        farmerStream = null;
+    }
+}
+
+// Form navigation
+function setupFormNavigation() {
+    // Consumer navigation
+    document.getElementById('consumer-next-1').addEventListener('click', function() {
+        if (validateStep('consumer', 1)) {
+            const photo = localStorage.getItem('consumer-photo');
+            if (!photo) {
+                alert('Please add a profile photo before proceeding.');
+                return;
+            }
+            navigateToStep('consumer', 2);
+        }
+    });
+    
+    document.getElementById('consumer-next-2').addEventListener('click', function() {
+        if (validateStep('consumer', 2)) {
+            navigateToStep('consumer', 3);
+        }
+    });
+    
+    document.getElementById('consumer-next-3').addEventListener('click', function() {
+        if (validateStep('consumer', 3)) {
+            navigateToStep('consumer', 4);
+            generatePreview('consumer');
+        }
+    });
+    
+    document.getElementById('consumer-prev-2').addEventListener('click', function() {
+        navigateToStep('consumer', 1);
+    });
+    
+    document.getElementById('consumer-prev-3').addEventListener('click', function() {
+        navigateToStep('consumer', 2);
+    });
+    
+    document.getElementById('consumer-prev-4').addEventListener('click', function() {
+        navigateToStep('consumer', 3);
+    });
+    
+    // Farmer navigation
+    document.getElementById('farmer-next-1').addEventListener('click', function() {
+        if (validateStep('farmer', 1)) {
+            const photo = localStorage.getItem('farmer-photo');
+            if (!photo) {
+                alert('Please capture a profile photo before proceeding.');
+                return;
+            }
+            navigateToStep('farmer', 2);
+        }
+    });
+    
+    document.getElementById('farmer-next-2').addEventListener('click', function() {
+        if (validateStep('farmer', 2)) {
+            navigateToStep('farmer', 3);
+        }
+    });
+    
+    document.getElementById('farmer-next-3').addEventListener('click', function() {
+        if (validateStep('farmer', 3)) {
+            navigateToStep('farmer', 4);
+        }
+    });
+    
+    document.getElementById('farmer-next-4').addEventListener('click', function() {
+        if (validateStep('farmer', 4)) {
+            navigateToStep('farmer', 5);
+            generatePreview('farmer');
+        }
+    });
+    
+    document.getElementById('farmer-prev-2').addEventListener('click', function() {
+        navigateToStep('farmer', 1);
+    });
+    
+    document.getElementById('farmer-prev-3').addEventListener('click', function() {
+        navigateToStep('farmer', 2);
+    });
+    
+    document.getElementById('farmer-prev-4').addEventListener('click', function() {
+        navigateToStep('farmer', 3);
+    });
+    
+    document.getElementById('farmer-prev-5').addEventListener('click', function() {
+        navigateToStep('farmer', 4);
+    });
+}
+
+function navigateToStep(formType, step) {
+    const steps = document.querySelectorAll(`#${formType}-form .form-step`);
+    steps.forEach(stepElement => {
+        stepElement.classList.remove('active');
+    });
+    
+    document.getElementById(`${formType}-step-${step}`).classList.add('active');
+    updateProgressBar(formType);
+    updateProgressText(formType, step);
+}
+
+function validateStep(formType, step) {
+    let isValid = true;
+    
+    if (formType === 'consumer') {
+        if (step === 1) {
+            const fields = ['username', 'email', 'mobile'];
+            fields.forEach(field => {
+                const input = document.getElementById(`${formType}-${field}`);
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+        } else if (step === 2) {
+            const password = document.getElementById(`${formType}-password`);
+            const confirmPassword = document.getElementById(`${formType}-confirm-password`);
+            
+            if (!validateField(password)) {
+                isValid = false;
+            }
+            
+            if (password.value !== confirmPassword.value) {
+                showError(document.getElementById(`${formType}-password-match-error`), 'Passwords do not match');
+                isValid = false;
             } else {
-                input.type = "password";
+                hideError(document.getElementById(`${formType}-password-match-error`));
+            }
+        } else if (step === 3) {
+            const otp = getOTPValue('consumer');
+            if (otp.length !== 6) {
+                alert('Please complete the mobile verification before proceeding.');
+                isValid = false;
+            }
+            
+            const otpStatus = document.getElementById('consumer-otp-status');
+            if (!otpStatus.classList.contains('verification-success')) {
+                alert('Please verify your mobile number before proceeding.');
+                isValid = false;
+            }
+        } else if (step === 4) {
+            const terms = document.getElementById('consumer-terms');
+            if (!terms.checked) {
+                alert('Please agree to the Terms & Conditions to continue.');
+                isValid = false;
             }
         }
+    } else if (formType === 'farmer') {
+        if (step === 1) {
+            const fields = ['username', 'email', 'aadhaar', 'mobile'];
+            fields.forEach(field => {
+                const input = document.getElementById(`${formType}-${field}`);
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+        } else if (step === 2) {
+            const fields = ['farm-name', 'farm-size', 'specialization'];
+            fields.forEach(field => {
+                const input = document.getElementById(`${formType}-${field}`);
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+            
+            const certs = document.querySelectorAll(`#farmer-form input[name="certifications"]:checked`);
+            if (certs.length === 0) {
+                alert('Please select at least one certification');
+                isValid = false;
+            }
+        } else if (step === 3) {
+            const fields = ['village', 'taluka', 'district', 'state', 'pin'];
+            fields.forEach(field => {
+                const input = document.getElementById(`${formType}-${field}`);
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+        } else if (step === 4) {
+            const fields = ['account-holder', 'account-number', 'bank-name', 'ifsc-code', 'branch'];
+            fields.forEach(field => {
+                const input = document.getElementById(`${formType}-${field}`);
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+        } else if (step === 5) {
+            const password = document.getElementById(`${formType}-password`);
+            const confirmPassword = document.getElementById(`${formType}-confirm-password`);
+            
+            if (!validateField(password)) {
+                isValid = false;
+            }
+            
+            if (password.value !== confirmPassword.value) {
+                showError(document.getElementById(`${formType}-password-match-error`), 'Passwords do not match');
+                isValid = false;
+            } else {
+                hideError(document.getElementById(`${formType}-password-match-error`));
+            }
+            
+            // Check Aadhaar verification
+            const aadhaarStatus = document.getElementById('farmer-aadhaar-otp-status');
+            if (!aadhaarStatus.classList.contains('verification-success')) {
+                alert('Please complete Aadhaar verification before proceeding.');
+                isValid = false;
+            }
+            
+            // Check mobile verification
+            const mobileStatus = document.getElementById('farmer-mobile-otp-status');
+            if (!mobileStatus.classList.contains('verification-success')) {
+                alert('Please complete mobile verification before proceeding.');
+                isValid = false;
+            }
+            
+            // Check terms
+            const terms = document.getElementById('farmer-terms');
+            if (!terms.checked) {
+                alert('Please agree to the Terms & Conditions to continue.');
+                isValid = false;
+            }
+        }
+    }
+    
+    return isValid;
+}
 
-        function moveToNext(current, nextFieldId) {
-            if (current.value.length === 1) {
-                if (nextFieldId !== '') {
-                    document.getElementById(nextFieldId).focus();
+function generatePreview(formType) {
+    const previewContent = document.getElementById(`${formType}-preview-content`);
+    previewContent.innerHTML = '';
+    
+    if (formType === 'consumer') {
+        const photo = localStorage.getItem('consumer-photo');
+        if (photo) {
+            const photoPreview = document.createElement('img');
+            photoPreview.src = photo;
+            photoPreview.className = 'preview-photo';
+            previewContent.appendChild(photoPreview);
+        }
+        
+        addPreviewRow(previewContent, 'Username', document.getElementById(`${formType}-username`).value);
+        addPreviewRow(previewContent, 'Email', document.getElementById(`${formType}-email`).value);
+        addPreviewRow(previewContent, 'Mobile Number', document.getElementById(`${formType}-mobile`).value);
+    } else if (formType === 'farmer') {
+        const photo = localStorage.getItem('farmer-photo');
+        if (photo) {
+            const photoPreview = document.createElement('img');
+            photoPreview.src = photo;
+            photoPreview.className = 'preview-photo';
+            previewContent.appendChild(photoPreview);
+        }
+        
+        addPreviewRow(previewContent, 'Username', document.getElementById(`${formType}-username`).value);
+        addPreviewRow(previewContent, 'Email', document.getElementById(`${formType}-email`).value);
+        addPreviewRow(previewContent, 'Aadhaar Number', document.getElementById(`${formType}-aadhaar`).value);
+        addPreviewRow(previewContent, 'Mobile Number', document.getElementById(`${formType}-mobile`).value);
+        
+        addPreviewRow(previewContent, 'Farm Name', document.getElementById(`${formType}-farm-name`).value);
+        addPreviewRow(previewContent, 'Farm Size', document.getElementById(`${formType}-farm-size`).value + ' acres');
+        addPreviewRow(previewContent, 'Specialization', document.getElementById(`${formType}-specialization`).value);
+        
+        const certs = Array.from(document.querySelectorAll(`#${formType}-form input[name="certifications"]:checked`))
+            .map(cert => cert.value).join(', ');
+        addPreviewRow(previewContent, 'Certifications', certs || 'None');
+        
+        addPreviewRow(previewContent, 'Village', document.getElementById(`${formType}-village`).value);
+        addPreviewRow(previewContent, 'Taluka', document.getElementById(`${formType}-taluka`).value);
+        addPreviewRow(previewContent, 'District', document.getElementById(`${formType}-district`).value);
+        addPreviewRow(previewContent, 'State', document.getElementById(`${formType}-state`).value);
+        addPreviewRow(previewContent, 'PIN Code', document.getElementById(`${formType}-pin`).value);
+        
+        addPreviewRow(previewContent, 'Account Holder', document.getElementById(`${formType}-account-holder`).value);
+        addPreviewRow(previewContent, 'Account Number', document.getElementById(`${formType}-account-number`).value);
+        addPreviewRow(previewContent, 'Bank Name', document.getElementById(`${formType}-bank-name`).value);
+        addPreviewRow(previewContent, 'IFSC Code', document.getElementById(`${formType}-ifsc-code`).value);
+        addPreviewRow(previewContent, 'Branch', document.getElementById(`${formType}-branch`).value);
+    }
+    
+    document.getElementById(`${formType}-preview`).style.display = 'block';
+}
+
+function addPreviewRow(container, label, value) {
+    const row = document.createElement('div');
+    row.className = 'preview-row';
+    
+    const labelElement = document.createElement('div');
+    labelElement.className = 'preview-label';
+    labelElement.textContent = label;
+    
+    const valueElement = document.createElement('div');
+    valueElement.className = 'preview-value';
+    valueElement.textContent = value || 'Not provided';
+    
+    row.appendChild(labelElement);
+    row.appendChild(valueElement);
+    container.appendChild(row);
+}
+
+// Progress tracking
+function updateProgressBar(formType) {
+    const form = document.getElementById(`${formType}-form`);
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    let filledCount = 0;
+    
+    const photo = localStorage.getItem(`${formType}-photo`);
+    if (photo) filledCount++;
+    
+    inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            const checkboxes = document.querySelectorAll(`#${formType}-form input[name="${input.name}"]`);
+            const atLeastOneChecked = Array.from(checkboxes).some(cb => cb.checked);
+            if (atLeastOneChecked) filledCount++;
+        } else if (input.value.trim() && 
+           (!input.id.includes('confirm-password') || 
+            input.value === document.getElementById(input.id.replace('confirm-', '')).value)) {
+            filledCount++;
+        }
+    });
+    
+    const terms = document.getElementById(`${formType}-terms`);
+    if (terms && terms.checked) filledCount++;
+    
+    const totalFields = inputs.length + 2;
+    const progress = (filledCount / totalFields) * 100;
+    document.getElementById('progress-bar').style.width = `${Math.min(progress, 100)}%`;
+}
+
+function updateProgressText(formType, step) {
+    let steps;
+    if (formType === 'consumer') {
+        steps = [
+            "Step 1 of 4: Personal Details & Photo",
+            "Step 2 of 4: Security", 
+            "Step 3 of 4: Verification",
+            "Step 4 of 4: Preview & Terms"
+        ];
+    } else {
+        steps = [
+            "Step 1 of 5: Personal Details & Photo",
+            "Step 2 of 5: Farm Details", 
+            "Step 3 of 5: Farm Location",
+            "Step 4 of 5: Bank Details",
+            "Step 5 of 5: Verification & Security"
+        ];
+    }
+    document.getElementById('progress-text').textContent = steps[step-1];
+}
+
+// Backend API Functions
+async function uploadProfilePhoto(imageData, userType) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageData: imageData, userType: userType })
+        });
+
+        if (!response.ok) {
+            throw new Error('Photo upload failed');
+        }
+
+        const data = await response.json();
+        return data.photoUrl;
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        alert('Photo upload failed: ' + error.message);
+        return null;
+    }
+}
+
+// OTP functionality with MSG91 integration
+function setupOTP() {
+    // Consumer Mobile OTP
+    document.getElementById('consumer-send-otp').addEventListener('click', async function() {
+        const mobile = document.getElementById('consumer-mobile').value;
+        if (!isValidPhone(mobile)) {
+            alert('Please enter a valid 10-digit mobile number first');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Sending...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/mobile/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: mobile })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                let statusMessage = '✅ Verification code sent successfully';
+                
+                // Enhanced messaging for MSG91 vs Mock mode
+                if (result.mode === 'msg91_production') {
+                    statusMessage = '✅ Verification code sent via SMS (MSG91)';
+                } else if (result.debug_otp) {
+                    statusMessage = `📱 OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('consumer', result.debug_otp);
+                }
+                
+                document.getElementById('consumer-otp-status').textContent = statusMessage;
+                document.getElementById('consumer-otp-status').className = 'verification-pending';
+                
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('OTP error:', error);
+            document.getElementById('consumer-otp-status').textContent = '❌ Error: ' + error.message;
+            document.getElementById('consumer-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    document.getElementById('consumer-verify-otp').addEventListener('click', async function() {
+        const mobile = document.getElementById('consumer-mobile').value;
+        const otp = getOTPValue('consumer');
+        
+        if (otp.length !== 6) {
+            alert('Please enter the complete 6-digit code');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Verifying...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/mobile/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: mobile, otp: otp })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('consumer-otp-status').textContent = '✅ Mobile number verified successfully';
+                document.getElementById('consumer-otp-status').className = 'verification-success';
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            document.getElementById('consumer-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('consumer-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    // Farmer Aadhaar OTP
+    document.getElementById('farmer-send-aadhaar-otp').addEventListener('click', async function() {
+        const aadhaar = document.getElementById('farmer-aadhaar').value;
+        const mobile = document.getElementById('farmer-mobile').value;
+        
+        if (!isValidAadhaar(aadhaar)) {
+            alert('Please enter a valid 12-digit Aadhaar number first');
+            return;
+        }
+        
+        if (!isValidPhone(mobile)) {
+            alert('Please enter a valid 10-digit mobile number first');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Sending...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/aadhaar/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    aadhaar_number: aadhaar, 
+                    mobile: mobile 
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                let statusMessage = '✅ Aadhaar verification code sent';
+                
+                if (result.mode === 'msg91_production') {
+                    statusMessage = '✅ Aadhaar verification code sent via SMS (MSG91)';
+                } else if (result.debug_otp) {
+                    statusMessage = `🆔 Aadhaar OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('farmer-aadhaar', result.debug_otp);
+                }
+                
+                document.getElementById('farmer-aadhaar-otp-status').textContent = statusMessage;
+                document.getElementById('farmer-aadhaar-otp-status').className = 'verification-pending';
+                
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Aadhaar OTP error:', error);
+            document.getElementById('farmer-aadhaar-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('farmer-aadhaar-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    document.getElementById('farmer-verify-aadhaar-otp').addEventListener('click', async function() {
+        const aadhaar = document.getElementById('farmer-aadhaar').value;
+        const otp = getOTPValue('farmer-aadhaar');
+        
+        if (otp.length !== 6) {
+            alert('Please enter the complete 6-digit code');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Verifying...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/aadhaar/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    aadhaar_number: aadhaar, 
+                    otp: otp 
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('farmer-aadhaar-otp-status').textContent = '✅ Aadhaar verified successfully';
+                document.getElementById('farmer-aadhaar-otp-status').className = 'verification-success';
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Aadhaar verification error:', error);
+            document.getElementById('farmer-aadhaar-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('farmer-aadhaar-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    // Farmer Mobile OTP
+    document.getElementById('farmer-send-mobile-otp').addEventListener('click', async function() {
+        const mobile = document.getElementById('farmer-mobile').value;
+        if (!isValidPhone(mobile)) {
+            alert('Please enter a valid 10-digit mobile number first');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Sending...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/mobile/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: mobile })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                let statusMessage = '✅ Verification code sent successfully';
+                
+                if (result.mode === 'msg91_production') {
+                    statusMessage = '✅ Verification code sent via SMS (MSG91)';
+                } else if (result.debug_otp) {
+                    statusMessage = `📱 OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('farmer-mobile', result.debug_otp);
+                }
+                
+                document.getElementById('farmer-mobile-otp-status').textContent = statusMessage;
+                document.getElementById('farmer-mobile-otp-status').className = 'verification-pending';
+                
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Mobile OTP error:', error);
+            document.getElementById('farmer-mobile-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('farmer-mobile-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    document.getElementById('farmer-verify-mobile-otp').addEventListener('click', async function() {
+        const mobile = document.getElementById('farmer-mobile').value;
+        const otp = getOTPValue('farmer-mobile');
+        
+        if (otp.length !== 6) {
+            alert('Please enter the complete 6-digit code');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Verifying...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/mobile/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile: mobile, otp: otp })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('farmer-mobile-otp-status').textContent = '✅ Mobile number verified successfully';
+                document.getElementById('farmer-mobile-otp-status').className = 'verification-success';
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Mobile verification error:', error);
+            document.getElementById('farmer-mobile-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('farmer-mobile-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+}
+
+function getOTPValue(prefix) {
+    let otp = '';
+    for (let i = 1; i <= 6; i++) {
+        const input = document.getElementById(`${prefix}-otp-${i}`);
+        if (input) {
+            otp += input.value;
+        }
+    }
+    return otp;
+}
+
+function autoFillOTP(prefix, otp) {
+    for (let i = 0; i < 6; i++) {
+        const input = document.getElementById(`${prefix}-otp-${i + 1}`);
+        if (input) {
+            input.value = otp[i];
+            input.style.backgroundColor = '#f0f8f0';
+        }
+    }
+    
+    setTimeout(() => {
+        for (let i = 0; i < 6; i++) {
+            const input = document.getElementById(`${prefix}-otp-${i + 1}`);
+            if (input) {
+                input.style.backgroundColor = '';
+            }
+        }
+    }, 2000);
+}
+
+// Form validation and registration - FIXED VERSION
+function setupFormValidation() {
+    // Consumer form
+    document.getElementById('consumer-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateStep('consumer', 4)) return;
+        
+        // Get the actual submit button from the form
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Creating Account...';
+        
+        // Show loading spinner
+        document.getElementById('loading').style.display = 'block';
+        
+        try {
+            let photoUrl = null;
+            const photo = localStorage.getItem('consumer-photo');
+            if (photo) {
+                photoUrl = await uploadProfilePhoto(photo, 'consumer');
+            }
+
+            const formData = {
+                username: document.getElementById('consumer-username').value,
+                email: document.getElementById('consumer-email').value,
+                mobile: document.getElementById('consumer-mobile').value,
+                password: document.getElementById('consumer-password').value,
+                profile_photo_url: photoUrl
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/register/consumer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccessMessage();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            alert('Registration failed: ' + error.message);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+            document.getElementById('loading').style.display = 'none';
+        }
+    });
+    
+    // Farmer form
+    document.getElementById('farmer-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateStep('farmer', 5)) return;
+        
+        // Get the actual submit button from the form
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Creating Account...';
+        
+        // Show loading spinner
+        document.getElementById('loading').style.display = 'block';
+        
+        try {
+            let photoUrl = null;
+            const photo = localStorage.getItem('farmer-photo');
+            if (photo) {
+                photoUrl = await uploadProfilePhoto(photo, 'farmer');
+            }
+
+            const certifications = Array.from(document.querySelectorAll('#farmer-form input[name="certifications"]:checked'))
+                .map(cert => cert.value);
+            
+            const formData = {
+                username: document.getElementById('farmer-username').value,
+                email: document.getElementById('farmer-email').value,
+                aadhaar_number: document.getElementById('farmer-aadhaar').value,
+                mobile: document.getElementById('farmer-mobile').value,
+                password: document.getElementById('farmer-password').value,
+                profile_photo_url: photoUrl,
+                farm_name: document.getElementById('farmer-farm-name').value,
+                farm_size: parseFloat(document.getElementById('farmer-farm-size').value),
+                specialization: document.getElementById('farmer-specialization').value,
+                certifications: certifications,
+                village: document.getElementById('farmer-village').value,
+                taluka: document.getElementById('farmer-taluka').value,
+                district: document.getElementById('farmer-district').value,
+                state: document.getElementById('farmer-state').value,
+                pin_code: document.getElementById('farmer-pin').value,
+                account_holder_name: document.getElementById('farmer-account-holder').value,
+                account_number: document.getElementById('farmer-account-number').value,
+                bank_name: document.getElementById('farmer-bank-name').value,
+                ifsc_code: document.getElementById('farmer-ifsc-code').value,
+                branch_name: document.getElementById('farmer-branch').value,
+                aadhaar_verified: document.getElementById('farmer-aadhaar-otp-status').classList.contains('verification-success'),
+                mobile_verified: document.getElementById('farmer-mobile-otp-status').classList.contains('verification-success')
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/register/farmer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccessMessage();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            alert('Registration failed: ' + error.message);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+            document.getElementById('loading').style.display = 'none';
+        }
+    });
+    
+    setupRealTimeValidation('consumer');
+    setupRealTimeValidation('farmer');
+}
+
+function setupRealTimeValidation(formType) {
+    const form = document.getElementById(`${formType}-form`);
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+            updateProgressBar(formType);
+        });
+        
+        input.addEventListener('input', function() {
+            updateProgressBar(formType);
+            
+            if (this.type === 'password' && this.id.includes('password') && !this.id.includes('confirm')) {
+                checkPasswordStrength(this.value, this.id.replace('password', 'password-strength'));
+            }
+            
+            if (this.id.includes('confirm-password')) {
+                const passwordFieldId = this.id.replace('confirm-', '');
+                const password = document.getElementById(passwordFieldId).value;
+                const confirmPassword = this.value;
+                
+                const errorElement = document.getElementById(this.id + '-error');
+                if (password !== confirmPassword && confirmPassword !== '') {
+                    showError(errorElement, 'Passwords do not match');
+                } else {
+                    hideError(errorElement);
                 }
             }
-        }
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup cameras
-            setupCamera('consumer');
-            setupCamera('farmer');
-            
-            // Setup form validation
-            setupFormValidation('consumer-form');
-            setupFormValidation('farmer-form');
-            
-            // Setup OTP functionality
-            setupOTP();
-            
-            // Initialize progress text
-            updateProgressText('consumer', 1);
         });
-    </script>
+    });
+    
+    const terms = document.getElementById(`${formType}-terms`);
+    if (terms) {
+        terms.addEventListener('change', function() {
+            updateProgressBar(formType);
+        });
+    }
+}
+
+function validateField(field) {
+    const errorElement = document.getElementById(field.id + '-error');
+    if (!errorElement) return true;
+    
+    if (!field.value.trim() && field.type !== 'checkbox') {
+        showError(errorElement, 'This field is required');
+        return false;
+    }
+    
+    switch(field.type) {
+        case 'email':
+            if (!isValidEmail(field.value)) {
+                showError(errorElement, 'Please enter a valid email address');
+                return false;
+            }
+            break;
+            
+        case 'tel':
+            if (!isValidPhone(field.value)) {
+                showError(errorElement, 'Please enter a valid phone number');
+                return false;
+            }
+            break;
+            
+        case 'text':
+            if (field.id.includes('username') && field.value.length < 3) {
+                showError(errorElement, 'Username must be at least 3 characters');
+                return false;
+            }
+            
+            if (field.id.includes('aadhaar') && !isValidAadhaar(field.value)) {
+                showError(errorElement, 'Please enter a valid 12-digit Aadhaar number');
+                return false;
+            }
+            
+            if (field.id.includes('pin') && !isValidPin(field.value)) {
+                showError(errorElement, 'Please enter a valid 6-digit PIN code');
+                return false;
+            }
+            
+            if (field.id.includes('account-number') && !isValidAccountNumber(field.value)) {
+                showError(errorElement, 'Please enter a valid account number');
+                return false;
+            }
+            
+            if (field.id.includes('ifsc-code') && !isValidIFSC(field.value)) {
+                showError(errorElement, 'Please enter a valid IFSC code');
+                return false;
+            }
+            break;
+            
+        case 'number':
+            if (field.value <= 0) {
+                showError(errorElement, 'Please enter a valid number');
+                return false;
+            }
+            break;
+    }
+    
+    hideError(errorElement);
+    return true;
+}
+
+function showError(element, message) {
+    if (element) {
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+}
+
+function hideError(element) {
+    if (element) {
+        element.style.display = 'none';
+    }
+}
+
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function isValidPhone(phone) {
+    const re = /^[6-9]\d{9}$/;
+    return re.test(phone);
+}
+
+function isValidAadhaar(aadhaar) {
+    const re = /^[0-9]{12}$/;
+    return re.test(aadhaar);
+}
+
+function isValidPin(pin) {
+    const re = /^[0-9]{6}$/;
+    return re.test(pin);
+}
+
+function isValidAccountNumber(accountNumber) {
+    const re = /^[0-9]{9,18}$/;
+    return re.test(accountNumber);
+}
+
+function isValidIFSC(ifsc) {
+    const re = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    return re.test(ifsc);
+}
+
+function checkPasswordStrength(password, strengthElementId) {
+    const strengthElement = document.getElementById(strengthElementId);
+    if (!password) {
+        strengthElement.textContent = '';
+        return;
+    }
+    
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    let strengthText = '';
+    let strengthClass = '';
+    
+    switch(strength) {
+        case 0:
+        case 1:
+            strengthText = 'Weak';
+            strengthClass = 'weak';
+            break;
+        case 2:
+        case 3:
+            strengthText = 'Medium';
+            strengthClass = 'medium';
+            break;
+        case 4:
+            strengthText = 'Strong';
+            strengthClass = 'strong';
+            break;
+    }
+    
+    strengthElement.textContent = `Password strength: ${strengthText}`;
+    strengthElement.className = `password-strength ${strengthClass}`;
+}
+
+// Success message and login redirection
+function showSuccessMessage() {
+    document.getElementById('consumer-form').style.display = 'none';
+    document.getElementById('farmer-form').style.display = 'none';
+    document.getElementById('success-message').style.display = 'block';
+    document.getElementById('progress-bar').style.width = '100%';
+    document.getElementById('progress-text').textContent = 'Registration Complete!';
+    
+    localStorage.removeItem('consumer-photo');
+    localStorage.removeItem('farmer-photo');
+    
+    stopAllCameras();
+}
+
+document.getElementById('go-to-login').addEventListener('click', function() {
+    alert('Redirecting to login page...');
+    // window.location.href = 'login.html'; // Uncomment when you have a login page
+});
+
+document.getElementById('consumer-login-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Redirecting to login page...');
+    // window.location.href = 'login.html'; // Uncomment when you have a login page
+});
+
+document.getElementById('farmer-login-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Redirecting to login page...');
+    // window.location.href = 'login.html'; // Uncomment when you have a login page
+});
+
+// Utility functions
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
+
+function setupOTPNavigation() {
+    // Setup OTP input auto-tab
+    document.querySelectorAll('.otp-input').forEach((input, index, inputs) => {
+        input.addEventListener('input', (e) => {
+            if (e.target.value.length === 1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+        });
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    setupConsumerCamera();
+    setupFarmerCamera();
+    setupConsumerPhotoUpload();
+    setupConsumerPhotoOptions();
+    setupFormValidation();
+    setupFormNavigation();
+    setupOTP();
+    setupOTPNavigation();
+    updateProgressText('consumer', 1);
+    
+    // Add CSS for verification-failed class if not present
+    if (!document.querySelector('.verification-failed')) {
+        const style = document.createElement('style');
+        style.textContent = `
+            .verification-failed {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+                padding: 10px;
+                border-radius: 8px;
+                margin: 15px 0;
+                text-align: center;
+                font-weight: bold;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+});
+</script>
 </body>
 </html>

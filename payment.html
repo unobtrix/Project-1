@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Razorpay Payment - FarmTrails</title>
+    <title>FarmTrails Payment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -17,7 +18,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(45deg, #6a11cb, #2575fc, #6a11cb, #2575fc);
+            background: linear-gradient(45deg, #2e7d32, #4caf50, #66bb6a, #81c784);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             padding: 20px;
@@ -35,19 +36,41 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
         }
 
-        .logo {
-            width: 180px;
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-bottom: 25px;
         }
 
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #2e7d32;
+        }
+
+        .logo i {
+            font-size: 32px;
+            color: #2e7d32;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2e7d32;
+            margin: 0;
+        }
+
         h1 {
-            color: #333;
+            color: #2e7d32;
             margin-bottom: 30px;
             font-weight: 600;
+            font-size: 28px;
         }
 
         .order-summary {
@@ -56,11 +79,12 @@
             padding: 20px;
             margin-bottom: 25px;
             text-align: left;
+            border-left: 4px solid #4caf50;
         }
 
         .order-summary h3 {
             margin-bottom: 15px;
-            color: #333;
+            color: #2e7d32;
             border-bottom: 1px solid #ddd;
             padding-bottom: 10px;
         }
@@ -85,7 +109,92 @@
             padding-top: 15px;
             border-top: 2px solid #ddd;
             font-size: 1.2rem;
-            color: #2c3e50;
+            color: #2e7d32;
+        }
+
+        .payment-methods {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .payment-methods h3 {
+            margin-bottom: 15px;
+            color: #2e7d32;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-option:hover {
+            border-color: #4caf50;
+        }
+
+        .payment-option.selected {
+            border-color: #4caf50;
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+
+        .payment-option input {
+            margin-right: 10px;
+            width: auto;
+        }
+
+        .payment-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 6px;
+        }
+
+        .payment-details {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .address-section {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .address-section h3 {
+            margin-bottom: 15px;
+            color: #2e7d32;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detect-address-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .detect-address-btn:hover {
+            background: #388e3c;
+        }
+
+        .detect-address-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
         }
 
         .input-group {
@@ -100,7 +209,7 @@
             font-weight: 500;
         }
 
-        input {
+        input, textarea, select {
             width: 100%;
             padding: 14px;
             border: 1px solid #ddd;
@@ -109,10 +218,24 @@
             transition: all 0.3s ease;
         }
 
-        input:focus {
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input:focus, textarea:focus, select:focus {
             outline: none;
-            border-color: #528FF0;
-            box-shadow: 0 0 0 3px rgba(82, 143, 240, 0.2);
+            border-color: #4caf50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .input-group {
+            flex: 1;
         }
 
         .error {
@@ -125,7 +248,7 @@
         .pay-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(to right, #528FF0, #4168D3);
+            background: linear-gradient(to right, #4caf50, #388e3c);
             color: white;
             border: none;
             border-radius: 8px;
@@ -134,16 +257,25 @@
             cursor: pointer;
             margin-top: 10px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(82, 143, 240, 0.3);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
 
         .pay-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(82, 143, 240, 0.4);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
 
         .pay-btn:active {
             transform: translateY(1px);
+        }
+
+        .cod-btn {
+            background: linear-gradient(to right, #ff9800, #f57c00);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .cod-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
         }
 
         /* Success Popup */
@@ -188,7 +320,7 @@
         }
 
         .popup h2 {
-            color: #27ae60;
+            color: #4caf50;
             margin-bottom: 15px;
         }
 
@@ -199,7 +331,7 @@
         }
 
         .close-btn {
-            background: #528FF0;
+            background: #4caf50;
             color: white;
             border: none;
             padding: 12px 30px;
@@ -211,7 +343,7 @@
         }
 
         .close-btn:hover {
-            background: #4168D3;
+            background: #388e3c;
         }
 
         .loading {
@@ -219,9 +351,9 @@
             margin: 20px auto;
             width: 40px;
             height: 40px;
-            border: 4px solid rgba(82, 143, 240, 0.3);
+            border: 4px solid rgba(76, 175, 80, 0.3);
             border-radius: 50%;
-            border-top-color: #528FF0;
+            border-top-color: #4caf50;
             animation: spin 1s ease-in-out infinite;
         }
 
@@ -232,7 +364,7 @@
         .back-btn {
             display: inline-block;
             margin-top: 20px;
-            color: #528FF0;
+            color: #4caf50;
             text-decoration: none;
             font-weight: 500;
         }
@@ -240,11 +372,36 @@
         .back-btn:hover {
             text-decoration: underline;
         }
+
+        .location-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .location-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .location-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
     <div class="payment-container">
-        <img src="https://razorpay.com/assets/razorpay-logo.svg" alt="Razorpay Logo" class="logo">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>FarmTrails</h1>
+            </div>
+        </div>
+        
         <h1>Secure Payment</h1>
         
         <div class="order-summary">
@@ -258,11 +415,26 @@
             </div>
         </div>
         
-        <form id="payment-form">
-            <div class="input-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" placeholder="Enter your full name" required>
-                <div class="error" id="name-error">Please enter your name</div>
+        <div class="address-section">
+            <h3>
+                Delivery Address
+                <button class="detect-address-btn" id="detect-address-btn">Detect My Location</button>
+            </h3>
+            
+            <div class="location-status" id="location-status"></div>
+            
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name" required>
+                    <div class="error" id="name-error">Please enter your name</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" placeholder="Enter your phone number" required pattern="[0-9]{10}">
+                    <div class="error" id="phone-error">Please enter a valid 10-digit phone number</div>
+                </div>
             </div>
             
             <div class="input-group">
@@ -272,14 +444,85 @@
             </div>
             
             <div class="input-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" placeholder="Enter your phone number" required pattern="[0-9]{10}">
-                <div class="error" id="phone-error">Please enter a valid 10-digit phone number</div>
+                <label for="address">Street Address</label>
+                <textarea id="address" placeholder="Enter your complete address" required></textarea>
+                <div class="error" id="address-error">Please enter your address</div>
             </div>
             
-            <button type="submit" class="pay-btn">Pay Now</button>
-            <div class="loading" id="loading"></div>
-        </form>
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" placeholder="Enter your city" required>
+                    <div class="error" id="city-error">Please enter your city</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="state">State</label>
+                    <input type="text" id="state" placeholder="Enter your state" required>
+                    <div class="error" id="state-error">Please enter your state</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="pincode">Pincode</label>
+                    <input type="text" id="pincode" placeholder="Enter pincode" required pattern="[0-9]{6}">
+                    <div class="error" id="pincode-error">Please enter a valid 6-digit pincode</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="landmark">Landmark (Optional)</label>
+                    <input type="text" id="landmark" placeholder="Enter nearby landmark">
+                </div>
+            </div>
+        </div>
+        
+        <div class="payment-methods">
+            <h3>Payment Method</h3>
+            <div class="payment-option selected" id="online-payment">
+                <input type="radio" id="online" name="payment-method" value="online" checked>
+                <div class="payment-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                </div>
+                <div>
+                    <label for="online" style="cursor: pointer; font-weight: 600;">Online Payment</label>
+                    <p style="font-size: 14px; color: #666; margin-top: 4px;">Pay securely with Razorpay</p>
+                </div>
+            </div>
+            
+            <div class="payment-option" id="cod-payment">
+                <input type="radio" id="cod" name="payment-method" value="cod">
+                <div class="payment-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
+                        <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
+                        <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+                <div>
+                    <label for="cod" style="cursor: pointer; font-weight: 600;">Cash on Delivery</label>
+                    <p style="font-size: 14px; color: #666; margin-top: 4px;">Pay when you receive your order</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="payment-details" id="online-payment-details">
+            <form id="payment-form">
+                <button type="submit" class="pay-btn">Pay Now</button>
+                <div class="loading" id="loading"></div>
+            </form>
+        </div>
+        
+        <div class="payment-details" id="cod-payment-details" style="display: none;">
+            <button type="button" class="pay-btn cod-btn" id="confirm-cod">Confirm Order</button>
+            <div class="loading" id="cod-loading"></div>
+        </div>
         
         <a href="index.html" class="back-btn">← Back to Shopping</a>
     </div>
@@ -288,9 +531,10 @@
     <div class="popup-overlay" id="popup-overlay">
         <div class="popup">
             <img src="https://www.svgrepo.com/show/13650/success.svg" alt="Success" class="success-icon">
-            <h2>Payment Successful!</h2>
+            <h2 id="success-title">Payment Successful!</h2>
             <p id="payment-details">Your payment has been processed successfully.</p>
             <p id="payment-id"></p>
+            <p id="delivery-info"></p>
 
             <!-- Buttons: View invoice, Download invoice, Continue shopping -->
             <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap">
@@ -312,12 +556,185 @@
             const form = document.getElementById('payment-form');
             const popup = document.getElementById('popup-overlay');
             const loading = document.getElementById('loading');
+            const codLoading = document.getElementById('cod-loading');
             const orderItemsContainer = document.getElementById('order-items');
             const totalAmountElement = document.getElementById('total-amount');
+            const onlinePaymentOption = document.getElementById('online-payment');
+            const codPaymentOption = document.getElementById('cod-payment');
+            const onlinePaymentDetails = document.getElementById('online-payment-details');
+            const codPaymentDetails = document.getElementById('cod-payment-details');
+            const confirmCodBtn = document.getElementById('confirm-cod');
+            const detectAddressBtn = document.getElementById('detect-address-btn');
+            const locationStatus = document.getElementById('location-status');
             
             // Keep last invoice data available
             let lastInvoice = null;
             let totalAmount = 0;
+            let paymentMethod = 'online';
+            
+            // Payment method selection - fixed radio button issue
+            onlinePaymentOption.addEventListener('click', function(e) {
+                // Only change if click is not directly on the radio button
+                if (e.target.type !== 'radio') {
+                    selectPaymentMethod('online');
+                    document.getElementById('online').checked = true;
+                }
+            });
+            
+            codPaymentOption.addEventListener('click', function(e) {
+                // Only change if click is not directly on the radio button
+                if (e.target.type !== 'radio') {
+                    selectPaymentMethod('cod');
+                    document.getElementById('cod').checked = true;
+                }
+            });
+            
+            // Also handle direct radio button clicks
+            document.getElementById('online').addEventListener('click', function() {
+                selectPaymentMethod('online');
+            });
+            
+            document.getElementById('cod').addEventListener('click', function() {
+                selectPaymentMethod('cod');
+            });
+            
+            function selectPaymentMethod(method) {
+                paymentMethod = method;
+                
+                // Update UI
+                if (method === 'online') {
+                    onlinePaymentOption.classList.add('selected');
+                    codPaymentOption.classList.remove('selected');
+                    onlinePaymentDetails.style.display = 'block';
+                    codPaymentDetails.style.display = 'none';
+                } else {
+                    onlinePaymentOption.classList.remove('selected');
+                    codPaymentOption.classList.add('selected');
+                    onlinePaymentDetails.style.display = 'none';
+                    codPaymentDetails.style.display = 'block';
+                }
+            }
+            
+            // Detect address using Geolocation API
+            detectAddressBtn.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    showLocationStatus('Geolocation is not supported by your browser', 'error');
+                    return;
+                }
+                
+                detectAddressBtn.textContent = 'Detecting...';
+                detectAddressBtn.disabled = true;
+                showLocationStatus('Detecting your location...', 'info');
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // Use OpenStreetMap Nominatim API for reverse geocoding
+                        reverseGeocode(position.coords.latitude, position.coords.longitude);
+                    },
+                    function(error) {
+                        console.error('Error getting location:', error);
+                        let errorMessage = 'Unable to retrieve your location. ';
+                        
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Please allow location access and try again.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'Location request timed out.';
+                                break;
+                            default:
+                                errorMessage += 'Please enter your address manually.';
+                        }
+                        
+                        showLocationStatus(errorMessage, 'error');
+                        detectAddressBtn.textContent = 'Detect My Location';
+                        detectAddressBtn.disabled = false;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            });
+            
+            // Reverse geocoding using OpenStreetMap Nominatim API
+            function reverseGeocode(lat, lng) {
+                showLocationStatus('Getting address details...', 'info');
+                
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
+                
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.address) {
+                            fillAddressForm(data.address, data.display_name);
+                        } else {
+                            throw new Error('No address data found');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Reverse geocoding error:', error);
+                        showLocationStatus('Could not retrieve address details. Please enter manually.', 'error');
+                        detectAddressBtn.textContent = 'Detect My Location';
+                        detectAddressBtn.disabled = false;
+                    });
+            }
+            
+            // Fill the address form with retrieved data
+            function fillAddressForm(address, fullAddress) {
+                // Map OpenStreetMap address components to our form fields
+                const formData = {
+                    address: fullAddress || '',
+                    city: address.city || address.town || address.village || address.county || '',
+                    state: address.state || '',
+                    pincode: address.postcode || '',
+                    landmark: address.amenity || address.road || ''
+                };
+                
+                // Fill the form fields
+                document.getElementById('address').value = formData.address;
+                document.getElementById('city').value = formData.city;
+                document.getElementById('state').value = formData.state;
+                document.getElementById('pincode').value = formData.pincode;
+                document.getElementById('landmark').value = formData.landmark;
+                
+                // Show success message
+                showLocationStatus('Address detected successfully! You can edit the fields if needed.', 'success');
+                
+                // Reset button
+                detectAddressBtn.textContent = 'Detect My Location';
+                detectAddressBtn.disabled = false;
+            }
+            
+            // Show location status messages
+            function showLocationStatus(message, type) {
+                locationStatus.textContent = message;
+                locationStatus.className = 'location-status';
+                
+                if (type === 'success') {
+                    locationStatus.classList.add('success');
+                } else if (type === 'error') {
+                    locationStatus.classList.add('error');
+                }
+                
+                locationStatus.style.display = 'block';
+                
+                // Auto-hide success messages after 5 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        locationStatus.style.display = 'none';
+                    }, 5000);
+                }
+            }
             
             // Retrieve cart data from localStorage
             function loadCartItems() {
@@ -392,7 +809,7 @@
             // Initialize order display
             displayOrderItems();
             
-            // Form submission
+            // Form submission for online payment
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -421,12 +838,37 @@
                 }
             });
             
+            // COD order confirmation
+            confirmCodBtn.addEventListener('click', function() {
+                if (validateForm()) {
+                    const cartItems = loadCartItems();
+                    
+                    // Check if cart has items
+                    if (cartItems.length === 0) {
+                        alert('Your cart is empty. Please add items before proceeding to payment.');
+                        return;
+                    }
+                    
+                    codLoading.style.display = 'block';
+                    
+                    // Simulate order processing
+                    setTimeout(() => {
+                        codLoading.style.display = 'none';
+                        processCodOrder();
+                    }, 1000);
+                }
+            });
+            
             // Form validation
             function validateForm() {
                 let isValid = true;
                 const name = document.getElementById('name').value.trim();
                 const email = document.getElementById('email').value.trim();
                 const phone = document.getElementById('phone').value.trim();
+                const address = document.getElementById('address').value.trim();
+                const city = document.getElementById('city').value.trim();
+                const state = document.getElementById('state').value.trim();
+                const pincode = document.getElementById('pincode').value.trim();
                 
                 // Reset errors
                 document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
@@ -449,6 +891,30 @@
                     isValid = false;
                 }
                 
+                // Validate address
+                if (!address) {
+                    document.getElementById('address-error').style.display = 'block';
+                    isValid = false;
+                }
+                
+                // Validate city
+                if (!city) {
+                    document.getElementById('city-error').style.display = 'block';
+                    isValid = false;
+                }
+                
+                // Validate state
+                if (!state) {
+                    document.getElementById('state-error').style.display = 'block';
+                    isValid = false;
+                }
+                
+                // Validate pincode
+                if (!validatePincode(pincode)) {
+                    document.getElementById('pincode-error').style.display = 'block';
+                    isValid = false;
+                }
+                
                 return isValid;
             }
             
@@ -462,6 +928,12 @@
             function validatePhone(phone) {
                 const re = /^[0-9]{10}$/;
                 return re.test(phone);
+            }
+            
+            // Pincode validation
+            function validatePincode(pincode) {
+                const re = /^[0-9]{6}$/;
+                return re.test(pincode);
             }
             
             // Initiate Razorpay payment
@@ -481,9 +953,9 @@
                     currency: 'INR',
                     name: 'FarmTrails',
                     description: 'Payment for farm products and tours',
-                    image: 'https://razorpay.com/assets/razorpay-logo.svg',
+                    image: 'https://example.com/farmtrails-logo.png', // Replace with your logo
                     handler: function(response) {
-                        showSuccessPopup(response.razorpay_payment_id);
+                        showSuccessPopup(response.razorpay_payment_id, 'online');
                     },
                     prefill: {
                         name: document.getElementById('name').value.trim(),
@@ -495,7 +967,7 @@
                         items: cartItems.map(item => `${item.name || 'Item'} x${item.quantity || 1}`).join(', ')
                     },
                     theme: {
-                        color: '#528FF0'
+                        color: '#4caf50'
                     },
                     modal: {
                         ondismiss: function() {
@@ -519,14 +991,20 @@
                 }
             }
             
-            // Show success popup
-            function showSuccessPopup(paymentId) {
+            // Process COD order
+            function processCodOrder() {
                 const cartItems = loadCartItems();
                 
                 // Build invoice data BEFORE clearing cart
                 const name = document.getElementById('name').value.trim() || 'Guest';
                 const email = document.getElementById('email').value.trim() || '';
                 const phone = document.getElementById('phone').value.trim() || '';
+                const address = document.getElementById('address').value.trim() || '';
+                const city = document.getElementById('city').value.trim() || '';
+                const state = document.getElementById('state').value.trim() || '';
+                const pincode = document.getElementById('pincode').value.trim() || '';
+                const landmark = document.getElementById('landmark').value.trim() || '';
+                
                 const invoiceId = 'INV' + Date.now();
                 const date = new Date().toISOString();
 
@@ -549,12 +1027,21 @@
                 lastInvoice = {
                     invoiceId,
                     date,
-                    billing: { name, email, phone },
+                    billing: { 
+                        name, 
+                        email, 
+                        phone,
+                        address,
+                        city,
+                        state,
+                        pincode,
+                        landmark
+                    },
                     items,
                     subtotal,
                     tax,
                     grandTotal,
-                    paymentId
+                    paymentMethod: 'cod'
                 };
 
                 // Save invoice to localStorage (invoices array)
@@ -567,9 +1054,91 @@
                 }
 
                 // Update popup texts
+                document.getElementById('success-title').textContent = 'Order Confirmed!';
+                document.getElementById('payment-id').textContent = '';
+                document.getElementById('payment-details').textContent =
+                    `Your order for ₹${lastInvoice.grandTotal.toFixed(2)} has been confirmed.`;
+                document.getElementById('delivery-info').textContent = 
+                    `Your order will be delivered to ${address}, ${city}, ${state} - ${pincode}.`;
+
+                // Show popup
+                const popup = document.getElementById('popup-overlay');
+                popup.classList.add('show');
+
+                // Clear cart from localStorage (keep lastInvoice in memory and invoices saved)
+                localStorage.removeItem('cartItems');
+            }
+            
+            // Show success popup
+            function showSuccessPopup(paymentId, method) {
+                const cartItems = loadCartItems();
+                
+                // Build invoice data BEFORE clearing cart
+                const name = document.getElementById('name').value.trim() || 'Guest';
+                const email = document.getElementById('email').value.trim() || '';
+                const phone = document.getElementById('phone').value.trim() || '';
+                const address = document.getElementById('address').value.trim() || '';
+                const city = document.getElementById('city').value.trim() || '';
+                const state = document.getElementById('state').value.trim() || '';
+                const pincode = document.getElementById('pincode').value.trim() || '';
+                const landmark = document.getElementById('landmark').value.trim() || '';
+                
+                const invoiceId = 'INV' + Date.now();
+                const date = new Date().toISOString();
+
+                const items = cartItems.map(it => {
+                    const unit = Number(it.price) || 0;
+                    const qty = Number(it.quantity) || 1;
+                    const name = it.name || it.title || 'Item';
+                    return {
+                        name: name,
+                        unitPrice: unit,
+                        qty: qty,
+                        lineTotal: unit * qty
+                    };
+                });
+
+                const subtotal = items.reduce((s, it) => s + it.lineTotal, 0);
+                const tax = Math.round(subtotal * 0.05); // 5%
+                const grandTotal = subtotal + tax;
+
+                lastInvoice = {
+                    invoiceId,
+                    date,
+                    billing: { 
+                        name, 
+                        email, 
+                        phone,
+                        address,
+                        city,
+                        state,
+                        pincode,
+                        landmark
+                    },
+                    items,
+                    subtotal,
+                    tax,
+                    grandTotal,
+                    paymentId,
+                    paymentMethod: method
+                };
+
+                // Save invoice to localStorage (invoices array)
+                try {
+                    const stored = JSON.parse(localStorage.getItem('invoices') || '[]');
+                    stored.push(lastInvoice);
+                    localStorage.setItem('invoices', JSON.stringify(stored));
+                } catch (e) {
+                    console.warn('Could not save invoice locally', e);
+                }
+
+                // Update popup texts
+                document.getElementById('success-title').textContent = 'Payment Successful!';
                 document.getElementById('payment-id').textContent = `Payment ID: ${paymentId || ''}`;
                 document.getElementById('payment-details').textContent =
                     `Your payment of ₹${lastInvoice.grandTotal.toFixed(2)} has been processed successfully.`;
+                document.getElementById('delivery-info').textContent = 
+                    `Your order will be delivered to ${address}, ${city}, ${state} - ${pincode}.`;
 
                 // Show popup
                 const popup = document.getElementById('popup-overlay');
@@ -612,6 +1181,7 @@
                         th,td{padding:8px;border-bottom:1px solid #eee}
                         th{background:#f7f7f7}
                         .right{text-align:right}
+                        .payment-method {margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 5px;}
                     </style>
                 `;
 
@@ -631,7 +1201,10 @@
                                     <strong>Billing To</strong><br/>
                                     ${escapeHtml(inv.billing.name)}<br/>
                                     ${escapeHtml(inv.billing.email)}<br/>
-                                    ${escapeHtml(inv.billing.phone)}
+                                    ${escapeHtml(inv.billing.phone)}<br/>
+                                    ${escapeHtml(inv.billing.address)}<br/>
+                                    ${escapeHtml(inv.billing.city)}, ${escapeHtml(inv.billing.state)} - ${escapeHtml(inv.billing.pincode)}
+                                    ${inv.billing.landmark ? `<br/>Landmark: ${escapeHtml(inv.billing.landmark)}` : ''}
                                 </div>
                                 <div style="text-align:right">
                                     <strong>FarmTrails</strong><br/>
@@ -640,6 +1213,11 @@
                                     support@farmtrails.example<br/>
                                     <small>${new Date(inv.date).toLocaleString()}</small>
                                 </div>
+                            </div>
+
+                            <div class="payment-method">
+                                <strong>Payment Method:</strong> ${inv.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                                ${inv.paymentId ? `<br/><strong>Payment ID:</strong> ${escapeHtml(inv.paymentId)}` : ''}
                             </div>
 
                             <table aria-label="Invoice Items" style="margin-top:12px">
@@ -669,8 +1247,6 @@
                                     </tr>
                                 </tfoot>
                             </table>
-
-                            <p style="margin-top:18px">Payment ID: ${escapeHtml(inv.paymentId || '')}</p>
 
                             ${forPrint ? `<script>window.onload=function(){ window.print(); }<\/script>` : ''}
                         </div>
@@ -745,5 +1321,4 @@
         });
     </script>
 </body>
-
 </html>
