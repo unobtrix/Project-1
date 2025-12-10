@@ -1568,29 +1568,7 @@ function updateProgressText(formType, step) {
     document.getElementById('progress-text').textContent = steps[step-1];
 }
 
-// Backend API Functions
-async function uploadProfilePhoto(imageData, userType) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/upload-photo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageData: imageData, userType: userType })
-        });
-
-        if (!response.ok) {
-            throw new Error('Photo upload failed');
-        }
-
-        const data = await response.json();
-        return data.photoUrl;
-    } catch (error) {
-        console.error('Error uploading photo:', error);
-        alert('Photo upload failed: ' + error.message);
-        return null;
-    }
-}
-
-// OTP functionality with MSG91 integration
+// OTP functionality
 function setupOTP() {
     // Consumer Mobile OTP
     document.getElementById('consumer-send-otp').addEventListener('click', async function() {
@@ -1617,10 +1595,7 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Verification code sent successfully';
                 
-                // Enhanced messaging for MSG91 vs Mock mode
-                if (result.mode === 'msg91_production') {
-                    statusMessage = '✅ Verification code sent via SMS (MSG91)';
-                } else if (result.debug_otp) {
+                if (result.debug_otp) {
                     statusMessage = `📱 OTP for testing: ${result.debug_otp}`;
                     autoFillOTP('consumer', result.debug_otp);
                 }
@@ -1715,9 +1690,7 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Aadhaar verification code sent';
                 
-                if (result.mode === 'msg91_production') {
-                    statusMessage = '✅ Aadhaar verification code sent via SMS (MSG91)';
-                } else if (result.debug_otp) {
+                if (result.debug_otp) {
                     statusMessage = `🆔 Aadhaar OTP for testing: ${result.debug_otp}`;
                     autoFillOTP('farmer-aadhaar', result.debug_otp);
                 }
@@ -1805,9 +1778,7 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Verification code sent successfully';
                 
-                if (result.mode === 'msg91_production') {
-                    statusMessage = '✅ Verification code sent via SMS (MSG91)';
-                } else if (result.debug_otp) {
+                if (result.debug_otp) {
                     statusMessage = `📱 OTP for testing: ${result.debug_otp}`;
                     autoFillOTP('farmer-mobile', result.debug_otp);
                 }
@@ -1905,7 +1876,6 @@ function setupFormValidation() {
         e.preventDefault();
         if (!validateStep('consumer', 4)) return;
         
-        // Get the actual submit button from the form
         const submitButton = this.querySelector('button[type="submit"]');
         const originalText = submitButton.textContent;
         submitButton.disabled = true;
@@ -1915,19 +1885,22 @@ function setupFormValidation() {
         document.getElementById('loading').style.display = 'block';
         
         try {
-            let photoUrl = null;
+            // Get the photo from localStorage
             const photo = localStorage.getItem('consumer-photo');
-            if (photo) {
-                photoUrl = await uploadProfilePhoto(photo, 'consumer');
-            }
-
+            
             const formData = {
                 username: document.getElementById('consumer-username').value,
                 email: document.getElementById('consumer-email').value,
                 mobile: document.getElementById('consumer-mobile').value,
                 password: document.getElementById('consumer-password').value,
-                profile_photo_url: photoUrl
+                profile_photo_base64: photo  // Pass base64 directly
             };
+
+            console.log('📤 Sending consumer registration with photo:', {
+                username: formData.username,
+                email: formData.email,
+                hasPhoto: !!photo
+            });
 
             const response = await fetch(`${API_BASE_URL}/api/register/consumer`, {
                 method: 'POST',
@@ -1944,6 +1917,7 @@ function setupFormValidation() {
             }
         } catch (error) {
             alert('Registration failed: ' + error.message);
+            console.error('Registration error:', error);
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = originalText;
@@ -1956,7 +1930,6 @@ function setupFormValidation() {
         e.preventDefault();
         if (!validateStep('farmer', 5)) return;
         
-        // Get the actual submit button from the form
         const submitButton = this.querySelector('button[type="submit"]');
         const originalText = submitButton.textContent;
         submitButton.disabled = true;
@@ -1966,12 +1939,9 @@ function setupFormValidation() {
         document.getElementById('loading').style.display = 'block';
         
         try {
-            let photoUrl = null;
+            // Get the photo from localStorage
             const photo = localStorage.getItem('farmer-photo');
-            if (photo) {
-                photoUrl = await uploadProfilePhoto(photo, 'farmer');
-            }
-
+            
             const certifications = Array.from(document.querySelectorAll('#farmer-form input[name="certifications"]:checked'))
                 .map(cert => cert.value);
             
@@ -1981,7 +1951,7 @@ function setupFormValidation() {
                 aadhaar_number: document.getElementById('farmer-aadhaar').value,
                 mobile: document.getElementById('farmer-mobile').value,
                 password: document.getElementById('farmer-password').value,
-                profile_photo_url: photoUrl,
+                profile_photo_base64: photo,  // Pass base64 directly
                 farm_name: document.getElementById('farmer-farm-name').value,
                 farm_size: parseFloat(document.getElementById('farmer-farm-size').value),
                 specialization: document.getElementById('farmer-specialization').value,
@@ -2000,6 +1970,13 @@ function setupFormValidation() {
                 mobile_verified: document.getElementById('farmer-mobile-otp-status').classList.contains('verification-success')
             };
 
+            console.log('📤 Sending farmer registration with photo:', {
+                username: formData.username,
+                email: formData.email,
+                farm_name: formData.farm_name,
+                hasPhoto: !!photo
+            });
+
             const response = await fetch(`${API_BASE_URL}/api/register/farmer`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2015,6 +1992,7 @@ function setupFormValidation() {
             }
         } catch (error) {
             alert('Registration failed: ' + error.message);
+            console.error('Registration error:', error);
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = originalText;
@@ -2224,20 +2202,17 @@ function showSuccessMessage() {
 }
 
 document.getElementById('go-to-login').addEventListener('click', function() {
-    alert('Redirecting to login page...');
-    // window.location.href = 'login.html'; // Uncomment when you have a login page
+    window.location.href = 'login.html';
 });
 
 document.getElementById('consumer-login-link').addEventListener('click', function(e) {
     e.preventDefault();
-    alert('Redirecting to login page...');
-    // window.location.href = 'login.html'; // Uncomment when you have a login page
+    window.location.href = 'login.html';
 });
 
 document.getElementById('farmer-login-link').addEventListener('click', function(e) {
     e.preventDefault();
-    alert('Redirecting to login page...');
-    // window.location.href = 'login.html'; // Uncomment when you have a login page
+    window.location.href = 'login.html';
 });
 
 // Utility functions
