@@ -1037,7 +1037,11 @@ function setupConsumerCamera() {
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 320, height: 240, facingMode: 'user' } 
+                video: { 
+                    width: { ideal: 320 },
+                    height: { ideal: 240 },
+                    facingMode: 'user' 
+                } 
             });
             
             consumerStream = stream;
@@ -1049,6 +1053,8 @@ function setupConsumerCamera() {
             startButton.style.display = 'none';
             retakeButton.style.display = 'none';
             capturedImage.style.display = 'none';
+            
+            console.log('📷 Consumer camera started');
         } catch (err) {
             console.error('Error accessing camera:', err);
             alert('Could not access camera. Please check permissions and try again.');
@@ -1061,7 +1067,8 @@ function setupConsumerCamera() {
         canvas.height = preview.videoHeight;
         context.drawImage(preview, 0, 0, canvas.width, canvas.height);
         
-        const imageData = canvas.toDataURL('image/png');
+        // Use JPEG with compression to reduce size
+        const imageData = canvas.toDataURL('image/jpeg', 0.7);
         capturedImage.src = imageData;
         
         canvas.style.display = 'none';
@@ -1069,6 +1076,13 @@ function setupConsumerCamera() {
         capturedImage.style.display = 'block';
         captureButton.style.display = 'none';
         retakeButton.style.display = 'inline-block';
+        
+        console.log('📸 Consumer photo captured:', {
+            width: canvas.width,
+            height: canvas.height,
+            dataLength: imageData.length,
+            dataStartsWith: imageData.substring(0, 50)
+        });
         
         localStorage.setItem('consumer-photo', imageData);
         updateProgressBar('consumer');
@@ -1080,6 +1094,7 @@ function setupConsumerCamera() {
         captureButton.style.display = 'inline-block';
         retakeButton.style.display = 'none';
         localStorage.removeItem('consumer-photo');
+        console.log('🔄 Consumer photo retaken');
     });
 }
 
@@ -1099,7 +1114,11 @@ function setupFarmerCamera() {
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 320, height: 240, facingMode: 'user' } 
+                video: { 
+                    width: { ideal: 320 },
+                    height: { ideal: 240 },
+                    facingMode: 'user' 
+                } 
             });
             
             farmerStream = stream;
@@ -1111,6 +1130,8 @@ function setupFarmerCamera() {
             startButton.style.display = 'none';
             retakeButton.style.display = 'none';
             capturedImage.style.display = 'none';
+            
+            console.log('📷 Farmer camera started');
         } catch (err) {
             console.error('Error accessing camera:', err);
             alert('Could not access camera. Please check permissions and try again.');
@@ -1123,7 +1144,8 @@ function setupFarmerCamera() {
         canvas.height = preview.videoHeight;
         context.drawImage(preview, 0, 0, canvas.width, canvas.height);
         
-        const imageData = canvas.toDataURL('image/png');
+        // Use JPEG with compression to reduce size
+        const imageData = canvas.toDataURL('image/jpeg', 0.7);
         capturedImage.src = imageData;
         
         canvas.style.display = 'none';
@@ -1131,6 +1153,13 @@ function setupFarmerCamera() {
         capturedImage.style.display = 'block';
         captureButton.style.display = 'none';
         retakeButton.style.display = 'inline-block';
+        
+        console.log('📸 Farmer photo captured:', {
+            width: canvas.width,
+            height: canvas.height,
+            dataLength: imageData.length,
+            dataStartsWith: imageData.substring(0, 50)
+        });
         
         localStorage.setItem('farmer-photo', imageData);
         updateProgressBar('farmer');
@@ -1142,6 +1171,7 @@ function setupFarmerCamera() {
         captureButton.style.display = 'inline-block';
         retakeButton.style.display = 'none';
         localStorage.removeItem('farmer-photo');
+        console.log('🔄 Farmer photo retaken');
     });
 }
 
@@ -1159,9 +1189,9 @@ function setupConsumerPhotoUpload() {
                 return;
             }
             
-            // Check file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Please select an image smaller than 5MB.');
+            // Check file size (max 2MB to avoid issues)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Please select an image smaller than 2MB.');
                 this.value = '';
                 return;
             }
@@ -1169,13 +1199,23 @@ function setupConsumerPhotoUpload() {
             const reader = new FileReader();
             
             reader.onload = function(event) {
-                preview.src = event.target.result;
+                const imageData = event.target.result;
+                preview.src = imageData;
                 preview.style.display = 'block';
-                localStorage.setItem('consumer-photo', event.target.result);
+                
+                console.log('📸 Consumer photo uploaded:', {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    dataLength: imageData.length,
+                    dataStartsWith: imageData.substring(0, 50)
+                });
+                
+                localStorage.setItem('consumer-photo', imageData);
                 updateProgressBar('consumer');
             };
             
             reader.onerror = function() {
+                console.error('Error reading file');
                 alert('Error reading file. Please try again.');
                 this.value = '';
             };
@@ -1888,6 +1928,13 @@ function setupFormValidation() {
             // Get the photo from localStorage
             const photo = localStorage.getItem('consumer-photo');
             
+            console.log('📸 Consumer photo data from localStorage:', {
+                hasPhoto: !!photo,
+                photoLength: photo ? photo.length : 0,
+                photoType: photo ? (photo.startsWith('data:image/') ? 'Valid base64' : 'Invalid format') : 'No photo',
+                photoPreview: photo ? photo.substring(0, 100) : 'No photo'
+            });
+            
             const formData = {
                 username: document.getElementById('consumer-username').value,
                 email: document.getElementById('consumer-email').value,
@@ -1899,7 +1946,8 @@ function setupFormValidation() {
             console.log('📤 Sending consumer registration with photo:', {
                 username: formData.username,
                 email: formData.email,
-                hasPhoto: !!photo
+                hasPhoto: !!formData.profile_photo_base64,
+                photoStartsWith: formData.profile_photo_base64 ? formData.profile_photo_base64.substring(0, 50) : 'No photo'
             });
 
             const response = await fetch(`${API_BASE_URL}/api/register/consumer`, {
@@ -1911,13 +1959,15 @@ function setupFormValidation() {
             const result = await response.json();
             
             if (result.success) {
+                console.log('✅ Registration successful:', result);
                 showSuccessMessage();
             } else {
+                console.error('❌ Registration failed:', result);
                 throw new Error(result.message);
             }
         } catch (error) {
+            console.error('Registration error details:', error);
             alert('Registration failed: ' + error.message);
-            console.error('Registration error:', error);
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = originalText;
@@ -1941,6 +1991,12 @@ function setupFormValidation() {
         try {
             // Get the photo from localStorage
             const photo = localStorage.getItem('farmer-photo');
+            
+            console.log('📸 Farmer photo data from localStorage:', {
+                hasPhoto: !!photo,
+                photoLength: photo ? photo.length : 0,
+                photoType: photo ? (photo.startsWith('data:image/') ? 'Valid base64' : 'Invalid format') : 'No photo'
+            });
             
             const certifications = Array.from(document.querySelectorAll('#farmer-form input[name="certifications"]:checked'))
                 .map(cert => cert.value);
@@ -1974,7 +2030,8 @@ function setupFormValidation() {
                 username: formData.username,
                 email: formData.email,
                 farm_name: formData.farm_name,
-                hasPhoto: !!photo
+                hasPhoto: !!formData.profile_photo_base64,
+                photoStartsWith: formData.profile_photo_base64 ? formData.profile_photo_base64.substring(0, 50) : 'No photo'
             });
 
             const response = await fetch(`${API_BASE_URL}/api/register/farmer`, {
@@ -1986,13 +2043,15 @@ function setupFormValidation() {
             const result = await response.json();
             
             if (result.success) {
+                console.log('✅ Registration successful:', result);
                 showSuccessMessage();
             } else {
+                console.error('❌ Registration failed:', result);
                 throw new Error(result.message);
             }
         } catch (error) {
+            console.error('Registration error details:', error);
             alert('Registration failed: ' + error.message);
-            console.error('Registration error:', error);
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = originalText;
@@ -2271,6 +2330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         document.head.appendChild(style);
     }
+    
+    console.log('✅ Signup page JavaScript initialized');
 });
 </script>
 </body>
