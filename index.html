@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login Form - FarmTrails</title>
+  <title>Login - FarmTrials</title>
   <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -30,6 +30,8 @@
     h1 {
       color: #0d883a;
       margin-bottom: 5px;
+      font-size: 28px;
+      font-weight: bold;
     }
 
     .login-container {
@@ -52,6 +54,7 @@
       text-align: center;
       color: #333;
       margin-bottom: 25px;
+      font-weight: 600;
     }
 
     .user-type-container {
@@ -85,6 +88,7 @@
       background-color: #e9f7ef;
       border-color: #0d883a;
       color: #0d883a;
+      font-weight: 600;
     }
 
     .user-type-btn i {
@@ -206,11 +210,28 @@
       display: none;
     }
 
+    .success-message {
+      color: #0d883a;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+      background-color: #e9f7ef;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
     .forgot-password {
       display: block;
       text-align: right;
       margin-top: 5px;
       font-size: 14px;
+      color: #0d883a;
+      text-decoration: none;
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
     }
 
     .remember-me {
@@ -221,6 +242,8 @@
 
     .remember-me input {
       margin-right: 8px;
+      width: 16px;
+      height: 16px;
     }
 
     .demo-credentials {
@@ -230,12 +253,14 @@
       margin-top: 20px;
       font-size: 13px;
       text-align: left;
+      border-left: 4px solid #0d883a;
     }
 
     .demo-credentials h3 {
       margin-top: 0;
       color: #0d883a;
       font-size: 14px;
+      margin-bottom: 8px;
     }
 
     .loader {
@@ -253,6 +278,25 @@
       to { transform: rotate(360deg); }
     }
 
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert-success {
+      background-color: #e9f7ef;
+      color: #0d883a;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+      background-color: #fdecea;
+      color: #e74c3c;
+      border: 1px solid #f5c6cb;
+    }
+
     @media (max-width: 480px) {
       .login-container {
         padding: 20px;
@@ -262,18 +306,48 @@
         flex-direction: column;
       }
     }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #0d883a;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
   </style>
 </head>
 <body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
   <div class="login-container">
-    <h1>FarmTrails</h1>
+    <h1>FarmTrials</h1>
     <h2>Login to Your Account</h2>
     
+    <div id="messageAlert" class="alert"></div>
+    
     <div class="user-type-container">
-      <button class="user-type-btn active" id="customerBtn">
-        <span>👤</span> Customer
+      <button class="user-type-btn active" id="consumerBtn" type="button">
+        <span>👤</span> Consumer
       </button>
-      <button class="user-type-btn" id="farmerBtn">
+      <button class="user-type-btn" id="farmerBtn" type="button">
         <span>👨‍🌾</span> Farmer
       </button>
     </div>
@@ -281,23 +355,23 @@
     <form id="loginForm">
       <div class="form-group">
         <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" placeholder="example@gmail.com" required />
+        <input type="email" id="email" name="email" placeholder="example@domain.com" required />
         <div class="error-message" id="email-error">Please enter a valid email address</div>
       </div>
       
       <div class="form-group">
         <label for="password">Password</label>
         <div class="password-container">
-          <input type="password" id="password" name="password" placeholder="Enter your password" required />
+          <input type="password" id="password" name="password" placeholder="Enter your password" required minlength="6" />
           <button type="button" class="toggle-password" id="togglePassword">👁️</button>
         </div>
         <div class="error-message" id="password-error">Password must be at least 6 characters</div>
-        <a href="#" class="forgot-password">Forgot Password?</a>
+        <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
       </div>
       
       <div class="remember-me">
         <input type="checkbox" id="remember" name="remember">
-        <label for="remember">Remember me</label>
+        <label for="remember">Remember my email</label>
       </div>
       
       <button type="submit" class="login-btn" id="loginBtn">
@@ -306,7 +380,7 @@
       </button>
     </form>
     
-    <button class="guest-btn" id="guestBtn">
+    <button class="guest-btn" id="guestBtn" type="button">
       Continue Shopping Without Login
     </button>
     
@@ -315,13 +389,25 @@
     </div>
     
     <div class="demo-credentials">
-      <h3>Demo Credentials (for testing):</h3>
-      <p>Email: demo@farmtrails.com<br>
-      Password: demo123</p>
+      <h3>📝 How to Test:</h3>
+      <p>1. Use the email & password you registered with</p>
+      <p>2. Select "Consumer" or "Farmer" based on your account type</p>
+      <p>3. Click "Sign up" if you don't have an account</p>
     </div>
   </div>
 
   <script>
+    // Backend API URL - Update this to match your actual backend URL
+    const API_BASE_URL = 'https://unobtrix-project-backend.onrender.com/'; // Change this to your actual backend URL
+    // For local testing: 'http://localhost:5000'
+    // For production: 'https://your-deployed-backend.com'
+    
+    // You can also set this dynamically based on environment
+    const currentHost = window.location.hostname;
+    const API_URL = currentHost === 'localhost' || currentHost === '127.0.0.1' 
+      ? 'http://localhost:5000' 
+      : 'https://unobtrix-project-backend.onrender.com/'; // Update this!
+
     document.addEventListener('DOMContentLoaded', function() {
       const loginForm = document.getElementById('loginForm');
       const emailInput = document.getElementById('email');
@@ -332,30 +418,57 @@
       const loginBtn = document.getElementById('loginBtn');
       const btnText = document.getElementById('btnText');
       const loader = document.getElementById('loader');
-      const customerBtn = document.getElementById('customerBtn');
+      const consumerBtn = document.getElementById('consumerBtn');
       const farmerBtn = document.getElementById('farmerBtn');
       const guestBtn = document.getElementById('guestBtn');
+      const forgotPassword = document.getElementById('forgotPassword');
+      const rememberCheckbox = document.getElementById('remember');
+      const messageAlert = document.getElementById('messageAlert');
+      const loadingOverlay = document.getElementById('loadingOverlay');
       
-      let userType = 'customer'; // Default user type
+      let userType = 'consumer'; // Default user type (matches your backend)
+      
+      // Load saved email if "remember me" was checked
+      const savedEmail = localStorage.getItem('rememberedEmail');
+      if (savedEmail) {
+        emailInput.value = savedEmail;
+        rememberCheckbox.checked = true;
+      }
       
       // User type selection
-      customerBtn.addEventListener('click', function() {
-        userType = 'customer';
-        customerBtn.classList.add('active');
+      consumerBtn.addEventListener('click', function() {
+        userType = 'consumer';
+        consumerBtn.classList.add('active');
         farmerBtn.classList.remove('active');
+        showMessage('Switched to Consumer login', 'success');
       });
       
       farmerBtn.addEventListener('click', function() {
         userType = 'farmer';
         farmerBtn.classList.add('active');
-        customerBtn.classList.remove('active');
+        consumerBtn.classList.remove('active');
+        showMessage('Switched to Farmer login', 'success');
       });
       
       // Guest mode
       guestBtn.addEventListener('click', function() {
-        // Redirect to shopping page without login
-        alert('Continuing as a guest. You can browse products but some features may be limited.');
-        window.location.href = 'customer.html';
+        showLoading(true);
+        // Save guest mode preference
+        sessionStorage.setItem('isGuest', 'true');
+        sessionStorage.setItem('userType', 'guest');
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+          showLoading(false);
+          window.location.href = 'customer.html';
+        }, 1000);
+      });
+      
+      // Forgot password
+      forgotPassword.addEventListener('click', function(e) {
+        e.preventDefault();
+        showMessage('Password reset feature coming soon!', 'error');
+        // You can implement password reset functionality here
       });
       
       // Toggle password visibility
@@ -370,85 +483,257 @@
       });
       
       // Form validation
-      emailInput.addEventListener('blur', function() {
-        if (!validateEmail(emailInput.value)) {
-          emailError.style.display = 'block';
-        } else {
-          emailError.style.display = 'none';
-        }
+      emailInput.addEventListener('blur', validateEmail);
+      emailInput.addEventListener('input', function() {
+        hideError(emailError);
       });
       
-      passwordInput.addEventListener('blur', function() {
-        if (passwordInput.value.length < 6) {
-          passwordError.style.display = 'block';
-        } else {
-          passwordError.style.display = 'none';
-        }
+      passwordInput.addEventListener('blur', validatePassword);
+      passwordInput.addEventListener('input', function() {
+        hideError(passwordError);
       });
       
       // Form submission
-      loginForm.addEventListener('submit', function(e) {
+      loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        let isValid = true;
+        const isValidEmail = validateEmail();
+        const isValidPassword = validatePassword();
         
-        // Validate email
-        if (!validateEmail(emailInput.value)) {
-          emailError.style.display = 'block';
-          isValid = false;
-        } else {
-          emailError.style.display = 'none';
+        if (isValidEmail && isValidPassword) {
+          await performLogin();
+        }
+      });
+      
+      // Validation functions
+      function validateEmail() {
+        const email = emailInput.value.trim();
+        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        
+        if (!isValid && email) {
+          showError(emailError, 'Please enter a valid email address');
+          return false;
+        } else if (!email) {
+          showError(emailError, 'Email address is required');
+          return false;
         }
         
-        // Validate password
-        if (passwordInput.value.length < 6) {
-          passwordError.style.display = 'block';
-          isValid = false;
-        } else {
-          passwordError.style.display = 'none';
+        hideError(emailError);
+        return true;
+      }
+      
+      function validatePassword() {
+        const password = passwordInput.value;
+        
+        if (password.length < 6) {
+          showError(passwordError, 'Password must be at least 6 characters');
+          return false;
         }
         
-        if (isValid) {
-          // Show loading state
-          btnText.style.display = 'none';
-          loader.style.display = 'inline-block';
-          loginBtn.disabled = true;
+        hideError(passwordError);
+        return true;
+      }
+      
+      // Login function
+      async function performLogin() {
+        showLoading(true);
+        setLoginButtonState(true);
+        
+        const loginData = {
+          email: emailInput.value.trim().toLowerCase(),
+          password: passwordInput.value,
+          userType: userType
+        };
+        
+        try {
+          console.log('Attempting login:', { email: loginData.email, userType });
           
-          // Simulate API call (replace with actual authentication)
-          setTimeout(function() {
-            // For demo purposes, check for specific credentials
-            if (emailInput.value === 'demo@farmtrails.com' && passwordInput.value === 'demo123') {
-              // Save user type to localStorage or session
-              localStorage.setItem('userType', userType);
-              
-              // Redirect based on user type
-              if (userType === 'customer') {
+          // Call your backend API
+          const response = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(loginData)
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            // Login successful
+            console.log('Login successful:', data.user);
+            
+            // Save user data
+            saveUserData(data.user);
+            
+            // Save email if "remember me" is checked
+            if (rememberCheckbox.checked) {
+              localStorage.setItem('rememberedEmail', loginData.email);
+            } else {
+              localStorage.removeItem('rememberedEmail');
+            }
+            
+            // Show success message
+            showMessage('Login successful! Redirecting...', 'success');
+            
+            // Redirect based on user type
+            setTimeout(() => {
+              if (userType === 'consumer') {
                 window.location.href = 'customer.html';
               } else {
                 window.location.href = 'farmerpage.html';
               }
-            } else {
-              alert('Invalid credentials. Please try again.\n\nUse demo@farmtrails.com / demo123 for testing');
-              btnText.style.display = 'inline-block';
-              loader.style.display = 'none';
-              loginBtn.disabled = false;
-            }
-          }, 1500);
+            }, 1500);
+            
+          } else {
+            // Login failed
+            console.error('Login failed:', data);
+            showMessage(data.message || 'Login failed. Please check your credentials.', 'error');
+            setLoginButtonState(false);
+            showLoading(false);
+          }
+          
+        } catch (error) {
+          console.error('Login error:', error);
+          showMessage('Network error. Please check your connection and try again.', 'error');
+          setLoginButtonState(false);
+          showLoading(false);
+          
+          // Fallback for testing if backend is not reachable
+          showMessage('Backend not reachable. Using demo mode for testing.', 'error');
+          setTimeout(() => {
+            // Demo fallback - remove in production
+            demoLoginFallback(loginData);
+          }, 1000);
         }
-      });
-      
-      // Email validation function
-      function validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
       }
       
-      // Check if there are saved credentials
-      const rememberedEmail = localStorage.getItem('rememberedEmail');
-      if (rememberedEmail) {
-        emailInput.value = rememberedEmail;
-        document.getElementById('remember').checked = true;
+      // Save user data to localStorage/sessionStorage
+      function saveUserData(user) {
+        // Store in sessionStorage (clears when browser closes)
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('userType', userType);
+        
+        // Also store in localStorage for persistence across tabs
+        localStorage.setItem('userType', userType);
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('userId', user.id);
+        localStorage.setItem('username', user.username);
+        
+        // Set auth token if available
+        if (user.token) {
+          localStorage.setItem('authToken', user.token);
+        }
       }
+      
+      // Demo fallback function (remove in production)
+      function demoLoginFallback(loginData) {
+        // For testing purposes only - remove this in production
+        const demoUsers = {
+          'consumer': [
+            { email: 'test@example.com', password: 'password123', name: 'Test User' },
+            { email: 'demo@farmtrials.com', password: 'demo123', name: 'Demo User' }
+          ],
+          'farmer': [
+            { email: 'farmer@example.com', password: 'password123', name: 'Test Farmer' }
+          ]
+        };
+        
+        const userList = demoUsers[userType] || [];
+        const foundUser = userList.find(user => 
+          user.email === loginData.email && user.password === loginData.password
+        );
+        
+        if (foundUser) {
+          showMessage('DEMO MODE: Login successful! (Using demo data)', 'success');
+          
+          // Save demo user data
+          const demoUser = {
+            id: 'demo_' + Date.now(),
+            username: foundUser.name,
+            email: foundUser.email,
+            user_type: userType,
+            status: 'active'
+          };
+          
+          saveUserData(demoUser);
+          
+          setTimeout(() => {
+            if (userType === 'consumer') {
+              window.location.href = 'customer.html';
+            } else {
+              window.location.href = 'farmerpage.html';
+            }
+          }, 1000);
+          
+        } else {
+          showMessage('Invalid credentials in demo mode. Try: test@example.com / password123', 'error');
+          setLoginButtonState(false);
+          showLoading(false);
+        }
+      }
+      
+      // Utility functions
+      function showError(element, message) {
+        element.textContent = message;
+        element.style.display = 'block';
+      }
+      
+      function hideError(element) {
+        element.style.display = 'none';
+      }
+      
+      function showMessage(message, type) {
+        messageAlert.textContent = message;
+        messageAlert.className = `alert alert-${type}`;
+        messageAlert.style.display = 'block';
+        
+        // Auto-hide success messages
+        if (type === 'success') {
+          setTimeout(() => {
+            messageAlert.style.display = 'none';
+          }, 3000);
+        }
+      }
+      
+      function setLoginButtonState(isLoading) {
+        if (isLoading) {
+          btnText.style.display = 'none';
+          loader.style.display = 'inline-block';
+          loginBtn.disabled = true;
+        } else {
+          btnText.style.display = 'inline-block';
+          loader.style.display = 'none';
+          loginBtn.disabled = false;
+        }
+      }
+      
+      function showLoading(show) {
+        loadingOverlay.style.display = show ? 'flex' : 'none';
+      }
+      
+      // Check if user is already logged in
+      function checkExistingLogin() {
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+        const savedUserType = localStorage.getItem('userType');
+        
+        if (isLoggedIn === 'true' && savedUserType) {
+          showMessage(`You're already logged in as ${savedUserType}. Redirecting...`, 'success');
+          
+          setTimeout(() => {
+            if (savedUserType === 'consumer') {
+              window.location.href = 'customer.html';
+            } else if (savedUserType === 'farmer') {
+              window.location.href = 'farmerpage.html';
+            }
+          }, 1000);
+        }
+      }
+      
+      // Run check on page load
+      checkExistingLogin();
     });
   </script>
 </body>
