@@ -398,7 +398,7 @@
 
   <script>
     // Backend API URL - Update this to match your actual backend URL
-    const API_BASE_URL = 'https://unobtrix-project-backend.onrender.com/'; // Change this to your actual backend URL
+    const API_BASE_URL = 'https://unobtrix-project-backend.onrender.com'; // Change this to your actual backend URL
     // For local testing: 'http://localhost:5000'
     // For production: 'https://your-deployed-backend.com'
     
@@ -406,7 +406,7 @@
     const currentHost = window.location.hostname;
     const API_URL = currentHost === 'localhost' || currentHost === '127.0.0.1' 
       ? 'http://localhost:5000' 
-      : 'https://unobtrix-project-backend.onrender.com/'; // Update this!
+      : 'https://unobtrix-project-backend.onrender.com'; // Update this!
 
     document.addEventListener('DOMContentLoaded', function() {
       const loginForm = document.getElementById('loginForm');
