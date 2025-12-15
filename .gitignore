@@ -1,5 +1,4 @@
-# Frontend Configuration - Sensitive files
-config.js
+# Frontend Configuration - Sensitive files (keep config.js, ignore overrides)
 config.local.js
 config.production.js
 
