@@ -2,6 +2,7 @@
 config.js
 config.local.js
 config.production.js
+!config.example.js
 
 # Environment files
 .env
