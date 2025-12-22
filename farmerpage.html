@@ -2366,58 +2366,11 @@
 
     <script>
         // Supabase Configuration
-        const SUPABASE_URL = window.CONFIG ? window.CONFIG.SUPABASE_URL : '';
-        const SUPABASE_ANON_KEY = window.CONFIG ? window.CONFIG.SUPABASE_ANON_KEY : '';
+        const SUPABASE_URL = window.CONFIG.SUPABASE_URL;
+        const SUPABASE_ANON_KEY = window.CONFIG.SUPABASE_ANON_KEY;
         
-        // Initialize Supabase client (with error handling)
-        let supabase = null;
-        try {
-            if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            } else {
-                console.warn('Supabase is not configured. Some features may not work.');
-                // Create a mock supabase object that returns empty results
-                supabase = {
-                    from: function(table) {
-                        return {
-                            select: function() { return this; },
-                            insert: function() { return this; },
-                            update: function() { return this; },
-                            delete: function() { return this; },
-                            eq: function() { return this; },
-                            single: function() { return Promise.resolve({ data: null, error: null }); },
-                            order: function() { return this; },
-                            limit: function() { return this; },
-                            then: function(resolve) { 
-                                resolve({ data: [], error: null }); 
-                                return this;
-                            }
-                        };
-                    }
-                };
-            }
-        } catch (error) {
-            console.error('Failed to initialize Supabase:', error);
-            // Create a mock supabase object that returns empty results
-            supabase = {
-                from: function(table) {
-                    return {
-                        select: function() { return this; },
-                        insert: function() { return this; },
-                        update: function() { return this; },
-                        delete: function() { return this; },
-                        eq: function() { return this; },
-                        single: function() { return Promise.resolve({ data: null, error: null }); },
-                        order: function() { return this; },
-                        limit: function() { return this; },
-                        then: function(resolve) { 
-                            resolve({ data: [], error: null }); 
-                            return this;
-                        }
-                    };
-                }
-            };
-        }
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         // Farmer ID (in a real app, this would come from authentication)
         const FARMER_ID = 'farmer_rajesh_kumar';
