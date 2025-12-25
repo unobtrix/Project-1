@@ -1,7 +1,6 @@
 # Frontend Configuration - Sensitive files
 config.js
-config.local.js
-config.production.js
+# Template files are tracked - only config.js with actual credentials is ignored
 
 # Environment files
 .env
