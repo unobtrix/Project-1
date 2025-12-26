@@ -1,7 +1,7 @@
 # Frontend Configuration - Sensitive files
-config.js
-config.local.js
-config.production.js
+# config.js is now tracked with safe defaults
+# Add sensitive credentials via deployment environment variables or local overrides
+# Template files are tracked for developer reference
 
 # Environment files
 .env
