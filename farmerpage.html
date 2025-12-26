@@ -12,13 +12,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/javascript">
-    // Load Microsoft Clarity analytics only if configured
+    // Load Microsoft Clarity analytics only if configured (with error handling for privacy settings)
     if (window.CONFIG && window.CONFIG.CLARITY_PROJECT_ID) {
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", window.CONFIG.CLARITY_PROJECT_ID);
+        try {
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", window.CONFIG.CLARITY_PROJECT_ID);
+        } catch (e) {
+            console.warn('Clarity analytics could not be loaded (privacy settings may block it):', e.message);
+        }
     }
     </script>
     <style>
@@ -2370,8 +2374,9 @@
         const SUPABASE_URL = window.CONFIG ? window.CONFIG.SUPABASE_URL : '';
         const SUPABASE_ANON_KEY = window.CONFIG ? window.CONFIG.SUPABASE_ANON_KEY : '';
         
-        // Initialize Supabase client with error handling
-        let supabase = null;
+        // Initialize Supabase client with error handling (only once)
+        if (!window.supabaseClient) {
+            let supabase = null;
         try {
             if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -2420,8 +2425,18 @@
             };
         }
         
-        // Farmer ID (in a real app, this would come from authentication)
-        const FARMER_ID = 'farmer_rajesh_kumar';
+        // Store in window to prevent redeclaration
+        window.supabaseClient = supabase;
+        }
+        
+        // Use the stored client
+        const supabase = window.supabaseClient || null;
+        
+        // Farmer ID (matches numeric primary key from the farmers table)
+        const FARMER_ID = 1;
+        
+        // Store farmer data globally
+        let farmerData = null;
         
         // Track if farmer is new (no products or tours)
         let isNewFarmer = true;
@@ -2474,6 +2489,145 @@
                 status: 'confirmed'
             }
         ];
+
+        // Load Farmer Data from Supabase
+        async function loadFarmerData() {
+            try {
+                if (!supabase) {
+                    console.warn('Supabase not initialized');
+                    return;
+                }
+
+                // Fetch farmer data from Supabase
+                const { data, error } = await supabase
+                    .from('farmers')
+                    .select('id, username, email, mobile, farm_name, farm_size, specialization, certifications, village, taluka, district, state, pin_code, account_holder_name, account_number, bank_name, ifsc_code, branch_name, profile_photo_url, status, account_verified')
+                    .eq('id', FARMER_ID)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching farmer data:', error);
+                    showNotification('Could not load farmer profile', 'error');
+                    return;
+                }
+
+                if (data) {
+                    // Normalize fields to match UI expectations without changing schema
+                    const normalizedCerts = Array.isArray(data.certifications) ? data.certifications.join(', ') : (data.certifications || '');
+                    const normalizedData = {
+                        ...data,
+                        full_name: data.username || data.email || 'Farmer',
+                        phone: data.mobile || '',
+                        pincode: data.pin_code || '',
+                        farm_type: data.specialization || '',
+                        address: [data.village, data.taluka, data.district, data.state, data.pin_code].filter(Boolean).join(', '),
+                        profile_photo: data.profile_photo_url || '',
+                        bank_branch: data.branch_name || '',
+                        certifications: normalizedCerts,
+                        years_of_farming: '' // not present in schema; keep blank for UI
+                    };
+
+                    farmerData = normalizedData;
+                    updateFarmerDisplay(normalizedData);
+                    console.log('✅ Farmer data loaded:', normalizedData);
+                } else {
+                    console.warn('No farmer data found for ID:', FARMER_ID);
+                }
+            } catch (error) {
+                console.error('Failed to load farmer data:', error);
+            }
+        }
+
+        // Update Farmer Display in Sidebar and Profile
+        function updateFarmerDisplay(data) {
+            // Update sidebar farmer info
+            const avatarImg = document.querySelector('.farmer-avatar');
+            if (avatarImg) {
+                avatarImg.src = data.profile_photo || data.profile_photo_url || 'https://via.placeholder.com/80';
+                avatarImg.alt = data.full_name || data.username || 'Farmer Avatar';
+            }
+
+            const farmerNameSidebar = document.querySelector('.farmer-info h3');
+            if (farmerNameSidebar) {
+                farmerNameSidebar.textContent = data.full_name || data.username || 'Farmer';
+            }
+
+            const farmerRating = document.querySelector('.farmer-rating');
+            if (farmerRating) {
+                const statusLabel = data.status || (data.account_verified ? 'verified' : 'pending');
+                farmerRating.textContent = `Status: ${statusLabel}`;
+            }
+
+            // Update profile section
+            const profileName = document.querySelector('.profile-info h2');
+            if (profileName) {
+                profileName.textContent = data.full_name || data.username || 'Farmer';
+            }
+
+            const profileEmail = document.querySelector('.profile-info p:nth-child(3)');
+            if (profileEmail) {
+                profileEmail.innerHTML = `<i class="fas fa-envelope"></i> ${data.email || 'N/A'}`;
+            }
+
+            const profilePhone = document.querySelector('.profile-info p:nth-child(4)');
+            if (profilePhone) {
+                profilePhone.innerHTML = `<i class="fas fa-phone"></i> ${data.phone || data.mobile || 'N/A'}`;
+            }
+
+            // Update profile details section
+            updateProfileDetails(data);
+        }
+
+        // Update Profile Details Section
+        function updateProfileDetails(data) {
+            // Personal Information
+            const detailItems = document.querySelectorAll('.detail-item .detail-value');
+            if (detailItems.length >= 5) {
+                detailItems[0].textContent = data.full_name || data.username || '';
+                detailItems[1].textContent = data.email || '';
+                detailItems[2].textContent = data.phone || data.mobile || '';
+                detailItems[3].textContent = '';
+                detailItems[4].textContent = '';
+            }
+
+            // Farm Details
+            const detailGroups = document.querySelectorAll('.detail-group');
+            if (detailGroups.length >= 2) {
+                const farmItems = detailGroups[1].querySelectorAll('.detail-item .detail-value');
+                if (farmItems.length >= 5) {
+                    farmItems[0].textContent = data.farm_name || '';
+                    farmItems[1].textContent = data.farm_type || data.specialization || '';
+                    farmItems[2].textContent = data.farm_size ? `${data.farm_size} acres` : '';
+                    farmItems[3].textContent = data.years_of_farming ? `${data.years_of_farming} years` : '';
+                    farmItems[4].textContent = data.certifications || '';
+                }
+            }
+
+            // Address Information
+            if (detailGroups.length >= 3) {
+                const addressItems = detailGroups[2].querySelectorAll('.detail-item .detail-value');
+                if (addressItems.length >= 6) {
+                    addressItems[0].textContent = data.address || [data.village, data.taluka, data.district, data.state, data.pincode || data.pin_code].filter(Boolean).join(', ');
+                    addressItems[1].textContent = data.village || '';
+                    addressItems[2].textContent = data.taluka || '';
+                    addressItems[3].textContent = data.district || '';
+                    addressItems[4].textContent = data.state || '';
+                    addressItems[5].textContent = data.pincode || data.pin_code || '';
+                }
+            }
+
+            // Bank Details
+            if (detailGroups.length >= 4) {
+                const bankItems = detailGroups[3].querySelectorAll('.detail-item .detail-value');
+                if (bankItems.length >= 5) {
+                    bankItems[0].textContent = data.account_holder_name || '';
+                    bankItems[1].textContent = data.account_number ? `****${data.account_number.slice(-4)}` : '';
+                    bankItems[2].textContent = data.bank_name || '';
+                    bankItems[3].textContent = data.ifsc_code || '';
+                    bankItems[4].textContent = data.bank_branch || data.branch_name || '';
+                }
+            }
+        }
 
         // Page Navigation
         function showPage(pageId) {
@@ -3054,28 +3208,33 @@
         
         // Open Edit Profile Modal
         function openEditProfileModal() {
-            // Set current values in the form
-            document.getElementById('editFullName').value = 'Rajesh Kumar';
-            document.getElementById('editEmail').value = 'rajesh@organicfarm.com';
-            document.getElementById('editPhone').value = '+91 98765 43210';
-            document.getElementById('editDateOfBirth').value = '1985-03-15';
-            document.getElementById('editGender').value = 'male';
-            document.getElementById('editFarmName').value = 'Organic Vegetable Farm';
-            document.getElementById('editFarmType').value = 'Organic Farming';
-            document.getElementById('editFarmSize').value = '15';
-            document.getElementById('editYearsFarming').value = '8';
-            document.getElementById('editCertifications').value = 'Organic India, FSSAI';
-            document.getElementById('editAddress').value = 'Farm House No. 45';
-            document.getElementById('editVillage').value = 'Shindewadi';
-            document.getElementById('editTaluka').value = 'Mulshi';
-            document.getElementById('editDistrict').value = 'Pune';
-            document.getElementById('editState').value = 'Maharashtra';
-            document.getElementById('editPincode').value = '412108';
-            document.getElementById('editAccountHolder').value = 'Rajesh Kumar';
-            document.getElementById('editAccountNumber').value = 'XXXX XXXX 1234';
-            document.getElementById('editBankName').value = 'State Bank of India';
-            document.getElementById('editIFSC').value = 'SBIN0001234';
-            document.getElementById('editBranch').value = 'Pune Main Branch';
+            if (!farmerData) {
+                console.warn('Farmer data not loaded yet');
+                return;
+            }
+
+            // Set current values from farmerData
+            document.getElementById('editFullName').value = farmerData.full_name || farmerData.username || '';
+            document.getElementById('editEmail').value = farmerData.email || '';
+            document.getElementById('editPhone').value = farmerData.phone || farmerData.mobile || '';
+            document.getElementById('editDateOfBirth').value = '';
+            document.getElementById('editGender').value = '';
+            document.getElementById('editFarmName').value = farmerData.farm_name || '';
+            document.getElementById('editFarmType').value = farmerData.farm_type || farmerData.specialization || '';
+            document.getElementById('editFarmSize').value = farmerData.farm_size || '';
+            document.getElementById('editYearsFarming').value = farmerData.years_of_farming || '';
+            document.getElementById('editCertifications').value = farmerData.certifications || '';
+            document.getElementById('editAddress').value = farmerData.address || '';
+            document.getElementById('editVillage').value = farmerData.village || '';
+            document.getElementById('editTaluka').value = farmerData.taluka || '';
+            document.getElementById('editDistrict').value = farmerData.district || '';
+            document.getElementById('editState').value = farmerData.state || '';
+            document.getElementById('editPincode').value = farmerData.pincode || farmerData.pin_code || '';
+            document.getElementById('editAccountHolder').value = farmerData.account_holder_name || '';
+            document.getElementById('editAccountNumber').value = farmerData.account_number ? `XXXX XXXX ${farmerData.account_number.slice(-4)}` : '';
+            document.getElementById('editBankName').value = farmerData.bank_name || '';
+            document.getElementById('editIFSC').value = farmerData.ifsc_code || '';
+            document.getElementById('editBranch').value = farmerData.bank_branch || farmerData.branch_name || '';
             
             openModal('editProfileModal');
         }
@@ -3087,13 +3246,14 @@
                 const fullName = document.getElementById('editFullName').value;
                 const email = document.getElementById('editEmail').value;
                 const phone = document.getElementById('editPhone').value;
-                const dateOfBirth = document.getElementById('editDateOfBirth').value;
-                const gender = document.getElementById('editGender').value;
                 const farmName = document.getElementById('editFarmName').value;
                 const farmType = document.getElementById('editFarmType').value;
                 const farmSize = document.getElementById('editFarmSize').value;
                 const yearsFarming = document.getElementById('editYearsFarming').value;
-                const certifications = document.getElementById('editCertifications').value;
+                const certificationsRaw = document.getElementById('editCertifications').value;
+                const certifications = certificationsRaw
+                    ? certificationsRaw.split(',').map(c => c.trim()).filter(Boolean)
+                    : null;
                 const address = document.getElementById('editAddress').value;
                 const village = document.getElementById('editVillage').value;
                 const taluka = document.getElementById('editTaluka').value;
@@ -3101,23 +3261,74 @@
                 const state = document.getElementById('editState').value;
                 const pincode = document.getElementById('editPincode').value;
                 const accountHolder = document.getElementById('editAccountHolder').value;
-                const accountNumber = document.getElementById('editAccountNumber').value;
+                const accountNumber = document.getElementById('editAccountNumber').value.replace(/[^0-9]/g, '');
                 const bankName = document.getElementById('editBankName').value;
                 const ifsc = document.getElementById('editIFSC').value;
                 const branch = document.getElementById('editBranch').value;
                 
-                // In a real app, we would update this in Supabase
-                // For now, we'll just show a success message
+                // Update Supabase with new farmer data
+                const { data, error } = await supabase
+                    .from('farmers')
+                    .update({
+                        username: fullName,
+                        email: email,
+                        mobile: phone,
+                        farm_name: farmName,
+                        specialization: farmType,
+                        farm_size: farmSize || null,
+                        certifications: certifications,
+                        village: village,
+                        taluka: taluka,
+                        district: district,
+                        state: state,
+                        pin_code: pincode,
+                        account_holder_name: accountHolder,
+                        account_number: accountNumber || null,
+                        bank_name: bankName,
+                        ifsc_code: ifsc,
+                        branch_name: branch,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', FARMER_ID);
+                
+                if (error) {
+                    console.error('Error updating farmer profile:', error);
+                    showNotification('Error updating profile. Please try again.', 'error');
+                    return;
+                }
+                
+                // Update local farmerData
+                farmerData = {
+                    ...farmerData,
+                    username: fullName,
+                    full_name: fullName,
+                    email: email,
+                    phone: phone,
+                    mobile: phone,
+                    farm_name: farmName,
+                    farm_type: farmType,
+                    specialization: farmType,
+                    farm_size: farmSize,
+                    years_of_farming: yearsFarming,
+                    certifications: certifications ? certifications.join(', ') : '',
+                    address: address,
+                    village: village,
+                    taluka: taluka,
+                    district: district,
+                    state: state,
+                    pincode: pincode,
+                    pin_code: pincode,
+                    account_holder_name: accountHolder,
+                    account_number: accountNumber || farmerData.account_number,
+                    bank_name: bankName,
+                    ifsc_code: ifsc,
+                    bank_branch: branch,
+                    branch_name: branch
+                };
                 
                 showNotification('Profile updated successfully!');
                 closeModal('editProfileModal');
-                
-                // Update the profile page with new values
-                updateProfileDisplay({
-                    fullName, email, phone, dateOfBirth, gender, farmName, farmType, 
-                    farmSize, yearsFarming, certifications, address, village, taluka,
-                    district, state, pincode, accountHolder, accountNumber, bankName, ifsc, branch
-                });
+                updateFarmerDisplay(farmerData);
                 
             } catch (error) {
                 console.error('Error updating profile:', error);
@@ -3127,39 +3338,51 @@
         
         // Update Profile Display
         function updateProfileDisplay(profileData) {
+            const fullName = profileData.full_name || profileData.username || 'Farmer';
+            const email = profileData.email || '';
+            const phone = profileData.phone || profileData.mobile || '';
+            const farmType = profileData.farm_type || profileData.specialization || '';
+            const farmSize = profileData.farm_size ? `${profileData.farm_size} acres` : '';
+            const yearsFarming = profileData.years_of_farming ? `${profileData.years_of_farming} years` : '';
+            const certifications = Array.isArray(profileData.certifications) ? profileData.certifications.join(', ') : (profileData.certifications || '');
+            const address = profileData.address || [profileData.village, profileData.taluka, profileData.district, profileData.state, profileData.pincode || profileData.pin_code].filter(Boolean).join(', ');
+            const pincode = profileData.pincode || profileData.pin_code || '';
+            const maskedAccount = profileData.account_number ? `****${profileData.account_number.slice(-4)}` : '';
+            const branch = profileData.bank_branch || profileData.branch_name || '';
+
             // Update profile header
-            document.querySelector('.profile-info h2').textContent = profileData.fullName;
-            document.querySelector('.profile-info p:nth-child(3)').innerHTML = `<i class="fas fa-envelope"></i> ${profileData.email}`;
-            document.querySelector('.profile-info p:nth-child(4)').innerHTML = `<i class="fas fa-phone"></i> ${profileData.phone}`;
+            document.querySelector('.profile-info h2').textContent = fullName;
+            document.querySelector('.profile-info p:nth-child(3)').innerHTML = `<i class="fas fa-envelope"></i> ${email}`;
+            document.querySelector('.profile-info p:nth-child(4)').innerHTML = `<i class="fas fa-phone"></i> ${phone}`;
             
             // Update personal information
-            document.querySelector('.detail-item:nth-child(1) .detail-value').textContent = profileData.fullName;
-            document.querySelector('.detail-item:nth-child(2) .detail-value').textContent = profileData.email;
-            document.querySelector('.detail-item:nth-child(3) .detail-value').textContent = profileData.phone;
-            document.querySelector('.detail-item:nth-child(4) .detail-value').textContent = new Date(profileData.dateOfBirth).toLocaleDateString('en-IN');
-            document.querySelector('.detail-item:nth-child(5) .detail-value').textContent = profileData.gender.charAt(0).toUpperCase() + profileData.gender.slice(1);
+            document.querySelector('.detail-item:nth-child(1) .detail-value').textContent = fullName;
+            document.querySelector('.detail-item:nth-child(2) .detail-value').textContent = email;
+            document.querySelector('.detail-item:nth-child(3) .detail-value').textContent = phone;
+            document.querySelector('.detail-item:nth-child(4) .detail-value').textContent = '';
+            document.querySelector('.detail-item:nth-child(5) .detail-value').textContent = '';
             
             // Update farm details
-            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(1) .detail-value').textContent = profileData.farmName;
-            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(2) .detail-value').textContent = profileData.farmType;
-            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(3) .detail-value').textContent = `${profileData.farmSize} acres`;
-            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(4) .detail-value').textContent = `${profileData.yearsFarming} years`;
-            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(5) .detail-value').textContent = profileData.certifications;
+            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(1) .detail-value').textContent = profileData.farm_name || '';
+            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(2) .detail-value').textContent = farmType;
+            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(3) .detail-value').textContent = farmSize;
+            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(4) .detail-value').textContent = yearsFarming;
+            document.querySelector('.detail-group:nth-child(2) .detail-item:nth-child(5) .detail-value').textContent = certifications;
             
             // Update address information
-            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(1) .detail-value').textContent = profileData.address;
-            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(2) .detail-value').textContent = profileData.village;
-                        document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(3) .detail-value').textContent = profileData.taluka;
-            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(4) .detail-value').textContent = profileData.district;
-            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(5) .detail-value').textContent = profileData.state;
-            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(6) .detail-value').textContent = profileData.pincode;
+            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(1) .detail-value').textContent = address;
+            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(2) .detail-value').textContent = profileData.village || '';
+            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(3) .detail-value').textContent = profileData.taluka || '';
+            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(4) .detail-value').textContent = profileData.district || '';
+            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(5) .detail-value').textContent = profileData.state || '';
+            document.querySelector('.detail-group:nth-child(3) .detail-item:nth-child(6) .detail-value').textContent = pincode;
             
             // Update bank details
-            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(1) .detail-value').textContent = profileData.accountHolder;
-            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(2) .detail-value').textContent = profileData.accountNumber;
-            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(3) .detail-value').textContent = profileData.bankName;
-            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(4) .detail-value').textContent = profileData.ifsc;
-            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(5) .detail-value').textContent = profileData.branch;
+            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(1) .detail-value').textContent = profileData.account_holder_name || '';
+            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(2) .detail-value').textContent = maskedAccount;
+            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(3) .detail-value').textContent = profileData.bank_name || '';
+            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(4) .detail-value').textContent = profileData.ifsc_code || '';
+            document.querySelector('.detail-group:nth-child(4) .detail-item:nth-child(5) .detail-value').textContent = branch;
         }
         
         // Get Product Actions based on fulfillment status
@@ -3754,6 +3977,10 @@
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             // Load initial data
+            // Load farmer data first
+            loadFarmerData();
+            
+            // Load dashboard data
             loadDashboardData();
             loadProducts();
             loadTours();
