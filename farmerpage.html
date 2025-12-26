@@ -2379,7 +2379,7 @@
          *    - NEXT_PUBLIC_SUPABASE_ANON_KEY
          * 
          * 2. "No authenticated user found" - User must be logged in:
-         *    - Ensure user is authenticated via Supabase Auth
+         *    - Ensure user is authenticated via Supabase Auth from index.html login
          *    - The dashboard fetches farmer data based on logged-in user's email
          *    - Create a farmer record with matching email in farmers table
          * 
@@ -2424,6 +2424,11 @@
                                 return this;
                             }
                         };
+                    },
+                    auth: {
+                        getUser: function() {
+                            return Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') });
+                        }
                     }
                 };
             }
@@ -2446,6 +2451,11 @@
                             return this;
                         }
                     };
+                },
+                auth: {
+                    getUser: function() {
+                        return Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') });
+                    }
                 }
             };
         }
@@ -2463,16 +2473,33 @@
         
         // Get current authenticated user
         async function getCurrentUser() {
-            if (!supabaseClient) return null;
-            
+            // First, check if user was logged in via index.html (stored in sessionStorage/localStorage)
             try {
-                const { data: { user }, error } = await supabaseClient.auth.getUser();
-                if (error) throw error;
-                return user;
+                const storedUser = sessionStorage.getItem('currentUser');
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    console.log('✅ User authenticated from index.html:', user.email);
+                    return user;
+                }
             } catch (error) {
-                console.error('Error getting current user:', error);
-                return null;
+                console.warn('Error reading stored user data:', error);
             }
+            
+            // Fallback: Try Supabase auth if no stored user
+            if (supabaseClient) {
+                try {
+                    const { data: { user }, error } = await supabaseClient.auth.getUser();
+                    if (error) throw error;
+                    if (user) {
+                        console.log('✅ User authenticated via Supabase:', user.email);
+                        return user;
+                    }
+                } catch (error) {
+                    console.warn('Supabase auth check:', error.message);
+                }
+            }
+            
+            return null;
         }
         
         // Track if farmer is new (no products or tours)
@@ -2530,28 +2557,35 @@
         // Load Farmer Data from Supabase
         async function loadFarmerData() {
             try {
-                if (!supabaseClient) {
-                    console.warn('⚠️ Supabase not initialized');
-                    showNotification('Database not configured. Running in demo mode.', 'error');
-                    return;
-                }
-
-                // Get authenticated user
+                // Get authenticated user first (from index.html login or Supabase)
                 currentUser = await getCurrentUser();
                 
                 if (!currentUser || !currentUser.email) {
                     console.error('❌ No authenticated user found');
-                    console.info('ℹ️ User must be logged in to access farmer dashboard');
-                    showNotification('Please log in to access your dashboard', 'error');
-                    
-                    // Redirect to login page after 2 seconds
-                    setTimeout(() => {
-                        window.location.href = '/login.html'; // Update with your actual login page path
-                    }, 2000);
+                    console.info('ℹ️ Please log in via index.html first to access your dashboard');
+                    showNotification('Authentication session not found. Please log in first.', 'error');
                     return;
                 }
 
-                console.log('✅ Authenticated user:', currentUser.email);
+                console.log('ℹ️ Loading farmer profile for:', currentUser.email);
+                
+                if (!supabaseClient) {
+                    console.warn('⚠️ Supabase not configured. Using demo mode.');
+                    // Use dummy data for demo
+                    farmerData = {
+                        id: null,
+                        username: currentUser.email.split('@')[0],
+                        email: currentUser.email,
+                        mobile: '',
+                        full_name: currentUser.username || currentUser.email.split('@')[0],
+                        phone: '',
+                        farm_name: 'Demo Farm',
+                        status: 'pending'
+                    };
+                    updateFarmerDisplay(farmerData);
+                    updateProfileDetails(farmerData);
+                    return;
+                }
 
                 // Fetch farmer data from Supabase using authenticated user's email
                 const { data, error } = await supabaseClient
