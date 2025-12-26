@@ -2370,6 +2370,25 @@
     </div>
 
     <script>
+        /*
+         * FarmTrails Farmer Dashboard
+         * 
+         * Troubleshooting Guide:
+         * 1. "Supabase is not configured" - Set these Netlify env vars:
+         *    - NEXT_PUBLIC_SUPABASE_URL
+         *    - NEXT_PUBLIC_SUPABASE_ANON_KEY
+         * 
+         * 2. "No authenticated user found" - User must be logged in:
+         *    - Ensure user is authenticated via Supabase Auth
+         *    - The dashboard fetches farmer data based on logged-in user's email
+         *    - Create a farmer record with matching email in farmers table
+         * 
+         * 3. Clarity tracking blocked - This is normal browser privacy protection, already handled
+         * 
+         * 4. Check browser console for detailed initialization logs with emojis:
+         *    ✅ = Success  ❌ = Error  ⚠️ = Warning  ℹ️ = Info
+         */
+        
         // Supabase Configuration
         const SUPABASE_URL = window.CONFIG ? window.CONFIG.SUPABASE_URL : '';
         const SUPABASE_ANON_KEY = window.CONFIG ? window.CONFIG.SUPABASE_ANON_KEY : '';
@@ -2380,8 +2399,14 @@
         try {
             if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized successfully');
             } else {
-                console.warn('Supabase is not configured. Some features may not work.');
+                console.warn('⚠️ Supabase is not configured. Environment variables missing:', {
+                    hasSupabaseLib: !!window.supabase,
+                    hasUrl: !!SUPABASE_URL,
+                    hasKey: !!SUPABASE_ANON_KEY
+                });
+                console.warn('ℹ️ To fix: Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Netlify environment variables');
                 // Create a mock supabase object that returns empty results
                 supabase = {
                     from: function(table) {
@@ -2432,11 +2457,23 @@
         // Use the stored client
         const supabaseClient = window.supabaseClient || null;
         
-        // Farmer ID (matches numeric primary key from the farmers table)
-        const FARMER_ID = 1;
-        
         // Store farmer data globally
         let farmerData = null;
+        let currentUser = null;
+        
+        // Get current authenticated user
+        async function getCurrentUser() {
+            if (!supabaseClient) return null;
+            
+            try {
+                const { data: { user }, error } = await supabaseClient.auth.getUser();
+                if (error) throw error;
+                return user;
+            } catch (error) {
+                console.error('Error getting current user:', error);
+                return null;
+            }
+        }
         
         // Track if farmer is new (no products or tours)
         let isNewFarmer = true;
@@ -2494,15 +2531,33 @@
         async function loadFarmerData() {
             try {
                 if (!supabaseClient) {
-                    console.warn('Supabase not initialized');
+                    console.warn('⚠️ Supabase not initialized');
+                    showNotification('Database not configured. Running in demo mode.', 'error');
                     return;
                 }
 
-                // Fetch farmer data from Supabase
+                // Get authenticated user
+                currentUser = await getCurrentUser();
+                
+                if (!currentUser || !currentUser.email) {
+                    console.error('❌ No authenticated user found');
+                    console.info('ℹ️ User must be logged in to access farmer dashboard');
+                    showNotification('Please log in to access your dashboard', 'error');
+                    
+                    // Redirect to login page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/login.html'; // Update with your actual login page path
+                    }, 2000);
+                    return;
+                }
+
+                console.log('✅ Authenticated user:', currentUser.email);
+
+                // Fetch farmer data from Supabase using authenticated user's email
                 const { data, error } = await supabaseClient
                     .from('farmers')
                     .select('id, username, email, mobile, farm_name, farm_size, specialization, certifications, village, taluka, district, state, pin_code, account_holder_name, account_number, bank_name, ifsc_code, branch_name, profile_photo_url, status, account_verified')
-                    .eq('id', FARMER_ID)
+                    .eq('email', currentUser.email)
                     .single();
 
                 if (error) {
@@ -2531,7 +2586,22 @@
                     updateFarmerDisplay(normalizedData);
                     console.log('✅ Farmer data loaded:', normalizedData);
                 } else {
-                    console.warn('No farmer data found for ID:', FARMER_ID);
+                    console.error('❌ No farmer found with email:', currentUser.email);
+                    console.info('ℹ️ To fix: Create a farmer record in your database with email:', currentUser.email);
+                    showNotification('Farmer profile not found. Please complete your registration.', 'error');
+                    
+                    // Set dummy data so UI doesn't crash
+                    farmerData = {
+                        id: null,
+                        username: currentUser.email.split('@')[0],
+                        email: currentUser.email,
+                        mobile: '',
+                        full_name: currentUser.email.split('@')[0],
+                        phone: '',
+                        farm_name: 'Demo Farm',
+                        status: 'pending'
+                    };
+                    updateFarmerDisplay(farmerData);
                 }
             } catch (error) {
                 console.error('Failed to load farmer data:', error);
@@ -2785,7 +2855,7 @@
                     .from('products')
                     .insert([
                         {
-                            farmer_id: FARMER_ID,
+                            farmer_id: farmerData?.id,
                             name: productName,
                             description: description,
                             category: category,
@@ -2843,7 +2913,7 @@
                     .from('tours')
                     .insert([
                         {
-                            farmer_id: FARMER_ID,
+                            farmer_id: farmerData?.id,
                             name: tourName,
                             description: tourDescription,
                             location: tourLocation,
@@ -2893,7 +2963,7 @@
                 const { data: products, error } = await supabaseClient
                     .from('products')
                     .select('*')
-                    .eq('farmer_id', FARMER_ID)
+                    .eq('farmer_id', farmerData?.id)
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
@@ -2984,7 +3054,7 @@
                 const { data: tours, error } = await supabaseClient
                     .from('tours')
                     .select('*')
-                    .eq('farmer_id', FARMER_ID)
+                    .eq('farmer_id', farmerData?.id)
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
@@ -3072,22 +3142,22 @@
                 const { data: products, error: productsError } = await supabaseClient
                     .from('products')
                     .select('*')
-                    .eq('farmer_id', FARMER_ID);
+                    .eq('farmer_id', farmerData?.id);
                 
                 const { data: tours, error: toursError } = await supabaseClient
                     .from('tours')
                     .select('*')
-                    .eq('farmer_id', FARMER_ID);
+                    .eq('farmer_id', farmerData?.id);
                 
                 const { data: bookings, error: bookingsError } = await supabaseClient
                     .from('bookings')
                     .select('*')
-                    .eq('farmer_id', FARMER_ID);
+                    .eq('farmer_id', farmerData?.id);
                 
                 const { data: orders, error: ordersError } = await supabaseClient
                     .from('orders')
                     .select('*')
-                    .eq('farmer_id', FARMER_ID)
+                    .eq('farmer_id', farmerData?.id)
                     .order('created_at', { ascending: false })
                     .limit(5);
                 
@@ -3171,17 +3241,17 @@
                 const { data: products, error: productsError } = await supabaseClient
                     .from('products')
                     .select('*', { count: 'exact', head: true })
-                    .eq('farmer_id', FARMER_ID);
+                    .eq('farmer_id', farmerData?.id);
                 
                 const { data: tours, error: toursError } = await supabaseClient
                     .from('tours')
                     .select('*', { count: 'exact', head: true })
-                    .eq('farmer_id', FARMER_ID);
+                    .eq('farmer_id', farmerData?.id);
                 
                 const { data: orders, error: ordersError } = await supabaseClient
                     .from('orders')
                     .select('*', { count: 'exact', head: true })
-                    .eq('farmer_id', FARMER_ID);
+                    .eq('farmer_id', farmerData?.id);
                 
                 if (productsError || toursError || ordersError) {
                     throw new Error('Error checking analytics data');
@@ -3209,7 +3279,14 @@
         // Open Edit Profile Modal
         function openEditProfileModal() {
             if (!farmerData) {
-                console.warn('Farmer data not loaded yet');
+                console.error('❌ Cannot edit profile: Farmer data not loaded');
+                showNotification('Unable to load profile data. Please refresh the page.', 'error');
+                return;
+            }
+            
+            if (!supabaseClient) {
+                console.error('❌ Cannot edit profile: Supabase not configured');
+                showNotification('Profile editing is unavailable. Database not configured.', 'error');
                 return;
             }
 
@@ -3289,7 +3366,7 @@
                         branch_name: branch,
                         updated_at: new Date().toISOString()
                     })
-                    .eq('id', FARMER_ID);
+                    .eq('id', farmerData.id);
                 
                 if (error) {
                     console.error('Error updating farmer profile:', error);
@@ -3975,18 +4052,30 @@
         }
         
         // Initialize the dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load initial data
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Initializing FarmTrails Farmer Dashboard...');
+            
+            // Check configuration
+            if (!window.CONFIG) {
+                console.error('❌ env-config.js not loaded. Check that the file exists and loads before this script.');
+            }
+            
+            if (!supabaseClient) {
+                console.warn('⚠️ Running in demo mode without database connection');
+                showNotification('Running in demo mode. Some features may be limited.', 'error');
+            }
+            
             // Load farmer data first
-            loadFarmerData();
+            await loadFarmerData();
             
             // Load dashboard data
-            loadDashboardData();
-            loadProducts();
-            loadTours();
+            await loadDashboardData();
             
             // Set current date for shipment
-            document.getElementById('shipmentDate').valueAsDate = new Date();
+            const shipmentDateInput = document.getElementById('shipmentDate');
+            if (shipmentDateInput) {
+                shipmentDateInput.valueAsDate = new Date();
+            }
             
             // Close modals when clicking outside
             window.onclick = function(event) {
@@ -3996,6 +4085,8 @@
                     }
                 });
             };
+            
+            console.log('✅ Dashboard initialization complete');
         });
     </script>
 </body>
