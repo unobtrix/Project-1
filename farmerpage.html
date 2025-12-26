@@ -2430,7 +2430,7 @@
         }
         
         // Use the stored client
-        const supabase = window.supabaseClient || null;
+        const supabaseClient = window.supabaseClient || null;
         
         // Farmer ID (matches numeric primary key from the farmers table)
         const FARMER_ID = 1;
@@ -2493,13 +2493,13 @@
         // Load Farmer Data from Supabase
         async function loadFarmerData() {
             try {
-                if (!supabase) {
+                if (!supabaseClient) {
                     console.warn('Supabase not initialized');
                     return;
                 }
 
                 // Fetch farmer data from Supabase
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('farmers')
                     .select('id, username, email, mobile, farm_name, farm_size, specialization, certifications, village, taluka, district, state, pin_code, account_holder_name, account_number, bank_name, ifsc_code, branch_name, profile_photo_url, status, account_verified')
                     .eq('id', FARMER_ID)
@@ -2781,7 +2781,7 @@
             
             try {
                 // Insert product into Supabase
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('products')
                     .insert([
                         {
@@ -2839,7 +2839,7 @@
             
             try {
                 // Insert tour into Supabase
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('tours')
                     .insert([
                         {
@@ -2890,7 +2890,7 @@
             
             try {
                 // Fetch products from Supabase
-                const { data: products, error } = await supabase
+                const { data: products, error } = await supabaseClient
                     .from('products')
                     .select('*')
                     .eq('farmer_id', FARMER_ID)
@@ -2981,7 +2981,7 @@
             
             try {
                 // Fetch tours from Supabase
-                const { data: tours, error } = await supabase
+                const { data: tours, error } = await supabaseClient
                     .from('tours')
                     .select('*')
                     .eq('farmer_id', FARMER_ID)
@@ -2992,7 +2992,7 @@
                 // Fetch booking counts for each tour
                 const toursWithBookings = await Promise.all(
                     tours.map(async (tour) => {
-                        const { count, error: bookingError } = await supabase
+                        const { count, error: bookingError } = await supabaseClient
                             .from('bookings')
                             .select('*', { count: 'exact', head: true })
                             .eq('tour_id', tour.id);
@@ -3069,22 +3069,22 @@
         async function loadDashboardData() {
             try {
                 // Fetch dashboard stats
-                const { data: products, error: productsError } = await supabase
+                const { data: products, error: productsError } = await supabaseClient
                     .from('products')
                     .select('*')
                     .eq('farmer_id', FARMER_ID);
                 
-                const { data: tours, error: toursError } = await supabase
+                const { data: tours, error: toursError } = await supabaseClient
                     .from('tours')
                     .select('*')
                     .eq('farmer_id', FARMER_ID);
                 
-                const { data: bookings, error: bookingsError } = await supabase
+                const { data: bookings, error: bookingsError } = await supabaseClient
                     .from('bookings')
                     .select('*')
                     .eq('farmer_id', FARMER_ID);
                 
-                const { data: orders, error: ordersError } = await supabase
+                const { data: orders, error: ordersError } = await supabaseClient
                     .from('orders')
                     .select('*')
                     .eq('farmer_id', FARMER_ID)
@@ -3168,17 +3168,17 @@
             
             try {
                 // Check if we have any data
-                const { data: products, error: productsError } = await supabase
+                const { data: products, error: productsError } = await supabaseClient
                     .from('products')
                     .select('*', { count: 'exact', head: true })
                     .eq('farmer_id', FARMER_ID);
                 
-                const { data: tours, error: toursError } = await supabase
+                const { data: tours, error: toursError } = await supabaseClient
                     .from('tours')
                     .select('*', { count: 'exact', head: true })
                     .eq('farmer_id', FARMER_ID);
                 
-                const { data: orders, error: ordersError } = await supabase
+                const { data: orders, error: ordersError } = await supabaseClient
                     .from('orders')
                     .select('*', { count: 'exact', head: true })
                     .eq('farmer_id', FARMER_ID);
@@ -3267,7 +3267,7 @@
                 const branch = document.getElementById('editBranch').value;
                 
                 // Update Supabase with new farmer data
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('farmers')
                     .update({
                         username: fullName,
@@ -3445,7 +3445,7 @@
         async function shipProduct(productId) {
             try {
                 // Fetch product details
-                const { data: product, error } = await supabase
+                const { data: product, error } = await supabaseClient
                     .from('products')
                     .select('*')
                     .eq('id', productId)
@@ -3498,7 +3498,7 @@
         // Update Product Status
         async function updateProductStatus(productId, status) {
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('products')
                     .update({ fulfillment_status: status })
                     .eq('id', productId);
@@ -3603,7 +3603,7 @@
         async function editProduct(productId) {
             try {
                 // Fetch product details
-                const { data: product, error } = await supabase
+                const { data: product, error } = await supabaseClient
                     .from('products')
                     .select('*')
                     .eq('id', productId)
@@ -3637,7 +3637,7 @@
             const stock = document.getElementById('editProductStock').value;
             
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('products')
                     .update({
                         name: name,
@@ -3667,7 +3667,7 @@
             }
             
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('products')
                     .delete()
                     .eq('id', productId);
@@ -3687,7 +3687,7 @@
         async function editTour(tourId) {
             try {
                 // Fetch tour details
-                const { data: tour, error } = await supabase
+                const { data: tour, error } = await supabaseClient
                     .from('tours')
                     .select('*')
                     .eq('id', tourId)
@@ -3725,7 +3725,7 @@
             const price = document.getElementById('editTourPrice').value;
             
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tours')
                     .update({
                         name: name,
@@ -3754,14 +3754,14 @@
         async function viewBookings(tourId) {
             try {
                 // Fetch tour details
-                const { data: tour, error: tourError } = await supabase
+                const { data: tour, error: tourError } = await supabaseClient
                     .from('tours')
                     .select('*')
                     .eq('id', tourId)
                     .single();
                 
                 // Fetch bookings for this tour
-                const { data: bookings, error: bookingsError } = await supabase
+                const { data: bookings, error: bookingsError } = await supabaseClient
                     .from('bookings')
                     .select('*')
                     .eq('tour_id', tourId)
@@ -3871,7 +3871,7 @@
         // Filter Bookings
         async function filterBookings(tourId, status) {
             try {
-                let query = supabase
+                let query = supabaseClient
                     .from('bookings')
                     .select('*')
                     .eq('tour_id', tourId);
@@ -3927,7 +3927,7 @@
         // View Shipment Details
         async function viewShipmentDetails(productId) {
             try {
-                const { data: product, error } = await supabase
+                const { data: product, error } = await supabaseClient
                     .from('products')
                     .select('*')
                     .eq('id', productId)
