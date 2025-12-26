@@ -40,23 +40,45 @@
     return defaultValue;
   }
 
-  // Set configuration from environment variables
+  // Helper: try multiple keys for a single logical config value
+  function pickEnv(keys, fallback) {
+    for (const k of keys) {
+      const val = getEnvVariable(k, undefined);
+      if (val !== undefined && val !== '') return val;
+    }
+    return fallback;
+  }
+
+  // Set configuration from environment variables (supports multiple naming conventions)
   window.CONFIG = {
     // API Configuration
-    API_BASE_URL: getEnvVariable(
+    API_BASE_URL: pickEnv([
+      'NEXT_PUBLIC_API_URL',
       'REACT_APP_API_BASE_URL',
-      getDefaultApiUrl()
-    ),
+      'API_BASE_URL'
+    ], getDefaultApiUrl()),
     
     // Supabase Configuration
-    SUPABASE_URL: getEnvVariable('REACT_APP_SUPABASE_URL', ''),
-    SUPABASE_ANON_KEY: getEnvVariable('REACT_APP_SUPABASE_ANON_KEY', ''),
+    SUPABASE_URL: pickEnv([
+      'SUPABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'REACT_APP_SUPABASE_URL'
+    ], ''),
+    SUPABASE_ANON_KEY: pickEnv([
+      'SUPABASE_ANON_KEY',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+      'REACT_APP_SUPABASE_ANON_KEY'
+    ], ''),
     
     // Microsoft Clarity Configuration
-    CLARITY_PROJECT_ID: getEnvVariable('REACT_APP_CLARITY_PROJECT_ID', 'tu6s87m19d'),
+    CLARITY_PROJECT_ID: pickEnv([
+      'CLARITY_PROJECT_ID',
+      'NEXT_PUBLIC_CLARITY_PROJECT_ID',
+      'REACT_APP_CLARITY_PROJECT_ID'
+    ], 'tu6s87m19d'),
     
     // Environment
-    ENV: getEnvVariable('REACT_APP_ENV', 'production'),
+    ENV: pickEnv(['REACT_APP_ENV', 'NEXT_PUBLIC_ENV', 'NODE_ENV'], 'production'),
   };
 
   /**
