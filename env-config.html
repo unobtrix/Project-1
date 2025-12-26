@@ -1,0 +1,88 @@
+<!-- 
+  Environment Configuration Loader
+  This file loads environment variables from Netlify and makes them available globally
+  Include this in the <head> of your HTML files BEFORE any other scripts that use CONFIG
+  
+  Netlify Environment Variables to set in your dashboard:
+  - REACT_APP_API_BASE_URL (e.g., https://unobtrix-project-backend.onrender.com)
+  - REACT_APP_SUPABASE_URL
+  - REACT_APP_SUPABASE_ANON_KEY
+  - REACT_APP_CLARITY_PROJECT_ID
+-->
+<script>
+(function() {
+  // Initialize global CONFIG object
+  window.CONFIG = window.CONFIG || {};
+
+  // Function to get environment variable from Netlify context
+  // In Netlify, build variables are available as window.__NETLIFY__.env
+  function getEnvVariable(key, defaultValue) {
+    // Check multiple possible sources for environment variables
+    
+    // 1. Netlify build environment (if available)
+    if (typeof window.__NETLIFY__ !== 'undefined' && window.__NETLIFY__.env) {
+      if (window.__NETLIFY__.env[key]) {
+        return window.__NETLIFY__.env[key];
+      }
+    }
+    
+    // 2. Meta tags (alternative method - set these in your HTML)
+    const metaTag = document.querySelector(`meta[name="env-${key.toLowerCase()}"]`);
+    if (metaTag) {
+      return metaTag.getAttribute('content');
+    }
+    
+    // 3. Window object (can be set by Netlify functions)
+    if (window[key]) {
+      return window[key];
+    }
+    
+    // 4. Return default value
+    return defaultValue;
+  }
+
+  // Set configuration from environment variables
+  window.CONFIG = {
+    // API Configuration
+    API_BASE_URL: getEnvVariable(
+      'REACT_APP_API_BASE_URL',
+      getDefaultApiUrl()
+    ),
+    
+    // Supabase Configuration
+    SUPABASE_URL: getEnvVariable('REACT_APP_SUPABASE_URL', ''),
+    SUPABASE_ANON_KEY: getEnvVariable('REACT_APP_SUPABASE_ANON_KEY', ''),
+    
+    // Microsoft Clarity Configuration
+    CLARITY_PROJECT_ID: getEnvVariable('REACT_APP_CLARITY_PROJECT_ID', 'tu6s87m19d'),
+    
+    // Environment
+    ENV: getEnvVariable('REACT_APP_ENV', 'production'),
+  };
+
+  /**
+   * Get default API URL based on current environment
+   */
+  function getDefaultApiUrl() {
+    const hostname = window.location.hostname;
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+      return 'http://localhost:5000';
+    }
+    
+    // Production default
+    return 'https://unobtrix-project-backend.onrender.com';
+  }
+
+  // Development logging
+  if (window.CONFIG.ENV === 'development' || window.CONFIG.ENV === 'staging') {
+    console.log('%c🔧 FarmTrails Configuration Loaded', 'color: #4CAF50; font-weight: bold;', {
+      API_BASE_URL: window.CONFIG.API_BASE_URL,
+      SUPABASE_URL: window.CONFIG.SUPABASE_URL ? '✓ Configured' : '✗ Not configured',
+      SUPABASE_ANON_KEY: window.CONFIG.SUPABASE_ANON_KEY ? '✓ Configured' : '✗ Not configured',
+      CLARITY_PROJECT_ID: window.CONFIG.CLARITY_PROJECT_ID || '✓ Configured',
+      Environment: window.CONFIG.ENV,
+    });
+  }
+})();
+</script>

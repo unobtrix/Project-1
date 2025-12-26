@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FarmTrail Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load environment configuration from Netlify variables -->
+    <script src="env-config.html"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -463,6 +466,7 @@
                     <div class="profile-header">
                         <div class="profile-image-container">
                             <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile Image" class="profile-image" />
+                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile Image" class="profile-image" id="profileAvatar" />
                             <div class="edit-profile">
                                 <i class="fas fa-camera"></i>
                             </div>
@@ -470,15 +474,15 @@
                     </div>
                     
                     <div class="profile-info">
-                        <h2 class="full-name">Akira Tanaka</h2>
-                        <p class="role">Organic Farmer since 2018</p>
+                            <h2 class="full-name" id="profileName">Akira Tanaka</h2>
+                            <p class="role" id="profileRole">Organic Farmer since 2018</p>
                         
                         <div class="contact-list">
                             <div class="contact-item">
                                 <span>📞</span>
                                 <div class="contact-details">
                                     <span class="contact-label">Phone Number</span>
-                                    <span class="contact-value">+91 98XXXXXX52</span>
+                                        <span class="contact-value" id="profilePhone">+91 98XXXXXX52</span>
                                 </div>
                             </div>
                             
@@ -486,7 +490,7 @@
                                 <span>📧</span>
                                 <div class="contact-details">
                                     <span class="contact-label">Email Address</span>
-                                    <span class="contact-value">akira.tanaka@example.com</span>
+                                        <span class="contact-value" id="profileEmail">akira.tanaka@example.com</span>
                                 </div>
                             </div>
                             
@@ -494,7 +498,7 @@
                                 <span>🆔</span>
                                 <div class="contact-details">
                                     <span class="contact-label">Aadhar Number</span>
-                                    <span class="contact-value">XXXX XXXX 9012</span>
+                                        <span class="contact-value" id="profileAadhar">XXXX XXXX 9012</span>
                                 </div>
                             </div>
                             
@@ -502,7 +506,7 @@
                                 <span>📍</span>
                                 <div class="contact-details">
                                     <span class="contact-label">Farm Location</span>
-                                    <span class="contact-value">Chennai, Tamil Nadu</span>
+                                        <span class="contact-value" id="profileLocation">Chennai, Tamil Nadu</span>
                                 </div>
                             </div>
                         </div>
@@ -514,6 +518,49 @@
                     <a href="login.html" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
+
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUserId = urlParams.get('user_id');
+            const storedUserId = localStorage.getItem('userId') || localStorage.getItem('currentUserId');
+            const userId = urlUserId || storedUserId || 'user123';
+
+            async function loadProfile() {
+                try {
+                    const sb = await window.getSupabaseClient();
+                    const { data, error } = await sb
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching profile:', error);
+                        return;
+                    }
+
+                    if (!data) return;
+
+                    document.getElementById('profileName').textContent = data.full_name || data.name || 'Unknown User';
+                    document.getElementById('profileRole').textContent = data.role || data.farm_name || 'Farmer';
+                    if (data.email) document.getElementById('profileEmail').textContent = data.email;
+                    if (data.phone) document.getElementById('profilePhone').textContent = data.phone;
+                    if (data.aadhar_number) document.getElementById('profileAadhar').textContent = data.aadhar_number;
+                    if (data.location || data.farm_location) document.getElementById('profileLocation').textContent = data.location || data.farm_location;
+                    if (data.avatar_url) document.getElementById('profileAvatar').src = data.avatar_url;
+                } catch (e) {
+                    console.error('Unexpected profile error:', e);
+                }
+            }
+
+            loadProfile();
+        })();
+    </script>
+
+    </body>
+
+    </html>
 </body>
 
 </html>
