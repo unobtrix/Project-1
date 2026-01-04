@@ -1220,14 +1220,14 @@
                 
                 <div class="profile-section">
                     <div class="profile-header">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="Rajesh Kumar" class="profile-avatar">
+                        <img id="profileAvatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="Farmer" class="profile-avatar">
                         <div class="profile-info">
-                            <h2>Rajesh Kumar</h2>
-                            <p><i class="fas fa-map-marker-alt"></i> Pune, Maharashtra</p>
-                            <p><i class="fas fa-envelope"></i> rajesh@organicfarm.com</p>
-                            <p><i class="fas fa-phone"></i> +91 98765 43210</p>
+                            <h2 id="profileName">Farmer</h2>
+                            <p><i class="fas fa-map-marker-alt"></i> <span id="profileLocation">--</span></p>
+                            <p><i class="fas fa-envelope"></i> <span id="profileEmail">--</span></p>
+                            <p><i class="fas fa-phone"></i> <span id="profilePhone">--</span></p>
                             <div class="farmer-rating">
-                                <i class="fas fa-star"></i> 4.8 Rating (128 reviews)
+                                <i class="fas fa-star"></i> <span id="profileRating">4.8 Rating (128 reviews)</span>
                             </div>
                         </div>
                     </div>
@@ -1258,18 +1258,18 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                             <div>
                                 <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Farm Details</h4>
-                                <p><strong>Farm Name:</strong> Organic Vegetable Farm</p>
-                                <p><strong>Farm Size:</strong> 15 acres</p>
-                                <p><strong>Specialization:</strong> Organic vegetables, spices, dairy</p>
-                                <p><strong>Certifications:</strong> Organic India, FSSAI</p>
+                                <p><strong>Farm Name:</strong> <span id="farmName">--</span></p>
+                                <p><strong>Farm Size:</strong> <span id="farmSize">--</span></p>
+                                <p><strong>Specialization:</strong> <span id="farmSpecialization">--</span></p>
+                                <p><strong>Certifications:</strong> <span id="farmCertifications">--</span></p>
                             </div>
                             <div>
                                 <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Farm Location</h4>
-                                <p>Village: Shindewadi</p>
-                                <p>Taluka: Mulshi</p>
-                                <p>District: Pune</p>
-                                <p>State: Maharashtra</p>
-                                <p>PIN: 412108</p>
+                                <p>Village: <span id="farmVillage">--</span></p>
+                                <p>Taluka: <span id="farmTaluka">--</span></p>
+                                <p>District: <span id="farmDistrict">--</span></p>
+                                <p>State: <span id="farmState">--</span></p>
+                                <p>PIN: <span id="farmPin">--</span></p>
                             </div>
                         </div>
                     </div>
@@ -1434,15 +1434,50 @@
                 
                 if (data.success && data.profile) {
                     const profile = data.profile;
-                    const name = profile.full_name || profile.name || 'Farmer';
+                    const name = profile.full_name || profile.name || profile.username || 'Farmer';
+                    const email = profile.email || '--';
+                    const phone = profile.mobile || profile.phone || '--';
+                    const location = profile.location || [profile.village, profile.district, profile.state].filter(Boolean).join(', ') || '--';
+                    const avatar = profile.avatar_url || profile.profile_photo_url;
+
                     document.getElementById('farmerName').textContent = name;
-                    document.getElementById('welcomeTitle').textContent = `Welcome, ${name}!`;
+                    const welcomeTitle = document.getElementById('welcomeTitle');
+                    if (welcomeTitle) welcomeTitle.textContent = `Welcome, ${name}!`;
                     const subtitle = profile.farm_name || profile.role || 'Farm';
                     document.getElementById('farmerSubtitle').textContent = subtitle;
-                    
-                    if (profile.avatar_url || profile.profile_photo_url) {
-                        document.getElementById('farmerAvatar').src = profile.avatar_url || profile.profile_photo_url;
+
+                    const profileNameEl = document.getElementById('profileName');
+                    if (profileNameEl) profileNameEl.textContent = name;
+
+                    const profileEmailEl = document.getElementById('profileEmail');
+                    if (profileEmailEl) profileEmailEl.textContent = email;
+
+                    const profilePhoneEl = document.getElementById('profilePhone');
+                    if (profilePhoneEl) profilePhoneEl.textContent = phone;
+
+                    const profileLocationEl = document.getElementById('profileLocation');
+                    if (profileLocationEl) profileLocationEl.textContent = location || '--';
+
+                    if (avatar) {
+                        const avatarEls = [document.getElementById('farmerAvatar'), document.getElementById('profileAvatar')].filter(Boolean);
+                        avatarEls.forEach(el => { el.src = avatar; });
                     }
+
+                    // Farm details
+                    const setText = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value || '--';
+                    };
+
+                    setText('farmName', profile.farm_name);
+                    setText('farmSize', profile.farm_size);
+                    setText('farmSpecialization', profile.specialization);
+                    setText('farmCertifications', profile.certifications || '--');
+                    setText('farmVillage', profile.village);
+                    setText('farmTaluka', profile.taluka);
+                    setText('farmDistrict', profile.district);
+                    setText('farmState', profile.state);
+                    setText('farmPin', profile.pin_code);
                 } else {
                     console.error('Failed to load farmer profile:', data.message);
                     showNotification('Profile not found.');
