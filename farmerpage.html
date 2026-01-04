@@ -462,6 +462,53 @@
             cursor: pointer;
             margin: 10px 0;
         }
+
+        /* Multiple image thumbnails */
+        .image-preview-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .image-thumb-wrapper {
+            position: relative;
+        }
+
+        .image-thumb {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+        }
+
+        .thumb-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #DC3545;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 20px;
+        }
+
+        .thumb-label {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
         
         /* Bottom Navigation */
         .bottom-nav {
@@ -1063,19 +1110,17 @@
                         </div>
                         
                         <div class="form-group">
-                            <label>Product Image</label>
+                            <label>Product Images (up to 5)</label>
                             <div class="image-upload-container" id="imageUploadContainer">
-                                <div class="image-preview" id="imagePreview">
-                                    <img id="previewImage" src="" alt="Preview">
-                                </div>
                                 <div class="upload-text" id="uploadText">
                                     <i class="fas fa-cloud-upload-alt fa-2x" style="color: #ddd; margin-bottom: 1rem;"></i>
-                                    <p>Click to upload product image</p>
+                                    <p>Click to upload product images</p>
                                 </div>
-                                <input type="file" id="productImage" accept="image/*" style="display: none;">
+                                <input type="file" id="productImage" accept="image/*" multiple style="display: none;">
                                 <button type="button" class="upload-btn" onclick="document.getElementById('productImage').click()">
-                                    Choose Image
+                                    Choose Images
                                 </button>
+                                <div class="image-preview-list" id="imagePreviewList"></div>
                             </div>
                         </div>
                         
@@ -1087,59 +1132,7 @@
                 </div>
                 
                 <!-- Products Grid -->
-                <div class="product-cards">
-                    <div class="product-card">
-                        <img src="https://images.unsplash.com/photo-1615485500834-bc10199bc727?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Turmeric" class="product-image">
-                        <div class="product-content">
-                            <h3 class="product-title">Turmeric Powder</h3>
-                            <div class="product-price">₹350/500gm</div>
-                            <div class="product-stock">Stock: 45 units</div>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <img src="https://images.unsplash.com/photo-1559715546-f66295d5aaa5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=200&q=80" alt="Honey" class="product-image">
-                        <div class="product-content">
-                            <h3 class="product-title">Fresh Honey</h3>
-                            <div class="product-price">₹450/500gm</div>
-                            <div class="product-stock">Stock: 32 units</div>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Sa-indian-gud.jpg/800px-Sa-indian-gud.jpg" alt="Jaggery" class="product-image">
-                        <div class="product-content">
-                            <h3 class="product-title">Natural Jaggery</h3>
-                            <div class="product-price">₹300/kg</div>
-                            <div class="product-stock">Stock: 28 units</div>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <img src="https://images.unsplash.com/photo-1566566716750-2f7035681d78?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Tomatoes" class="product-image">
-                        <div class="product-content">
-                            <h3 class="product-title">Organic Tomatoes</h3>
-                            <div class="product-price">₹80/kg</div>
-                            <div class="product-stock">Stock: 65 units</div>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div class="product-cards"></div>
             </div>
             
             <!-- Tours Page -->
@@ -1158,65 +1151,8 @@
                 <div class="tour-cards">
                     <div class="tour-card">
                         <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Organic Farm Tour" class="tour-image">
-                        <div class="tour-content">
-                            <h3 class="tour-title">Organic Farm Tour</h3>
-                            <div class="tour-meta">
-                                <span><i class="fas fa-clock"></i> 2 hours</span>
-                                <span><i class="fas fa-users"></i> 15 people</span>
-                            </div>
-                            <p class="tour-description">Experience the journey of organic farming from seed to harvest. Learn about sustainable practices.</p>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="tour-card">
-                        <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Dairy Experience" class="tour-image">
-                        <div class="tour-content">
-                            <h3 class="tour-title">Dairy Experience</h3>
-                            <div class="tour-meta">
-                                <span><i class="fas fa-clock"></i> 3 hours</span>
-                                <span><i class="fas fa-users"></i> 10 people</span>
-                            </div>
-                            <p class="tour-description">Get hands-on experience with our dairy operations. Learn about milking, processing, and more.</p>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="tour-card">
-                        <img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Beekeeping Workshop" class="tour-image">
-                        <div class="tour-content">
-                            <h3 class="tour-title">Beekeeping Workshop</h3>
-                            <div class="tour-meta">
-                                <span><i class="fas fa-clock"></i> 4 hours</span>
-                                <span><i class="fas fa-users"></i> 8 people</span>
-                            </div>
-                            <p class="tour-description">Learn about the importance of bees in agriculture and get hands-on beekeeping experience.</p>
-                            <div class="product-actions">
-                                <button class="action-btn btn-edit">Edit</button>
-                                <button class="action-btn btn-view">View</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Profile Page -->
-            <div class="page-content" id="profile-page">
-                <div class="dashboard-header">
-                    <div class="welcome-message">
-                        <h2>Your Profile</h2>
-                        <p>Manage your account and farm information</p>
-                    </div>
-                    <button class="btn btn-primary" id="editProfileBtn">
-                        <i class="fas fa-edit"></i> Edit Profile
-                    </button>
-                </div>
+                        <!-- Tours Grid -->
+                        <div class="tour-cards"></div>
                 
                 <div class="profile-section">
                     <div class="profile-header">
@@ -1565,12 +1501,10 @@
                     document.getElementById('productUnit').value = product.unit || 'kg';
                     document.getElementById('productStock').value = product.stock || '';
                     
-                    // Show preview if image exists
-                    if (product.image_url) {
-                        document.getElementById('previewImage').src = product.image_url;
-                        document.getElementById('imagePreview').style.display = 'block';
-                        document.getElementById('uploadText').style.display = 'none';
-                    }
+                    // Show existing image (not editable until new images are picked)
+                    existingImageUrl = product.image_url || '';
+                    selectedImages = [];
+                    renderSelectedImages();
                     
                     // Show form
                     document.getElementById('addProductForm').style.display = 'block';
@@ -1735,33 +1669,79 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
+        let selectedImages = [];
+        let existingImageUrl = '';
+
+        function renderSelectedImages() {
+            const list = document.getElementById('imagePreviewList');
+            const uploadText = document.getElementById('uploadText');
+            if (!list) return;
+
+            // If no new images and an existing image, show it as current
+            if (selectedImages.length === 0 && existingImageUrl) {
+                list.innerHTML = `
+                    <div class="image-thumb-wrapper">
+                        <img src="${existingImageUrl}" class="image-thumb" alt="Current image" onerror="this.style.display='none'">
+                        <span class="thumb-label">Current</span>
+                    </div>
+                `;
+                uploadText.style.display = 'block';
+                return;
+            }
+
+            if (selectedImages.length === 0) {
+                list.innerHTML = '';
+                uploadText.style.display = 'block';
+                return;
+            }
+
+            uploadText.style.display = 'none';
+            list.innerHTML = selectedImages.map((img, idx) => `
+                <div class="image-thumb-wrapper">
+                    <img src="${img}" class="image-thumb" alt="Preview ${idx + 1}">
+                    <button type="button" class="thumb-remove" onclick="removeSelectedImage(${idx})">×</button>
+                </div>
+            `).join('');
+        }
+
+        window.removeSelectedImage = function(idx) {
+            selectedImages.splice(idx, 1);
+            renderSelectedImages();
+        };
+
         document.getElementById('cancelProductBtn').addEventListener('click', function() {
             document.getElementById('addProductForm').style.display = 'none';
             document.getElementById('productForm').reset();
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('uploadText').style.display = 'block';
+            selectedImages = [];
+            existingImageUrl = '';
+            renderSelectedImages();
         });
         
-        // Image Upload Functionality
+        // Image Upload Functionality (multiple)
         document.getElementById('productImage').addEventListener('change', function(e) {
-            if (e.target.files.length) {
-                const file = e.target.files[0];
-                
-                // Validate file type
-                if (!file.type.startsWith('image/')) {
-                    showNotification('Please select an image file');
-                    return;
-                }
-                
-                // Preview image
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('previewImage').src = e.target.result;
-                    document.getElementById('imagePreview').style.display = 'block';
-                    document.getElementById('uploadText').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+
+            const remainingSlots = Math.max(0, 5 - selectedImages.length);
+            const toRead = files.slice(0, remainingSlots);
+
+            Promise.all(toRead.map(file => {
+                return new Promise((resolve, reject) => {
+                    if (!file.type.startsWith('image/')) return reject(new Error('Invalid file type'));
+                    const reader = new FileReader();
+                    reader.onload = ev => resolve(ev.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            })).then(base64Images => {
+                selectedImages.push(...base64Images);
+                existingImageUrl = '';
+                renderSelectedImages();
+            }).catch(() => {
+                showNotification('Please select valid image files');
+            }).finally(() => {
+                e.target.value = '';
+            });
         });
         
         // Form Submission -> Insert or Update product
@@ -1775,113 +1755,63 @@
             const productPrice = document.getElementById('productPrice').value;
             const productUnit = document.getElementById('productUnit').value;
             const productStock = document.getElementById('productStock').value;
-            const imageFile = document.getElementById('productImage').files[0];
             
             // Check if we're editing or creating
             const submitBtn = document.querySelector('#productForm button[type="submit"]');
             const editingId = submitBtn ? submitBtn.getAttribute('data-editing-id') : null;
             
             try {
-                let imageUrl = '';
+                const basePayload = {
+                    name: productName,
+                    description: productDescription,
+                    category: productCategory,
+                    price: parseFloat(productPrice),
+                    unit: productUnit,
+                    stock: parseInt(productStock || '0', 10),
+                    farmer_id: currentUserId
+                };
+
+                // Attach images if user selected new ones
+                if (selectedImages.length > 0) {
+                    basePayload.images = selectedImages;
+                }
                 
-                // Handle image upload if there's a new file
-                if (imageFile) {
-                    const reader = new FileReader();
-                    const base64Image = await new Promise((resolve, reject) => {
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(imageFile);
+                if (editingId) {
+                    // Update existing product
+                    const response = await fetch(`${API_URL}/api/products/${editingId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(basePayload)
                     });
-                    
-                    // Create payload with image
-                    const payload = {
-                        name: productName,
-                        description: productDescription,
-                        category: productCategory,
-                        price: parseFloat(productPrice),
-                        unit: productUnit,
-                        stock: parseInt(productStock || '0', 10),
-                        farmer_id: currentUserId,
-                        imageData: base64Image
-                    };
-                    
-                    if (editingId) {
-                        // Update existing product
-                        const response = await fetch(`${API_URL}/api/products/${editingId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            showNotification('Product updated successfully!');
-                            loadProducts();
-                        } else {
-                            showNotification('Failed to update product: ' + (data.message || 'Unknown error'));
-                        }
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification('Product updated successfully!');
+                        loadProducts();
                     } else {
-                        // Create new product
-                        const response = await fetch(`${API_URL}/api/products`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            showNotification('Product added successfully!');
-                            loadProducts();
-                        } else {
-                            showNotification('Failed to add product: ' + (data.message || 'Unknown error'));
-                        }
+                        showNotification('Failed to update product: ' + (data.message || 'Unknown error'));
                     }
                 } else {
-                    // No new image, just update other fields
-                    const payload = {
-                        name: productName,
-                        description: productDescription,
-                        category: productCategory,
-                        price: parseFloat(productPrice),
-                        unit: productUnit,
-                        stock: parseInt(productStock || '0', 10),
-                        farmer_id: currentUserId
-                    };
-                    
-                    if (editingId) {
-                        // Update existing product
-                        const response = await fetch(`${API_URL}/api/products/${editingId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            showNotification('Product updated successfully!');
-                            loadProducts();
-                        } else {
-                            showNotification('Failed to update product: ' + (data.message || 'Unknown error'));
-                        }
+                    // Create new product
+                    const response = await fetch(`${API_URL}/api/products`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(basePayload)
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification('Product added successfully!');
+                        loadProducts();
                     } else {
-                        // Create new product without image
-                        const response = await fetch(`${API_URL}/api/products`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            showNotification('Product added successfully!');
-                            loadProducts();
-                        } else {
-                            showNotification('Failed to add product: ' + (data.message || 'Unknown error'));
-                        }
+                        showNotification('Failed to add product: ' + (data.message || 'Unknown error'));
                     }
                 }
                 
                 // Reset form
                 document.getElementById('productForm').reset();
                 document.getElementById('addProductForm').style.display = 'none';
-                document.getElementById('imagePreview').style.display = 'none';
-                document.getElementById('uploadText').style.display = 'block';
+                selectedImages = [];
+                existingImageUrl = '';
+                renderSelectedImages();
                 
                 // Reset form title and button
                 const formTitle = document.querySelector('#addProductForm h3');
