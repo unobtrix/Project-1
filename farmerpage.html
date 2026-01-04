@@ -1410,6 +1410,237 @@
 
         const API_URL = getApiUrl();
 
+        // Load products from database
+        async function loadProducts() {
+            try {
+                if (!currentUserId) {
+                    console.error('No user ID found for loading products');
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/api/products?farmer_id=${currentUserId}`);
+                if (!response.ok) {
+                    console.error('Failed to load products:', response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success && data.products) {
+                    renderProducts(data.products);
+                    
+                    // Update product count stat
+                    const productCountEl = document.querySelector('.stats-cards .stat-card:nth-child(1) h3');
+                    if (productCountEl) {
+                        productCountEl.textContent = data.products.length;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showNotification('Failed to load products');
+            }
+        }
+
+        // Render products dynamically
+        function renderProducts(products) {
+            const container = document.querySelector('.product-cards');
+            if (!container) return;
+
+            if (!products || products.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #757575;">No products found. Click "Add Product" to create your first product.</p>';
+                return;
+            }
+
+            container.innerHTML = products.map(product => `
+                <div class="product-card" data-product-id="${product.id}">
+                    <img src="${product.image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80'}" 
+                         alt="${product.name}" 
+                         class="product-image"
+                         onerror="this.src='https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80'">
+                    <div class="product-content">
+                        <h3 class="product-title">${product.name}</h3>
+                        <div class="product-price">₹${parseFloat(product.price).toFixed(2)}/${product.unit || 'kg'}</div>
+                        <p class="product-stock">Stock: ${product.stock || 0} ${product.unit || 'kg'}</p>
+                        <p class="product-description" style="font-size: 0.9rem; color: #757575; margin-bottom: 1rem;">${product.description || ''}</p>
+                        <div class="product-actions">
+                            <button class="action-btn btn-edit" onclick="editProduct(${product.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn btn-delete" onclick="deleteProduct(${product.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load tours from database
+        async function loadTours() {
+            try {
+                if (!currentUserId) {
+                    console.error('No user ID found for loading tours');
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/api/tours?farmer_id=${currentUserId}`);
+                if (!response.ok) {
+                    console.error('Failed to load tours:', response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success && data.tours) {
+                    renderTours(data.tours);
+                    
+                    // Update tour count stat
+                    const tourCountEl = document.querySelector('.stats-cards .stat-card:nth-child(3) h3');
+                    if (tourCountEl) {
+                        tourCountEl.textContent = data.tours.length;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading tours:', error);
+                showNotification('Failed to load tours');
+            }
+        }
+
+        // Render tours dynamically
+        function renderTours(tours) {
+            const container = document.querySelector('.tour-cards');
+            if (!container) return;
+
+            if (!tours || tours.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #757575;">No tours found. Click "Add Tour" to create your first farm tour.</p>';
+                return;
+            }
+
+            container.innerHTML = tours.map(tour => `
+                <div class="tour-card" data-tour-id="${tour.id}">
+                    <img src="${tour.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'}" 
+                         alt="${tour.title}" 
+                         class="tour-image"
+                         onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'">
+                    <div class="tour-content">
+                        <h3 class="tour-title">${tour.title}</h3>
+                        <div class="tour-meta">
+                            <span><i class="fas fa-clock"></i> ${tour.duration || '2 hours'}</span>
+                            <span><i class="fas fa-tag"></i> ₹${parseFloat(tour.price).toFixed(2)}</span>
+                        </div>
+                        <p class="tour-description">${tour.description || ''}</p>
+                        <div class="product-actions">
+                            <button class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                            <button class="action-btn btn-edit" onclick="editTour(${tour.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn btn-delete" onclick="deleteTour(${tour.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Edit product function
+        async function editProduct(productId) {
+            try {
+                // Fetch product details
+                const response = await fetch(`${API_URL}/api/products/${productId}`);
+                if (!response.ok) {
+                    showNotification('Failed to load product details');
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success && data.product) {
+                    const product = data.product;
+                    
+                    // Populate form with product data
+                    document.getElementById('productName').value = product.name || '';
+                    document.getElementById('productDescription').value = product.description || '';
+                    document.getElementById('productCategory').value = product.category || 'Vegetables';
+                    document.getElementById('productPrice').value = product.price || '';
+                    document.getElementById('productUnit').value = product.unit || 'kg';
+                    document.getElementById('productStock').value = product.stock || '';
+                    
+                    // Show preview if image exists
+                    if (product.image_url) {
+                        document.getElementById('previewImage').src = product.image_url;
+                        document.getElementById('imagePreview').style.display = 'block';
+                        document.getElementById('uploadText').style.display = 'none';
+                    }
+                    
+                    // Show form
+                    document.getElementById('addProductForm').style.display = 'block';
+                    
+                    // Change form title and button
+                    const formTitle = document.querySelector('#addProductForm h3');
+                    if (formTitle) formTitle.textContent = 'Edit Product';
+                    
+                    const submitBtn = document.querySelector('#productForm button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.textContent = 'Update Product';
+                        submitBtn.setAttribute('data-editing-id', productId);
+                    }
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (error) {
+                console.error('Error editing product:', error);
+                showNotification('Failed to load product for editing');
+            }
+        }
+
+        // Delete product function
+        async function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Product deleted successfully!');
+                    loadProducts(); // Reload products
+                } else {
+                    showNotification('Failed to delete product: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                showNotification('Failed to delete product');
+            }
+        }
+
+        // Edit tour function (placeholder)
+        function editTour(tourId) {
+            showNotification('Edit tour functionality coming soon!');
+            console.log('Edit tour:', tourId);
+        }
+
+        // Delete tour function (placeholder)
+        function deleteTour(tourId) {
+            if (!confirm('Are you sure you want to delete this tour?')) {
+                return;
+            }
+            showNotification('Delete tour functionality coming soon!');
+            console.log('Delete tour:', tourId);
+        }
+
+        // Make functions globally accessible
+        window.editProduct = editProduct;
+        window.deleteProduct = deleteProduct;
+        window.editTour = editTour;
+        window.deleteTour = deleteTour;
+
         async function loadFarmerProfile() {
             try {
                 const userId = currentUserId;
@@ -1488,7 +1719,10 @@
             }
         }
 
+        // Load all data on page load
         loadFarmerProfile();
+        loadProducts();
+        loadTours();
 
         // Add Product Form Toggle
         document.getElementById('addProductBtn').addEventListener('click', function() {
@@ -1530,8 +1764,8 @@
             }
         });
         
-        // Form Submission -> Insert product into Supabase
-        document.getElementById('productForm').addEventListener('submit', function(e) {
+        // Form Submission -> Insert or Update product
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Get form values
@@ -1541,41 +1775,126 @@
             const productPrice = document.getElementById('productPrice').value;
             const productUnit = document.getElementById('productUnit').value;
             const productStock = document.getElementById('productStock').value;
+            const imageFile = document.getElementById('productImage').files[0];
             
-            async function submitToSupabase() {
-                const sb = await window.getSupabaseClient();
-                const payload = {
-                    name: productName,
-                    description: productDescription,
-                    category: productCategory,
-                    price: parseFloat(productPrice),
-                    unit: productUnit,
-                    stock: parseInt(productStock || '0', 10),
-                    is_active: true,
-                    farmer_id: currentUserId,
-                    created_at: new Date().toISOString()
-                };
-                try {
-                    const { data, error } = await sb
-                        .from('products')
-                        .insert([payload])
-                        .select()
-                        .single();
-                    if (error) throw error;
-                    showNotification('Product added successfully!');
-                } catch (err) {
-                    console.error('Error adding product:', err);
-                    showNotification('Failed to add product. Please try again.');
+            // Check if we're editing or creating
+            const submitBtn = document.querySelector('#productForm button[type="submit"]');
+            const editingId = submitBtn ? submitBtn.getAttribute('data-editing-id') : null;
+            
+            try {
+                let imageUrl = '';
+                
+                // Handle image upload if there's a new file
+                if (imageFile) {
+                    const reader = new FileReader();
+                    const base64Image = await new Promise((resolve, reject) => {
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(imageFile);
+                    });
+                    
+                    // Create payload with image
+                    const payload = {
+                        name: productName,
+                        description: productDescription,
+                        category: productCategory,
+                        price: parseFloat(productPrice),
+                        unit: productUnit,
+                        stock: parseInt(productStock || '0', 10),
+                        farmer_id: currentUserId,
+                        imageData: base64Image
+                    };
+                    
+                    if (editingId) {
+                        // Update existing product
+                        const response = await fetch(`${API_URL}/api/products/${editingId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            showNotification('Product updated successfully!');
+                            loadProducts();
+                        } else {
+                            showNotification('Failed to update product: ' + (data.message || 'Unknown error'));
+                        }
+                    } else {
+                        // Create new product
+                        const response = await fetch(`${API_URL}/api/products`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            showNotification('Product added successfully!');
+                            loadProducts();
+                        } else {
+                            showNotification('Failed to add product: ' + (data.message || 'Unknown error'));
+                        }
+                    }
+                } else {
+                    // No new image, just update other fields
+                    const payload = {
+                        name: productName,
+                        description: productDescription,
+                        category: productCategory,
+                        price: parseFloat(productPrice),
+                        unit: productUnit,
+                        stock: parseInt(productStock || '0', 10),
+                        farmer_id: currentUserId
+                    };
+                    
+                    if (editingId) {
+                        // Update existing product
+                        const response = await fetch(`${API_URL}/api/products/${editingId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            showNotification('Product updated successfully!');
+                            loadProducts();
+                        } else {
+                            showNotification('Failed to update product: ' + (data.message || 'Unknown error'));
+                        }
+                    } else {
+                        // Create new product without image
+                        const response = await fetch(`${API_URL}/api/products`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            showNotification('Product added successfully!');
+                            loadProducts();
+                        } else {
+                            showNotification('Failed to add product: ' + (data.message || 'Unknown error'));
+                        }
+                    }
                 }
+                
+                // Reset form
+                document.getElementById('productForm').reset();
+                document.getElementById('addProductForm').style.display = 'none';
+                document.getElementById('imagePreview').style.display = 'none';
+                document.getElementById('uploadText').style.display = 'block';
+                
+                // Reset form title and button
+                const formTitle = document.querySelector('#addProductForm h3');
+                if (formTitle) formTitle.textContent = 'Add New Product';
+                if (submitBtn) {
+                    submitBtn.textContent = 'Add Product';
+                    submitBtn.removeAttribute('data-editing-id');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting product:', error);
+                showNotification('Failed to save product. Please try again.');
             }
-
-            submitToSupabase();
-            
-            // Reset and hide form
-            document.getElementById('productForm').reset();
-            document.getElementById('addProductForm').style.display = 'none';
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('uploadText').style.display = 'block';
         });
         
         // Order Status Management
