@@ -1394,6 +1394,7 @@
             if (queryApi) return queryApi;
 
             if (window.CONFIG?.API_URL) return window.CONFIG.API_URL;
+            if (window.CONFIG?.API_BASE_URL) return window.CONFIG.API_BASE_URL;
 
             const storedApi = localStorage.getItem('API_URL') || localStorage.getItem('apiUrl') || localStorage.getItem('backendUrl');
             if (storedApi) return storedApi;

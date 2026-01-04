@@ -17,6 +17,10 @@
   // Function to get environment variable from Netlify context
   function getEnvVariable(key, defaultValue) {
     // Check multiple possible sources for environment variables
+    // 0. Pre-generated window._env_ (common Netlify static env injection pattern)
+    if (window._env_ && window._env_[key]) {
+      return window._env_[key];
+    }
     
     // 1. Netlify build environment (if available)
     if (typeof window.__NETLIFY__ !== 'undefined' && window.__NETLIFY__.env) {

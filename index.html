@@ -402,16 +402,12 @@
   </div>
 
   <script>
-    // Backend API URL - Update this to match your actual backend URL
-    const API_BASE_URL = window.CONFIG.API_BASE_URL; // Change this to your actual backend URL
-    // For local testing: 'http://localhost:5000'
-    // For production: 'https://your-deployed-backend.com'
-    
-    // You can also set this dynamically based on environment
+    // Backend API URL resolved from Netlify-provided config (env-config.js)
     const currentHost = window.location.hostname;
-    const API_URL = currentHost === 'localhost' || currentHost === '127.0.0.1' 
-      ? 'http://localhost:5000' 
-      : window.CONFIG.API_BASE_URL; // Update this!
+    const resolvedApi = (window.CONFIG && (window.CONFIG.API_BASE_URL || window.CONFIG.API_URL)) || '';
+    const API_URL = resolvedApi
+      || ((currentHost === 'localhost' || currentHost === '127.0.0.1') ? 'http://localhost:5000' : window.location.origin);
+    const API_BASE_URL = API_URL;
 
     document.addEventListener('DOMContentLoaded', function() {
       const loginForm = document.getElementById('loginForm');
