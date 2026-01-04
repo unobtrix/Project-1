@@ -1386,9 +1386,28 @@
         }
 
         const currentUserId = getCurrentUserId();
-        
-        // API URL - Update this with your backend server URL
-        const API_URL = window.CONFIG?.API_URL || 'http://localhost:5000';
+
+        // Resolve API base URL (prefer config, query string, or stored value; avoid localhost in production)
+        function getApiUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const queryApi = params.get('apiUrl') || params.get('api') || params.get('backend');
+            if (queryApi) return queryApi;
+
+            if (window.CONFIG?.API_URL) return window.CONFIG.API_URL;
+
+            const storedApi = localStorage.getItem('API_URL') || localStorage.getItem('apiUrl') || localStorage.getItem('backendUrl');
+            if (storedApi) return storedApi;
+
+            // When served from a hosted domain, try same-origin API
+            if (window.location.origin && window.location.origin !== 'file://') {
+                return window.location.origin;
+            }
+
+            // Last-resort fallback for local dev
+            return 'http://localhost:5000';
+        }
+
+        const API_URL = getApiUrl();
 
         async function loadFarmerProfile() {
             try {
