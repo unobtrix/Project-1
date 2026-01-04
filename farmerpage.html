@@ -1362,26 +1362,32 @@
         });
 
         const currentUserId = (localStorage.getItem('userId') || localStorage.getItem('currentUserId') || 'user123');
+        
+        // API URL - Update this with your backend server URL
+        const API_URL = window.CONFIG?.API_URL || 'http://localhost:5000';
 
         async function loadFarmerProfile() {
             try {
-                const sb = await window.getSupabaseClient();
-                const { data, error } = await sb
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUserId)
-                    .single();
-                if (error) {
-                    console.error('Error fetching farmer profile:', error);
-                    return;
+                const userId = currentUserId;
+                
+                // Use the new API endpoint
+                const response = await fetch(`${API_URL}/api/farmer/profile/${userId}`);
+                const data = await response.json();
+                
+                if (data.success && data.profile) {
+                    const profile = data.profile;
+                    const name = profile.full_name || profile.name || 'Farmer';
+                    document.getElementById('farmerName').textContent = name;
+                    document.getElementById('welcomeTitle').textContent = `Welcome, ${name}!`;
+                    const subtitle = profile.farm_name || profile.role || 'Farm';
+                    document.getElementById('farmerSubtitle').textContent = subtitle;
+                    
+                    if (profile.avatar_url || profile.profile_photo_url) {
+                        document.getElementById('farmerAvatar').src = profile.avatar_url || profile.profile_photo_url;
+                    }
+                } else {
+                    console.error('Failed to load farmer profile:', data.message);
                 }
-                if (!data) return;
-                const name = data.full_name || data.name || 'Farmer';
-                document.getElementById('farmerName').textContent = name;
-                document.getElementById('welcomeTitle').textContent = `Welcome, ${name}!`;
-                const subtitle = data.farm_name || data.role || 'Farm';
-                document.getElementById('farmerSubtitle').textContent = subtitle;
-                if (data.avatar_url) document.getElementById('farmerAvatar').src = data.avatar_url;
             } catch (e) {
                 console.error('Unexpected profile load error:', e);
             }
