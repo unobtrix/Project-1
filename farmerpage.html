@@ -1361,7 +1361,31 @@
             headerRight.classList.toggle('mobile-open');
         });
 
-        const currentUserId = (localStorage.getItem('userId') || localStorage.getItem('currentUserId') || 'user123');
+        // Resolve the logged-in user ID from query params or localStorage
+        function getCurrentUserId() {
+            const params = new URLSearchParams(window.location.search);
+            const paramId = params.get('id') || params.get('userId');
+            if (paramId) return paramId;
+
+            const directId = localStorage.getItem('farmerId') || localStorage.getItem('currentUserId') || localStorage.getItem('userId');
+            if (directId) return directId;
+
+            const storedUser = localStorage.getItem('user') || localStorage.getItem('currentUser') || localStorage.getItem('farmerProfile');
+            if (storedUser) {
+                try {
+                    const parsed = JSON.parse(storedUser);
+                    if (parsed && (parsed.id || parsed.userId || parsed.farmer_id)) {
+                        return parsed.id || parsed.userId || parsed.farmer_id;
+                    }
+                } catch (err) {
+                    console.warn('Failed to parse stored user payload:', err);
+                }
+            }
+
+            return null;
+        }
+
+        const currentUserId = getCurrentUserId();
         
         // API URL - Update this with your backend server URL
         const API_URL = window.CONFIG?.API_URL || 'http://localhost:5000';
@@ -1369,9 +1393,23 @@
         async function loadFarmerProfile() {
             try {
                 const userId = currentUserId;
-                
+
+                if (!userId) {
+                    console.error('No user ID found. Ensure login stores farmer id in localStorage or pass ?userId=123');
+                    showNotification('Please log in again to load your profile.');
+                    return;
+                }
+
                 // Use the new API endpoint
-                const response = await fetch(`${API_URL}/api/farmer/profile/${userId}`);
+                const response = await fetch(`${API_URL}/api/farmer/profile/${encodeURIComponent(userId)}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Profile fetch failed with status', response.status, errorText);
+                    showNotification('Failed to load profile. Please try again.');
+                    return;
+                }
+
                 const data = await response.json();
                 
                 if (data.success && data.profile) {
@@ -1387,9 +1425,11 @@
                     }
                 } else {
                     console.error('Failed to load farmer profile:', data.message);
+                    showNotification('Profile not found.');
                 }
             } catch (e) {
                 console.error('Unexpected profile load error:', e);
+                showNotification('Network error while loading profile.');
             }
         }
 
