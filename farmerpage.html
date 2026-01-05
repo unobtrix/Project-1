@@ -356,6 +356,11 @@
             color: #721C24;
         }
         
+        .status-active {
+            background: #D4EDDA;
+            color: #155724;
+        }
+        
         .status-sent {
             background: #D1ECF1;
             color: #0c5460;
@@ -369,6 +374,11 @@
         .status-in-warehouse {
             background: #D4EDDA;
             color: #155724;
+        }
+        
+        .status-not-sent {
+            background: #FFF3CD;
+            color: #856404;
         }
         
         /* Action Buttons */
@@ -1785,14 +1795,14 @@
                         <div class="product-price">₹${parseFloat(product.price).toFixed(2)}/${product.unit || 'kg'}</div>
                         <p class="product-stock">Stock: ${product.stock || 0} ${product.unit || 'kg'}</p>
                         <p class="product-description" style="font-size: 0.9rem; color: #757575; margin-bottom: 1rem;">${product.description || ''}</p>
-                        <span class="product-status ${product.status || 'pending'}">${(product.status || 'pending').charAt(0).toUpperCase() + (product.status || 'pending').slice(1)}</span>
+                        <span class="product-status ${product.status || 'active'}">${(product.status || 'active').charAt(0).toUpperCase() + (product.status || 'active').slice(1)}</span>
                         <div class="product-actions">
-                            ${(product.status === 'pending' || !product.status) ? `
+                            ${(product.status === 'active' || !product.status || product.fulfillment_status === 'not_sent') ? `
                                 <button class="action-btn btn-edit" onclick="editProduct(${product.id})">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
                             ` : ''}
-                            ${(product.status === 'pending' || !product.status) ? `
+                            ${(product.status === 'active' || !product.status || product.fulfillment_status === 'not_sent') ? `
                                 <button class="action-btn btn-warehouse" onclick="openShippingModal(${product.id}, '${product.name}', ${product.stock}, '${product.unit || 'kg'}')">
                                     <i class="fas fa-truck"></i> Send to Warehouse
                                 </button>
@@ -2084,11 +2094,20 @@
         // Shipping modal functions
         let currentWarehouseProductId = null;
 
+        // Function to generate UUID v4
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0,
+                v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         function openShippingModal(productId, productName, quantity, unit) {
             currentWarehouseProductId = productId;
             
-            // Generate a reference ID
-            const refId = `WH-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+            // Generate a UUID for the reference ID
+            const refId = generateUUID();
             
             // Populate modal with product details
             document.getElementById('labelProductName').textContent = productName;
@@ -2387,7 +2406,7 @@
                 }
 
                 const data = await response.json();
-                const shippedProducts = (data.products || []).filter(p => p.status === 'sent' || p.fulfillment_status);
+                const shippedProducts = (data.products || []).filter(p => p.status === 'sent' || p.fulfillment_status === 'in-transit' || p.fulfillment_status === 'in-warehouse');
                 
                 if (shippedProducts.length > 0) {
                     renderProductStatus(shippedProducts);
@@ -2649,13 +2668,18 @@
                 
                 // Reset form
                 const form = document.getElementById('addProductForm');
-                form.classList.remove('show');
-                document.getElementById('addProductBtn').classList.remove('active');
-                document.getElementById('addProductBtn2').classList.remove('active');
-                setTimeout(() => {
-                    form.style.display = 'none';
-                }, 400);
-                document.getElementById('productForm').reset();
+                if (form) {
+                    form.classList.remove('show');
+                    setTimeout(() => {
+                        form.style.display = 'none';
+                    }, 400);
+                }
+                const addBtn2 = document.getElementById('addProductBtn2');
+                if (addBtn2) addBtn2.classList.remove('active');
+                
+                const productFormEl = document.getElementById('productForm');
+                if (productFormEl) productFormEl.reset();
+                
                 selectedImages = [];
                 existingImageUrl = '';
                 renderSelectedImages();
