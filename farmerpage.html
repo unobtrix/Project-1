@@ -1743,8 +1743,16 @@
                     selectedImages = [];
                     renderSelectedImages();
                     
-                    // Show form
-                    document.getElementById('addProductForm').style.display = 'block';
+                    // Show form with animation
+                    const form = document.getElementById('addProductForm');
+                    form.style.display = 'block';
+                    const addBtn = document.getElementById('addProductBtn2');
+                    if (addBtn) {
+                        addBtn.classList.add('active');
+                    }
+                    setTimeout(() => {
+                        form.classList.add('show');
+                    }, 10);
                     
                     // Change form title and button
                     const formTitle = document.querySelector('#addProductForm h3');
@@ -1815,8 +1823,16 @@
                     selectedTourImages = [];
                     renderSelectedTourImages();
                     
-                    // Show form
-                    document.getElementById('addTourForm').style.display = 'block';
+                    // Show form with animation
+                    const form = document.getElementById('addTourForm');
+                    form.style.display = 'block';
+                    const addBtn = document.getElementById('addTourBtn');
+                    if (addBtn) {
+                        addBtn.classList.add('active');
+                    }
+                    setTimeout(() => {
+                        form.classList.add('show');
+                    }, 10);
                     
                     // Change form title and button
                     const formTitle = document.querySelector('#addTourForm h3');
