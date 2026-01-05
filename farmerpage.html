@@ -955,8 +955,8 @@
         <div class="sidebar">
             <div class="farmer-info">
                 <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="Farmer" class="farmer-avatar" id="farmerAvatar">
-                <h3 id="farmerName">Rajesh Kumar</h3>
-                <p id="farmerSubtitle">Organic Vegetable Farm</p>
+                <h3 id="farmerName">--</h3>
+                <p id="farmerSubtitle">--</p>
                 <div class="farmer-rating">
                     <i class="fas fa-star"></i> 4.8 Rating
                 </div>
@@ -978,7 +978,7 @@
             <div class="page-content active" id="dashboard-page">
                 <div class="dashboard-header">
                     <div class="welcome-message">
-                        <h2 id="welcomeTitle">Welcome, Rajesh!</h2>
+                        <h2 id="welcomeTitle">Welcome!</h2>
                         <p>Here's what's happening with your farm today.</p>
                     </div>
                     <button class="btn btn-primary" id="addProductBtn">
@@ -1212,6 +1212,42 @@
                     <button class="btn btn-primary" id="addTourBtn">
                         <i class="fas fa-plus"></i> Add Tour
                     </button>
+                </div>
+
+                <!-- Add Tour Form -->
+                <div class="add-form" id="addTourForm" style="display: none;">
+                    <h3>Add New Tour</h3>
+                    <form id="tourForm">
+                        <div class="form-group">
+                            <label for="tourName">Tour Name</label>
+                            <input type="text" id="tourName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tourDescription">Description</label>
+                            <textarea id="tourDescription" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tourDuration">Duration (hours)</label>
+                            <input type="number" id="tourDuration" min="0" step="0.5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tourPrice">Price per person (₹)</label>
+                            <input type="number" id="tourPrice" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tourMaxGroup">Max group size</label>
+                            <input type="number" id="tourMaxGroup" min="1" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="cancelTourBtn">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Tour</button>
+                        </div>
+                    </form>
                 </div>
                 
                 <!-- Tours Grid -->
@@ -1575,17 +1611,21 @@
                 return;
             }
 
-            container.innerHTML = tours.map(tour => `
+            container.innerHTML = tours.map(tour => {
+                const title = tour.title || tour.name || 'Tour';
+                const duration = tour.duration || (tour.duration_hours ? `${tour.duration_hours} hours` : '');
+                const price = tour.price !== undefined ? tour.price : (tour.price_per_person !== undefined ? tour.price_per_person : 0);
+                return `
                 <div class="tour-card" data-tour-id="${tour.id}">
                     <img src="${tour.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'}" 
-                         alt="${tour.title}" 
+                         alt="${title}" 
                          class="tour-image"
                          onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'">
                     <div class="tour-content">
-                        <h3 class="tour-title">${tour.title}</h3>
+                        <h3 class="tour-title">${title}</h3>
                         <div class="tour-meta">
-                            <span><i class="fas fa-clock"></i> ${tour.duration || '2 hours'}</span>
-                            <span><i class="fas fa-tag"></i> ₹${parseFloat(tour.price).toFixed(2)}</span>
+                            <span><i class="fas fa-clock"></i> ${duration || 'Duration not set'}</span>
+                            <span><i class="fas fa-tag"></i> ₹${parseFloat(price || 0).toFixed(2)}</span>
                         </div>
                         <p class="tour-description">${tour.description || ''}</p>
                         <div class="product-actions">
@@ -1601,7 +1641,7 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         // Edit product function
@@ -2007,6 +2047,63 @@
                 showNotification('Failed to save product. Please try again.');
             }
         });
+
+        // Tour Form Toggle
+        document.getElementById('addTourBtn').addEventListener('click', function() {
+            document.getElementById('addTourForm').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('cancelTourBtn').addEventListener('click', function() {
+            document.getElementById('addTourForm').style.display = 'none';
+            document.getElementById('tourForm').reset();
+        });
+
+        // Create tour
+        document.getElementById('tourForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!currentUserId) {
+                showNotification('Please log in again to create tours');
+                return;
+            }
+
+            const name = document.getElementById('tourName').value;
+            const description = document.getElementById('tourDescription').value;
+            const durationHours = parseInt(document.getElementById('tourDuration').value, 10);
+            const pricePerPerson = parseFloat(document.getElementById('tourPrice').value);
+            const maxGroupSize = parseInt(document.getElementById('tourMaxGroup').value, 10);
+
+            const payload = {
+                farmer_id: currentUserId,
+                name,
+                description,
+                duration_hours: isNaN(durationHours) ? null : durationHours,
+                price_per_person: isNaN(pricePerPerson) ? null : pricePerPerson,
+                max_group_size: isNaN(maxGroupSize) ? null : maxGroupSize
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/tours`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Tour added successfully!');
+                    document.getElementById('tourForm').reset();
+                    document.getElementById('addTourForm').style.display = 'none';
+                    loadTours();
+                } else {
+                    showNotification('Failed to add tour: ' + (data.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Error adding tour:', err);
+                showNotification('Failed to add tour');
+            }
+        });
         
         // Order Status Management
         document.querySelectorAll('.action-btn.btn-edit').forEach(button => {
@@ -2040,11 +2137,6 @@
                     }
                 }
             });
-        });
-        
-        // Add Tour Button
-        document.getElementById('addTourBtn').addEventListener('click', function() {
-            showNotification('Add Tour form would open here');
         });
         
         // Show notification
