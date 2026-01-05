@@ -1243,9 +1243,20 @@
                             <input type="number" id="tourMaxGroup" min="1" required>
                         </div>
 
+                        <div class="form-group">
+                            <label>Tour Images (up to 5)</label>
+                            <div class="image-upload-container" id="tourImageUploadContainer">
+                                <div class="image-preview" id="tourImagePreview" style="display: none;"></div>
+                                <input type="file" id="tourImage" accept="image/*" multiple style="display:none;">
+                                <button type="button" class="upload-btn" id="tourUploadBtn">Upload Images</button>
+                                <p style="color: #757575; font-size: 0.9rem;" id="tourUploadText">PNG, JPG up to 5 images</p>
+                                <div class="image-preview-list" id="tourImagePreviewList"></div>
+                            </div>
+                        </div>
+
                         <div class="form-actions">
                             <button type="button" class="btn btn-outline" id="cancelTourBtn">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Tour</button>
+                            <button type="submit" class="btn btn-primary" id="saveTourBtn">Save Tour</button>
                         </div>
                     </form>
                 </div>
@@ -1615,9 +1626,11 @@
                 const title = tour.title || tour.name || 'Tour';
                 const duration = tour.duration || (tour.duration_hours ? `${tour.duration_hours} hours` : '');
                 const price = tour.price !== undefined ? tour.price : (tour.price_per_person !== undefined ? tour.price_per_person : 0);
+                const images = Array.isArray(tour.tour_url) ? tour.tour_url : (tour.tour_url ? [tour.tour_url] : []);
+                const primaryImage = images.length ? images[0] : (tour.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80');
                 return `
                 <div class="tour-card" data-tour-id="${tour.id}">
-                    <img src="${tour.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'}" 
+                    <img src="${primaryImage}" 
                          alt="${title}" 
                          class="tour-image"
                          onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'">
@@ -1980,6 +1993,8 @@
             // Check if we're editing or creating
             const submitBtn = document.querySelector('#productForm button[type="submit"]');
             const editingId = submitBtn ? submitBtn.getAttribute('data-editing-id') : null;
+
+            setLoading(submitBtn, true, editingId ? 'Update Product' : 'Add Product', 'Saving...');
             
             try {
                 const basePayload = {
@@ -2046,6 +2061,7 @@
                 console.error('Error submitting product:', error);
                 showNotification('Failed to save product. Please try again.');
             }
+            setLoading(submitBtn, false, editingId ? 'Update Product' : 'Add Product', 'Saving...');
         });
 
         // Tour Form Toggle
@@ -2074,13 +2090,17 @@
             const pricePerPerson = parseFloat(document.getElementById('tourPrice').value);
             const maxGroupSize = parseInt(document.getElementById('tourMaxGroup').value, 10);
 
+            const saveBtn = document.getElementById('saveTourBtn');
+            setLoading(saveBtn, true, 'Save Tour', 'Saving...');
+
             const payload = {
                 farmer_id: currentUserId,
                 name,
                 description,
                 duration_hours: isNaN(durationHours) ? null : durationHours,
                 price_per_person: isNaN(pricePerPerson) ? null : pricePerPerson,
-                max_group_size: isNaN(maxGroupSize) ? null : maxGroupSize
+                max_group_size: isNaN(maxGroupSize) ? null : maxGroupSize,
+                images: selectedTourImages
             };
 
             try {
@@ -2095,6 +2115,8 @@
                     showNotification('Tour added successfully!');
                     document.getElementById('tourForm').reset();
                     document.getElementById('addTourForm').style.display = 'none';
+                    selectedTourImages = [];
+                    renderSelectedTourImages();
                     loadTours();
                 } else {
                     showNotification('Failed to add tour: ' + (data.message || 'Unknown error'));
@@ -2103,8 +2125,86 @@
                 console.error('Error adding tour:', err);
                 showNotification('Failed to add tour');
             }
+            setLoading(saveBtn, false, 'Save Tour', 'Saving...');
         });
         
+        // Simple loading state helper
+        function setLoading(buttonEl, isLoading, idleText, loadingText) {
+            if (!buttonEl) return;
+            if (isLoading) {
+                buttonEl.disabled = true;
+                buttonEl.dataset.prevText = buttonEl.textContent;
+                buttonEl.textContent = loadingText || 'Saving...';
+            } else {
+                buttonEl.disabled = false;
+                buttonEl.textContent = idleText || buttonEl.dataset.prevText || 'Save';
+            }
+        }
+
+        // Tour image selection state
+        let selectedTourImages = [];
+
+        function renderSelectedTourImages() {
+            const list = document.getElementById('tourImagePreviewList');
+            const uploadText = document.getElementById('tourUploadText');
+            if (!list) return;
+
+            if (selectedTourImages.length === 0) {
+                list.innerHTML = '';
+                if (uploadText) uploadText.style.display = 'block';
+                return;
+            }
+
+            if (uploadText) uploadText.style.display = 'none';
+            list.innerHTML = selectedTourImages.map((img, idx) => `
+                <div class="image-thumb-wrapper">
+                    <img src="${img}" class="image-thumb" alt="Preview ${idx + 1}">
+                    <button type="button" class="thumb-remove" onclick="removeSelectedTourImage(${idx})">×</button>
+                </div>
+            `).join('');
+        }
+
+        window.removeSelectedTourImage = function(idx) {
+            selectedTourImages.splice(idx, 1);
+            renderSelectedTourImages();
+        };
+
+        // Tour image picker trigger
+        const tourUploadBtn = document.getElementById('tourUploadBtn');
+        if (tourUploadBtn) {
+            tourUploadBtn.addEventListener('click', () => {
+                const input = document.getElementById('tourImage');
+                if (input) input.click();
+            });
+        }
+
+        // Tour image file input
+        const tourImageInput = document.getElementById('tourImage');
+        if (tourImageInput) {
+            tourImageInput.addEventListener('change', function(e) {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+
+                const remaining = Math.max(0, 5 - selectedTourImages.length);
+                const toRead = files.slice(0, remaining);
+
+                Promise.all(toRead.map(file => new Promise((resolve, reject) => {
+                    if (!file.type.startsWith('image/')) return reject(new Error('Invalid file type'));
+                    const reader = new FileReader();
+                    reader.onload = ev => resolve(ev.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                }))).then(base64Images => {
+                    selectedTourImages.push(...base64Images);
+                    renderSelectedTourImages();
+                }).catch(() => {
+                    showNotification('Please select valid image files');
+                }).finally(() => {
+                    e.target.value = '';
+                });
+            });
+        }
+
         // Order Status Management
         document.querySelectorAll('.action-btn.btn-edit').forEach(button => {
             button.addEventListener('click', function() {
