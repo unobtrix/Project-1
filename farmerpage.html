@@ -1385,12 +1385,25 @@
                 return;
             }
 
-            container.innerHTML = products.map(product => `
+            container.innerHTML = products.map(product => {
+                // Handle image_url as array or string
+                const images = Array.isArray(product.image_url) ? product.image_url : [product.image_url || ''];
+                const filteredImages = images.filter(img => img && img.trim());
+                const displayImage = filteredImages.length > 0 ? filteredImages[0] : 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80';
+                
+                return `
                 <div class="product-card" data-product-id="${product.id}">
-                    <img src="${product.image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80'}" 
-                         alt="${product.name}" 
-                         class="product-image"
-                         onerror="this.src='https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80'">
+                    <div style="position: relative;">
+                        <img src="${displayImage}" 
+                             alt="${product.name}" 
+                             class="product-image"
+                             onerror="this.src='https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80'">
+                        ${filteredImages.length > 1 ? `
+                            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                <i class="fas fa-images"></i> ${filteredImages.length}
+                            </div>
+                        ` : ''}
+                    </div>
                     <div class="product-content">
                         <h3 class="product-title">${product.name}</h3>
                         <div class="product-price">₹${parseFloat(product.price).toFixed(2)}/${product.unit || 'kg'}</div>
@@ -1406,7 +1419,7 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Load tours from database
