@@ -1453,10 +1453,31 @@
             }
 
             container.innerHTML = products.map(product => {
-                // Handle image_url as array or string
-                const images = Array.isArray(product.image_url) ? product.image_url : [product.image_url || ''];
+                // Handle image_url as array, string, or JSON string
+                let images = [];
+                if (Array.isArray(product.image_url)) {
+                    images = product.image_url;
+                } else if (typeof product.image_url === 'string') {
+                    try {
+                        // Try to parse if it's a JSON string
+                        const parsed = JSON.parse(product.image_url);
+                        images = Array.isArray(parsed) ? parsed : [product.image_url];
+                    } catch (e) {
+                        // Not JSON, treat as single URL
+                        images = [product.image_url];
+                    }
+                } else {
+                    images = [''];
+                }
+                
                 const filteredImages = images.filter(img => img && img.trim());
                 const hasMultipleImages = filteredImages.length > 1;
+                
+                console.log(`Product ${product.id} (${product.name}):`, {
+                    raw_image_url: product.image_url,
+                    parsed_images: filteredImages,
+                    count: filteredImages.length
+                });
                 
                 // Use placeholder if no images
                 if (filteredImages.length === 0) {
