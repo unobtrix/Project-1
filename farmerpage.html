@@ -356,6 +356,21 @@
             color: #721C24;
         }
         
+        .status-sent {
+            background: #D1ECF1;
+            color: #0c5460;
+        }
+        
+        .status-in-transit {
+            background: #CCE5FF;
+            color: #004085;
+        }
+        
+        .status-in-warehouse {
+            background: #D4EDDA;
+            color: #155724;
+        }
+        
         /* Action Buttons */
         .action-btn {
             padding: 5px 10px;
@@ -374,6 +389,15 @@
         .btn-edit {
             background: #17A2B8;
             color: white;
+        }
+        
+        .btn-warehouse {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warehouse:hover {
+            background: #218838;
         }
         
         .btn-delete {
@@ -721,6 +745,114 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: var(--white);
+            padding: 0;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: var(--dark);
+            font-size: 1.3rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 1px solid #e0e0e0;
+            justify-content: flex-end;
+        }
+        
+        .product-status {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+        
+        .product-status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .product-status.sent {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .product-status.in-warehouse {
+            background-color: #d4edda;
+            color: #155724;
         }
         
         /* Tour Cards */
@@ -1127,6 +1259,32 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Product Shipment Status Section -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3>Product Shipment Status</h3>
+                        <a href="#">View All</a>
+                    </div>
+                    
+                    <table class="table" id="productStatusTable">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Fulfillment</th>
+                                <th>Reference ID</th>
+                                <th>Sent Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productStatusBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: #757575;">Loading product status...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             
             <!-- Products Page -->
@@ -1202,6 +1360,42 @@
                             <button type="submit" class="btn btn-primary">Add Product</button>
                         </div>
                     </form>
+                </div>
+                
+                <!-- Shipping Label Modal -->
+                <div class="modal" id="shippingLabelModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Generate Shipping Label</h3>
+                            <button class="modal-close" onclick="closeShippingModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="labelPreview" style="background: #f5f5f5; padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                                <div style="border: 2px solid #333; padding: 2rem; background: white; font-family: monospace;">
+                                    <h4 style="text-align: center; margin-bottom: 1rem;">SHIPPING LABEL</h4>
+                                    <div style="margin-bottom: 1rem;">
+                                        <p><strong>From:</strong></p>
+                                        <p id="labelFromName">Farmer Name</p>
+                                        <p id="labelFromAddress">Farm Address</p>
+                                    </div>
+                                    <div style="border-top: 1px solid #ddd; padding-top: 1rem; margin-bottom: 1rem;">
+                                        <p><strong>Product:</strong> <span id="labelProductName">Product Name</span></p>
+                                        <p><strong>Quantity:</strong> <span id="labelProductQuantity">0</span> <span id="labelProductUnit">kg</span></p>
+                                        <p><strong>To:</strong> Central Warehouse</p>
+                                    </div>
+                                    <div style="border-top: 1px solid #ddd; padding-top: 1rem;">
+                                        <p style="text-align: center;"><strong>Reference ID:</strong></p>
+                                        <p id="labelRefId" style="text-align: center; font-size: 1.2rem; font-weight: bold;">--</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">The warehouse will track this shipment using the reference ID above.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeShippingModal()">Cancel</button>
+                            <button class="btn btn-primary" onclick="confirmSendToWarehouse()">Confirm & Send to Warehouse</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Products Grid -->
@@ -1591,10 +1785,18 @@
                         <div class="product-price">₹${parseFloat(product.price).toFixed(2)}/${product.unit || 'kg'}</div>
                         <p class="product-stock">Stock: ${product.stock || 0} ${product.unit || 'kg'}</p>
                         <p class="product-description" style="font-size: 0.9rem; color: #757575; margin-bottom: 1rem;">${product.description || ''}</p>
+                        <span class="product-status ${product.status || 'pending'}">${(product.status || 'pending').charAt(0).toUpperCase() + (product.status || 'pending').slice(1)}</span>
                         <div class="product-actions">
-                            <button class="action-btn btn-edit" onclick="editProduct(${product.id})">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
+                            ${(product.status === 'pending' || !product.status) ? `
+                                <button class="action-btn btn-edit" onclick="editProduct(${product.id})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            ` : ''}
+                            ${(product.status === 'pending' || !product.status) ? `
+                                <button class="action-btn btn-warehouse" onclick="openShippingModal(${product.id}, '${product.name}', ${product.stock}, '${product.unit || 'kg'}')">
+                                    <i class="fas fa-truck"></i> Send to Warehouse
+                                </button>
+                            ` : ''}
                             <button class="action-btn btn-delete" onclick="deleteProduct(${product.id})">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
@@ -1879,11 +2081,78 @@
             }
         }
 
+        // Shipping modal functions
+        let currentWarehouseProductId = null;
+
+        function openShippingModal(productId, productName, quantity, unit) {
+            currentWarehouseProductId = productId;
+            
+            // Generate a reference ID
+            const refId = `WH-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+            
+            // Populate modal with product details
+            document.getElementById('labelProductName').textContent = productName;
+            document.getElementById('labelProductQuantity').textContent = quantity;
+            document.getElementById('labelProductUnit').textContent = unit;
+            document.getElementById('labelRefId').textContent = refId;
+            
+            // Store ref ID in modal for later use
+            document.getElementById('shippingLabelModal').setAttribute('data-ref-id', refId);
+            
+            // Show modal
+            document.getElementById('shippingLabelModal').classList.add('show');
+        }
+
+        function closeShippingModal() {
+            document.getElementById('shippingLabelModal').classList.remove('show');
+            currentWarehouseProductId = null;
+        }
+
+        async function confirmSendToWarehouse() {
+            if (!currentWarehouseProductId) {
+                showNotification('Error: Product ID not found');
+                return;
+            }
+
+            const refId = document.getElementById('shippingLabelModal').getAttribute('data-ref-id');
+            
+            try {
+                // Update product status in database
+                const response = await fetch(`${API_URL}/api/products/${currentWarehouseProductId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: 'sent',
+                        fulfillment_status: 'in-transit',
+                        warehouse_ref_id: refId,
+                        sent_to_warehouse_date: new Date().toISOString()
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Product sent to warehouse successfully! Reference ID: ' + refId);
+                    closeShippingModal();
+                    loadProducts(); // Reload products to update status
+                } else {
+                    showNotification('Failed to update product status: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error sending to warehouse:', error);
+                showNotification('Failed to send product to warehouse');
+            }
+        }
+
         // Make functions globally accessible
         window.editProduct = editProduct;
         window.deleteProduct = deleteProduct;
         window.editTour = editTour;
         window.deleteTour = deleteTour;
+        window.openShippingModal = openShippingModal;
+        window.closeShippingModal = closeShippingModal;
+        window.confirmSendToWarehouse = confirmSendToWarehouse;
         
         // Image carousel navigation functions
         window.navigateCarousel = function(productId, direction) {
@@ -2102,7 +2371,63 @@
             }
         }
 
-        // Load recent tour bookings
+        // Load product shipment status
+        async function loadProductStatus() {
+            try {
+                if (!currentUserId) {
+                    console.error('No user ID found for loading product status');
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/api/products?farmer_id=${currentUserId}`);
+                if (!response.ok) {
+                    console.error('Failed to load product status:', response.statusText);
+                    document.getElementById('productStatusBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #757575;">No products found.</td></tr>';
+                    return;
+                }
+
+                const data = await response.json();
+                const shippedProducts = (data.products || []).filter(p => p.status === 'sent' || p.fulfillment_status);
+                
+                if (shippedProducts.length > 0) {
+                    renderProductStatus(shippedProducts);
+                } else {
+                    document.getElementById('productStatusBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #757575;">No products shipped yet. Send your products to warehouse to track their status.</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading product status:', error);
+                document.getElementById('productStatusBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #757575;">Failed to load product status.</td></tr>';
+            }
+        }
+
+        // Render product status
+        function renderProductStatus(products) {
+            const tbody = document.getElementById('productStatusBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = products.map(product => {
+                const status = product.status || 'pending';
+                const fulfillment = product.fulfillment_status || 'pending';
+                const refId = product.warehouse_ref_id || '--';
+                const sentDate = product.sent_to_warehouse_date ? 
+                    new Date(product.sent_to_warehouse_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                    : '--';
+                
+                const statusClass = `status-${status.toLowerCase()}`;
+                const fulfillmentClass = `status-${fulfillment.toLowerCase()}`;
+                
+                return `
+                <tr>
+                    <td>${product.name || 'Product'}</td>
+                    <td>${product.stock} ${product.unit || 'kg'}</td>
+                    <td><span class="status ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+                    <td><span class="status ${fulfillmentClass}">${fulfillment.charAt(0).toUpperCase() + fulfillment.slice(1).replace('-', ' ')}</span></td>
+                    <td><code style="background: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 3px;">${refId}</code></td>
+                    <td>${sentDate}</td>
+                </tr>
+            `}).join('');
+        }
+
         async function loadTourBookings() {
             try {
                 if (!currentUserId) {
@@ -2154,6 +2479,7 @@
         loadFarmerProfile();
         loadProducts();
         loadTours();
+        loadProductStatus();
         loadTourBookings();
 
         // Add Product Form Toggle
