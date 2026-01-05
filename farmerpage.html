@@ -704,6 +704,24 @@
             object-fit: cover;
         }
         
+        /* Tour Image Carousel */
+        .tour-image-container {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+        }
+        
+        .tour-image-slider {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+            height: 100%;
+        }
+        
+        .tour-image-slide {
+            min-width: 100%;
+            height: 100%;
+        }
+        
         .tour-content {
             padding: 1.5rem;
         }
@@ -1626,14 +1644,42 @@
                 const title = tour.title || tour.name || 'Tour';
                 const duration = tour.duration || (tour.duration_hours ? `${tour.duration_hours} hours` : '');
                 const price = tour.price !== undefined ? tour.price : (tour.price_per_person !== undefined ? tour.price_per_person : 0);
-                const images = Array.isArray(tour.tour_url) ? tour.tour_url : (tour.tour_url ? [tour.tour_url] : []);
-                const primaryImage = images.length ? images[0] : (tour.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80');
+                let images = Array.isArray(tour.tour_url) ? tour.tour_url : (tour.tour_url ? [tour.tour_url] : []);
+                const filteredImages = images.filter(img => img && img.trim());
+                const hasMultipleImages = filteredImages.length > 1;
+                
+                // Use placeholder if no images
+                if (filteredImages.length === 0) {
+                    filteredImages.push('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80');
+                }
+                
                 return `
                 <div class="tour-card" data-tour-id="${tour.id}">
-                    <img src="${primaryImage}" 
-                         alt="${title}" 
-                         class="tour-image"
-                         onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'">
+                    <div class="tour-image-container">
+                        <div class="tour-image-slider" data-slider-id="tour-slider-${tour.id}">
+                            ${filteredImages.map((img, idx) => `
+                                <img src="${img}" 
+                                     alt="${title} - Image ${idx + 1}" 
+                                     class="tour-image tour-image-slide"
+                                     onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'">
+                            `).join('')}
+                        </div>
+                        ${hasMultipleImages ? `
+                            <button class="carousel-btn carousel-btn-prev" onclick="navigateTourCarousel(${tour.id}, -1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-btn carousel-btn-next" onclick="navigateTourCarousel(${tour.id}, 1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="carousel-indicators">
+                                ${filteredImages.map((_, idx) => `
+                                    <div class="carousel-indicator ${idx === 0 ? 'active' : ''}" 
+                                         onclick="goToTourSlide(${tour.id}, ${idx})" 
+                                         data-indicator-id="tour-indicator-${tour.id}-${idx}"></div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
                     <div class="tour-content">
                         <h3 class="tour-title">${title}</h3>
                         <div class="tour-meta">
@@ -1655,6 +1701,12 @@
                     </div>
                 </div>
             `;}).join('');
+            
+            // Initialize carousel state for each tour
+            tours.forEach(tour => {
+                if (!window.tourCarouselState) window.tourCarouselState = {};
+                window.tourCarouselState[tour.id] = { currentIndex: 0 };
+            });
         }
 
         // Edit product function
@@ -1794,6 +1846,62 @@
             if (!slider) return;
             
             window.carouselState[productId].currentIndex = index;
+            
+            // Update slider position
+            slider.style.transform = `translateX(-${index * 100}%)`;
+            
+            // Update indicators
+            const indicators = slider.parentElement.querySelectorAll('.carousel-indicator');
+            indicators.forEach((indicator, idx) => {
+                if (idx === index) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+        };
+        
+        // Tour carousel navigation functions
+        window.navigateTourCarousel = function(tourId, direction) {
+            if (!window.tourCarouselState) window.tourCarouselState = {};
+            if (!window.tourCarouselState[tourId]) window.tourCarouselState[tourId] = { currentIndex: 0 };
+            
+            const slider = document.querySelector(`[data-slider-id="tour-slider-${tourId}"]`);
+            if (!slider) return;
+            
+            const slides = slider.querySelectorAll('.tour-image-slide');
+            const totalSlides = slides.length;
+            
+            let newIndex = window.tourCarouselState[tourId].currentIndex + direction;
+            
+            // Loop around
+            if (newIndex < 0) newIndex = totalSlides - 1;
+            if (newIndex >= totalSlides) newIndex = 0;
+            
+            window.tourCarouselState[tourId].currentIndex = newIndex;
+            
+            // Update slider position
+            slider.style.transform = `translateX(-${newIndex * 100}%)`;
+            
+            // Update indicators
+            const indicators = slider.parentElement.querySelectorAll('.carousel-indicator');
+            indicators.forEach((indicator, idx) => {
+                if (idx === newIndex) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+        };
+        
+        window.goToTourSlide = function(tourId, index) {
+            if (!window.tourCarouselState) window.tourCarouselState = {};
+            if (!window.tourCarouselState[tourId]) window.tourCarouselState[tourId] = { currentIndex: 0 };
+            
+            const slider = document.querySelector(`[data-slider-id="tour-slider-${tourId}"]`);
+            if (!slider) return;
+            
+            window.tourCarouselState[tourId].currentIndex = index;
             
             // Update slider position
             slider.style.transform = `translateX(-${index * 100}%)`;
