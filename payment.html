@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FarmTrails Payment Gateway">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://checkout.razorpay.com">
+    <link rel="dns-prefetch" href="https://www.clarity.ms">
     <title>Razorpay Payment - FarmTrails</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="text/javascript">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDFd9w4JiyyHSdouL8zqHvyVMTTFjTt2b8&libraries=geometry,places&loading=async" defer></script>
+    <script type="text/javascript" async>
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
@@ -398,6 +405,230 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        /* Map Modal */
+        .map-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .map-modal.active {
+            display: flex;
+        }
+
+        .map-modal-content {
+            background: white;
+            width: 90%;
+            max-width: 900px;
+            height: 85vh;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .map-modal-header {
+            padding: 20px;
+            background: #4caf50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .map-search-box {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 500;
+        }
+
+        .map-search-field {
+            width: 380px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            padding: 0;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .map-search-field:focus-within {
+            box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+            border-color: #4caf50;
+        }
+
+        .map-search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 12px 15px;
+            font-size: 14px;
+            background: transparent;
+            min-width: 0;
+        }
+
+        .map-search-input::placeholder {
+            color: #999;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            width: auto;
+            max-height: 220px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 500;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .search-result-item-desc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .map-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .map-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #google-map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .map-modal-footer {
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .map-coords-info {
+            font-size: 14px;
+            color: #555;
+            flex: 1;
+        }
+
+        .clear-search-btn {
+            padding: 0 15px;
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+            user-select: none;
+            display: none;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .clear-search-btn:hover {
+            color: #333;
+        }
+
+        .confirm-location-btn {
+            padding: 12px 30px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .confirm-location-btn:hover {
+            background: #388e3c;
+        }
+
+        /* Leaflet marker pulse animation */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
+        }
+
+        .leaflet-marker-icon {
+            animation: pulse 2s infinite;
+        }
     </style>
 </head>
 <body>
@@ -424,7 +655,7 @@
         <div class="address-section">
             <h3>
                 Delivery Address
-                <button class="detect-address-btn" id="detect-address-btn">Detect My Location</button>
+                <button class="detect-address-btn" id="detect-address-btn">Select on Map</button>
             </h3>
             
             <div class="location-status" id="location-status"></div>
@@ -533,6 +764,32 @@
         <a href="index.html" class="back-btn">← Back to Shopping</a>
     </div>
 
+    <!-- Map Selection Modal -->
+    <div class="map-modal" id="map-modal">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h3>📍 Select Your Delivery Location</h3>
+                <button class="map-modal-close" id="close-map-modal">&times;</button>
+            </div>
+            <div class="map-container">
+                <div id="google-map"></div>
+                <div class="map-search-box">
+                    <div class="map-search-field">
+                        <input type="text" id="map-search-input" class="map-search-input" placeholder="Search location in Hyderabad...">
+                        <span id="clear-search-btn" class="clear-search-btn" title="Clear">×</span>
+                    </div>
+                </div>
+                <div class="search-results" id="search-results"></div>
+            </div>
+            <div class="map-modal-footer">
+                <div class="map-coords-info" id="coords-info">
+                    Click on the map or drag the marker to select your location
+                </div>
+                <button class="confirm-location-btn" id="confirm-location-btn">Confirm Location</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Success Popup -->
     <div class="popup-overlay" id="popup-overlay">
         <div class="popup">
@@ -554,9 +811,9 @@
         </div>
     </div>
 
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('payment-form');
@@ -621,59 +878,469 @@
                 }
             }
             
-            // Detect address using Geolocation API
+            // Map modal elements
+            const mapModal = document.getElementById('map-modal');
+            const closeMapModal = document.getElementById('close-map-modal');
+            const confirmLocationBtn = document.getElementById('confirm-location-btn');
+            const coordsInfo = document.getElementById('coords-info');
+            
+            let googleMap = null;
+            let mapMarker = null;
+            let selectedLat = 17.385044;
+            let selectedLng = 78.486671;
+            let isMapLoaded = false;
+            let geofencePolygon = null;
+            let cachedAddressData = null;  // Cache address data to avoid re-fetching
+            let cachedDisplayName = null;  // Cache the full address string
+            let userHasSelectedLocation = false;  // Flag to prevent GPS from overwriting manual selection
+            let locationDetermined = false;       // Flag to avoid showing delivery status before a selection
+            
+            // Hyderabad ORR (Outer Ring Road) approximate boundaries
+            const HYDERABAD_CENTER = { lat: 17.385044, lng: 78.486671 };
+            const HYDERABAD_ORR_RADIUS = 20000; // 20km radius (approximate ORR boundary)
+            
+            // ORR Polygon coordinates - actual ORR boundary waypoints (updated)
+            const ORR_POLYGON_COORDS = [
+                [17.198497, 78.390372],
+                [17.208230, 78.439333],
+                [17.208414, 78.550771],
+                [17.276809, 78.656423],
+                [17.338635, 78.659286],
+                [17.392153, 78.686791],
+                [17.477744, 78.705016],
+                [17.562024, 78.620846],
+                [17.573154, 78.572809],
+                [17.600461, 78.447827],
+                [17.554635, 78.380576],
+                [17.539855, 78.230554],
+                [17.418365, 78.270638],
+                [17.381684, 78.347533],
+                [17.194121, 78.377669],
+                [17.198497, 78.390372]  // Close the polygon by returning to first point
+            ];
+
+            // Precompute a bounding box for Hyderabad based on ORR polygon
+            const HYD_BBOX = (function() {
+                let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+                for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
+                    const lat = ORR_POLYGON_COORDS[i][0];
+                    const lng = ORR_POLYGON_COORDS[i][1];
+                    if (lat < minLat) minLat = lat;
+                    if (lat > maxLat) maxLat = lat;
+                    if (lng < minLng) minLng = lng;
+                    if (lng > maxLng) maxLng = lng;
+                }
+                return { minLat, minLng, maxLat, maxLng };
+            })();
+            
+            // Calculate distance between two coordinates in meters
+            function calculateDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371000; // Earth's radius in meters
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            }
+            
+            // Check if location is within Hyderabad ORR geofence using point-in-polygon algorithm
+            function isWithinGeofence(lat, lng) {
+                // Ray casting algorithm for point in polygon
+                let inside = false;
+                for (let i = 0, j = ORR_POLYGON_COORDS.length - 1; i < ORR_POLYGON_COORDS.length; j = i++) {
+                    const xi = ORR_POLYGON_COORDS[i][0], yi = ORR_POLYGON_COORDS[i][1];
+                    const xj = ORR_POLYGON_COORDS[j][0], yj = ORR_POLYGON_COORDS[j][1];
+                    
+                    const intersect = ((yi > lng) !== (yj > lng))
+                        && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+                    if (intersect) inside = !inside;
+                }
+                return inside;
+            }
+            
+            // Open map modal for manual location selection
             detectAddressBtn.addEventListener('click', function() {
-                if (!navigator.geolocation) {
-                    showLocationStatus('Geolocation is not supported by your browser', 'error');
+                detectAddressBtn.disabled = true;
+                detectAddressBtn.textContent = 'Opening map...';
+                
+                // Open map immediately with default location
+                selectedLat = 17.385044;
+                selectedLng = 78.486671;
+                openMapModal();
+                
+                // Try to get real location in background and update map if successful
+                if (navigator.geolocation) {
+                    showLocationStatus('Getting your precise GPS location... This may take a moment.', 'info');
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            // Don't update if user has already manually selected a location
+                            if (userHasSelectedLocation) {
+                                console.log('GPS location received but ignored - user has manually selected location');
+                                detectAddressBtn.disabled = false;
+                                detectAddressBtn.textContent = 'Select on Map';
+                                return;
+                            }
+                            
+                            // Update to real location
+                            selectedLat = position.coords.latitude;
+                            selectedLng = position.coords.longitude;
+                            locationDetermined = true; // GPS fix obtained
+                            
+                            const accuracy = position.coords.accuracy;
+                            console.log('Detected location:', selectedLat, selectedLng, 'Accuracy:', accuracy, 'meters');
+                            
+                            // Check if accuracy is acceptable
+                            if (accuracy > 5000) {
+                                // Very poor accuracy (more than 5km)
+                                showLocationStatus(`⚠️ Location is very approximate (${Math.round(accuracy/1000)}km accuracy). Please manually select your exact location on the map.`, 'error');
+                            } else if (accuracy > 1000) {
+                                // Poor accuracy (1-5km)
+                                showLocationStatus(`Location detected but approximate (${Math.round(accuracy)}m accuracy). Please adjust the marker to your exact location.`, 'info');
+                            } else if (accuracy > 100) {
+                                // Moderate accuracy (100m-1km)
+                                showLocationStatus(`Location detected with ${Math.round(accuracy)}m accuracy. You may want to adjust the marker for precision.`, 'success');
+                            } else {
+                                // Good accuracy (less than 100m)
+                                showLocationStatus(`✓ Precise location detected with ${Math.round(accuracy)}m accuracy!`, 'success');
+                            }
+                            
+                            // Update map if already loaded
+                            if (googleMap && mapMarker) {
+                                const zoomLevel = accuracy > 1000 ? 13 : accuracy > 100 ? 15 : 17;
+                                googleMap.setCenter({ lat: selectedLat, lng: selectedLng });
+                                googleMap.setZoom(zoomLevel);
+                                mapMarker.setPosition({ lat: selectedLat, lng: selectedLng });
+                                updateCoordsInfo();
+                            }
+                            
+                            detectAddressBtn.disabled = false;
+                            detectAddressBtn.textContent = 'Select on Map';
+                        },
+                        function(error) {
+                            console.warn('High accuracy geolocation failed:', error);
+                            
+                            // Try again with low accuracy as fallback
+                            navigator.geolocation.getCurrentPosition(
+                                function(position) {
+                                    // Don't update if user has already manually selected a location
+                                    if (userHasSelectedLocation) {
+                                        console.log('Network location received but ignored - user has manually selected location');
+                                        detectAddressBtn.disabled = false;
+                                        detectAddressBtn.textContent = 'Select on Map';
+                                        return;
+                                    }
+                                    
+                                    selectedLat = position.coords.latitude;
+                                    selectedLng = position.coords.longitude;
+                                    locationDetermined = true; // Network location obtained
+                                    console.log('Network location:', selectedLat, selectedLng);
+                                    
+                                    if (googleMap && mapMarker) {
+                                        googleMap.setCenter({ lat: selectedLat, lng: selectedLng });
+                                        googleMap.setZoom(15);
+                                        mapMarker.setPosition({ lat: selectedLat, lng: selectedLng });
+                                        updateCoordsInfo();
+                                    }
+                                    
+                                    showLocationStatus('Approximate location detected. Please adjust the marker to your exact location.', 'info');
+                                    detectAddressBtn.disabled = false;
+                                    detectAddressBtn.textContent = 'Select on Map';
+                                },
+                                function(error2) {
+                                    let errorMsg = 'Could not detect location. ';
+                                    if (error.code === 1) {
+                                        errorMsg = 'Location permission denied. Please enable location access in your browser settings and try again.';
+                                    } else if (error.code === 2) {
+                                        errorMsg = 'Location unavailable. Make sure location services are enabled on your device.';
+                                    } else if (error.code === 3) {
+                                        errorMsg = 'Location detection timed out. Please manually select your location on the map.';
+                                    }
+                                    
+                                    showLocationStatus(errorMsg, 'info');
+                                    detectAddressBtn.disabled = false;
+                                    detectAddressBtn.textContent = 'Select on Map';
+                                },
+                                {
+                                    enableHighAccuracy: false,
+                                    timeout: 10000,
+                                    maximumAge: 300000
+                                }
+                            );
+                        },
+                        {
+                            enableHighAccuracy: true,   // Use GPS for accurate location
+                            timeout: 30000,              // 30 second timeout for GPS
+                            maximumAge: 0                // Don't use cached location, get fresh GPS fix
+                        }
+                    );
+                } else {
+                    showLocationStatus('Geolocation not supported. Select your location on the map.', 'info');
+                    detectAddressBtn.disabled = false;
+                    detectAddressBtn.textContent = 'Select on Map';
+                }
+            });
+            
+            // Function to open the map modal
+            function openMapModal() {
+                mapModal.classList.add('active');
+                showLocationStatus('Select your location on the map', 'info');
+                
+                // Initialize map if not already loaded
+                if (!isMapLoaded) {
+                    // Small delay to ensure modal is visible
+                    setTimeout(initializeMap, 100);
+                } else if (googleMap) {
+                    // If already loaded, just recenter the map
+                    googleMap.setCenter({ lat: selectedLat, lng: selectedLng });
+                    googleMap.setZoom(15);
+                    mapMarker.setPosition({ lat: selectedLat, lng: selectedLng });
+                    updateCoordsInfo();
+                    google.maps.event.trigger(googleMap, 'resize');
+                }
+            }
+            
+            // Initialize Google Maps
+            function initializeMap() {
+                if (isMapLoaded) return;
+                
+                try {
+                    // Create Google Map instance
+                    googleMap = new google.maps.Map(document.getElementById('google-map'), {
+                        center: { lat: selectedLat, lng: selectedLng },
+                        zoom: 15,
+                        mapTypeControl: true,
+                        mapTypeControlOptions: {
+                            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                            mapTypeIds: ['roadmap', 'satellite', 'hybrid']
+                        },
+                        streetViewControl: true,
+                        fullscreenControl: true,
+                        zoomControl: true
+                    });
+                    
+                    // Convert ORR polygon coords to Google Maps format
+                    const orrPath = ORR_POLYGON_COORDS.map(coord => ({ lat: coord[0], lng: coord[1] }));
+                    
+                    // Add Hyderabad ORR geofence polygon (actual ORR boundary)
+                    geofencePolygon = new google.maps.Polygon({
+                        paths: orrPath,
+                        strokeColor: '#4caf50',
+                        strokeOpacity: 0.6,
+                        strokeWeight: 3,
+                        fillColor: '#4caf50',
+                        fillOpacity: 0.1,
+                        map: googleMap
+                    });
+                    
+                    // Add info window for geofence
+                    const geofenceInfo = new google.maps.InfoWindow({
+                        content: 'Hyderabad ORR - Delivery Zone',
+                        position: { lat: HYDERABAD_CENTER.lat, lng: HYDERABAD_CENTER.lng }
+                    });
+                    
+                    geofencePolygon.addListener('click', function() {
+                        geofenceInfo.open(googleMap);
+                    });
+                    
+                    // Add center marker for geofence reference
+                    new google.maps.Marker({
+                        position: { lat: HYDERABAD_CENTER.lat, lng: HYDERABAD_CENTER.lng },
+                        map: googleMap,
+                        title: 'Hyderabad ORR Center',
+                        opacity: 0.5,
+                        icon: {
+                            url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                        }
+                    });
+                    
+                    // Create draggable delivery marker
+                    mapMarker = new google.maps.Marker({
+                        position: { lat: selectedLat, lng: selectedLng },
+                        map: googleMap,
+                        draggable: true,
+                        title: 'Your Delivery Location',
+                        icon: {
+                            url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                            scaledSize: new google.maps.Size(50, 50)
+                        },
+                        animation: google.maps.Animation.DROP
+                    });
+                    
+                    const markerInfo = new google.maps.InfoWindow({
+                        content: 'Drag me to your delivery location!'
+                    });
+                    markerInfo.open(googleMap, mapMarker);
+                    
+                    // Update coordinates when marker is dragged
+                    mapMarker.addListener('dragend', function(event) {
+                        userHasSelectedLocation = true;
+                        locationDetermined = true;
+                        selectedLat = event.latLng.lat();
+                        selectedLng = event.latLng.lng();
+                        googleMap.setCenter({ lat: selectedLat, lng: selectedLng });
+                        updateCoordsInfo();
+                        checkGeofenceStatus();
+                    });
+                    
+                    // Add marker on map click
+                    googleMap.addListener('click', function(event) {
+                        userHasSelectedLocation = true;
+                        locationDetermined = true;
+                        selectedLat = event.latLng.lat();
+                        selectedLng = event.latLng.lng();
+                        mapMarker.setPosition({ lat: selectedLat, lng: selectedLng });
+                        markerInfo.setContent('Selected location');
+                        markerInfo.open(googleMap, mapMarker);
+                        updateCoordsInfo();
+                        checkGeofenceStatus();
+                    });
+                    
+                    isMapLoaded = true;
+                    updateCoordsInfo();
+                    checkGeofenceStatus();
+                    
+                    // Google Places Autocomplete for search
+                    const searchInput = document.getElementById('map-search-input');
+                    const hydBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(HYD_BBOX.minLat, HYD_BBOX.minLng),
+                        new google.maps.LatLng(HYD_BBOX.maxLat, HYD_BBOX.maxLng)
+                    );
+
+                    const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+                        bounds: hydBounds,
+                        strictBounds: false, // bias, not restrict
+                        componentRestrictions: { country: 'in' },
+                        fields: ['geometry', 'formatted_address', 'name'],
+                        types: ['geocode']
+                    });
+
+                    autocomplete.addListener('place_changed', function() {
+                        const place = autocomplete.getPlace();
+                        if (!place.geometry || !place.geometry.location) {
+                            console.warn('No geometry for place');
+                            return;
+                        }
+
+                        userHasSelectedLocation = true;
+                        locationDetermined = true;
+                        selectedLat = place.geometry.location.lat();
+                        selectedLng = place.geometry.location.lng();
+
+                        googleMap.setCenter(place.geometry.location);
+                        googleMap.setZoom(17);
+                        mapMarker.setPosition(place.geometry.location);
+
+                        updateCoordsInfo();
+                        checkGeofenceStatus();
+                    });
+
+                    // Clear search button with display toggle
+                    const clearBtn = document.getElementById('clear-search-btn');
+                    function toggleClear() {
+                        clearBtn.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+                    }
+                    toggleClear();
+
+                    clearBtn.addEventListener('click', function() {
+                        searchInput.value = '';
+                        toggleClear();
+                        searchInput.focus();
+                        const results = document.getElementById('search-results');
+                        if (results) results.classList.remove('active');
+                    });
+
+                    searchInput.addEventListener('input', toggleClear);
+                } catch (error) {
+                    console.error('Error initializing map:', error);
+                    showLocationStatus('Error loading map. Please refresh the page.', 'error');
+                }
+            }
+            
+            // Check if selected location is within geofence and update UI
+            function checkGeofenceStatus(addressData) {
+                if (!locationDetermined) {
+                    coordsInfo.innerHTML = `📍 We are detecting your location...`;
+                    confirmLocationBtn.disabled = true;
+                    confirmLocationBtn.style.opacity = '0.5';
                     return;
                 }
+
+                const withinGeofence = isWithinGeofence(selectedLat, selectedLng);
                 
-                detectAddressBtn.textContent = 'Detecting...';
-                detectAddressBtn.disabled = true;
-                showLocationStatus('Detecting your location...', 'info');
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        // Use OpenStreetMap Nominatim API for reverse geocoding
-                        reverseGeocode(position.coords.latitude, position.coords.longitude);
-                    },
-                    function(error) {
-                        console.error('Error getting location:', error);
-                        let errorMessage = 'Unable to retrieve your location. ';
-                        
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage += 'Please allow location access and try again.';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage += 'Location information is unavailable.';
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage += 'Location request timed out.';
-                                break;
-                            default:
-                                errorMessage += 'Please enter your address manually.';
-                        }
-                        
-                        showLocationStatus(errorMessage, 'error');
-                        detectAddressBtn.textContent = 'Detect My Location';
-                        detectAddressBtn.disabled = false;
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 60000
+                if (withinGeofence) {
+                    coordsInfo.innerHTML = `✅ <strong>Location Selected</strong><br>✓ Within Delivery Zone`;
+                    confirmLocationBtn.disabled = false;
+                    confirmLocationBtn.style.opacity = '1';
+                } else {
+                    // Calculate distance to nearest ORR boundary point
+                    let minDistance = Infinity;
+                    for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
+                        const distance = calculateDistance(
+                            selectedLat, selectedLng,
+                            ORR_POLYGON_COORDS[i][0], ORR_POLYGON_COORDS[i][1]
+                        );
+                        minDistance = Math.min(minDistance, distance);
                     }
-                );
+                    
+                    const distanceKm = (minDistance / 1000).toFixed(2);
+                    coordsInfo.innerHTML = `⚠️ <strong>Outside Delivery Zone</strong><br>❌ (${distanceKm}km away)`;
+                    confirmLocationBtn.disabled = true;
+                    confirmLocationBtn.style.opacity = '0.5';
+                }
+            }
+            
+            // Update coordinates info display - only detecting message until locationDetermined
+            function updateCoordsInfo() {
+                if (!locationDetermined) {
+                    coordsInfo.innerHTML = `📍 We are detecting your location...`;
+                    confirmLocationBtn.disabled = true;
+                    confirmLocationBtn.style.opacity = '0.5';
+                    return;
+                }
+                checkGeofenceStatus(null);
+            }
+            
+            // Close map modal
+            closeMapModal.addEventListener('click', function() {
+                mapModal.classList.remove('active');
+            });
+            
+            // Close modal on overlay click
+            mapModal.addEventListener('click', function(e) {
+                if (e.target === mapModal) {
+                    mapModal.classList.remove('active');
+                }
+            });
+            
+            // Confirm location selection
+            confirmLocationBtn.addEventListener('click', function() {
+                detectAddressBtn.textContent = 'Getting address...';
+                detectAddressBtn.disabled = true;
+                
+                // Disable confirm button while fetching
+                confirmLocationBtn.disabled = true;
+                confirmLocationBtn.textContent = 'Getting address...';
+                
+                // Update the info display
+                coordsInfo.innerHTML = `📍 Fetching address...`;
+                
+                showLocationStatus('Getting address details from selected location...', 'info');
+                
+                // Fetch address for the selected location
+                console.log('Fetching address for confirmed location:', selectedLat, selectedLng);
+                reverseGeocode(selectedLat, selectedLng);
             });
             
             // Reverse geocoding using OpenStreetMap Nominatim API
             function reverseGeocode(lat, lng) {
                 showLocationStatus('Getting address details...', 'info');
-                
+
                 const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
-                
-                fetch(url)
+
+                return fetch(url, { signal: AbortSignal.timeout(10000) })
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok');
@@ -681,6 +1348,7 @@
                         return response.json();
                     })
                     .then(data => {
+                        console.log('Address fetched successfully:', data);
                         if (data && data.address) {
                             fillAddressForm(data.address, data.display_name);
                         } else {
@@ -689,14 +1357,96 @@
                     })
                     .catch(error => {
                         console.error('Reverse geocoding error:', error);
-                        showLocationStatus('Could not retrieve address details. Please enter manually.', 'error');
-                        detectAddressBtn.textContent = 'Detect My Location';
+                        showLocationStatus('Could not fetch address. Please enter manually or try again.', 'error');
+                        
+                        // Reset buttons
+                        confirmLocationBtn.textContent = 'Confirm Location';
+                        confirmLocationBtn.disabled = false;
+                        detectAddressBtn.textContent = 'Select on Map';
                         detectAddressBtn.disabled = false;
                     });
+            }
+
+            // IP-based geolocation fallback (approximate)
+            function fetchIpLocation() {
+                showLocationStatus('Using network-based location as fallback...', 'info');
+                fetch('https://ipapi.co/json/')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data) {
+                            const address = {
+                                city: data.city || '',
+                                state: data.region || data.region_code || '',
+                                postcode: data.postal || data.postal_code || '',
+                                road: data.city || '',
+                                amenity: ''
+                            };
+                            const full = [data.city, data.region, data.country_name].filter(Boolean).join(', ');
+                            fillAddressForm(address, full);
+                        } else {
+                            throw new Error('No IP location data');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('IP geolocation fallback failed:', err);
+                        showLocationStatus('Could not retrieve address details. Please enter manually.', 'error');
+                        detectAddressBtn.textContent = 'Select on Map';
+                        detectAddressBtn.disabled = false;
+                    });
+            }
+
+            // Simple serviceability check: Based on geofence status (which is primary), not just city name
+            function isServiceable(city, state, pincode) {
+                // Primary check: Is it within geofence? If yes, it's serviceable
+                if (isWithinGeofence(selectedLat, selectedLng)) {
+                    return true;
+                }
+                
+                // Fallback checks for manual entry cases
+                if (!city && !pincode) return false;
+                const c = (city || '').toLowerCase();
+                const s = (state || '').toLowerCase();
+                const p = (pincode || '').toString();
+
+                if (c.includes('hyderabad') || c.includes('secunderabad')) return true;
+                if (s.includes('telangana') && p.startsWith('50')) return true;
+                if (p.startsWith('50')) return true;
+                return false;
+            }
+
+            // Update UI and enable/disable payment based on serviceability
+            function updateServiceability(city, state, pincode) {
+                const serviceable = isServiceable(city, state, pincode);
+                const payButton = form.querySelector('.pay-btn');
+
+                if (serviceable) {
+                    showLocationStatus('Good news — we deliver to your location.', 'success');
+                    if (payButton) payButton.disabled = false;
+                    if (confirmCodBtn) confirmCodBtn.disabled = false;
+                } else {
+                    showLocationStatus('we are currently not delivering the products outside the hyderabad', 'error');
+                    if (payButton) payButton.disabled = true;
+                    if (confirmCodBtn) confirmCodBtn.disabled = true;
+                }
             }
             
             // Fill the address form with retrieved data
             function fillAddressForm(address, fullAddress) {
+                console.log('fillAddressForm called');
+                console.log('address param:', address);
+                console.log('fullAddress param:', fullAddress);
+                console.log('address type:', typeof address);
+                console.log('fullAddress type:', typeof fullAddress);
+                
+                // Ensure address object exists
+                if (!address || typeof address !== 'object') {
+                    console.error('Invalid address object:', address);
+                    showLocationStatus('Error: Invalid address data. Please try again.', 'error');
+                    confirmLocationBtn.textContent = 'Confirm Location';
+                    confirmLocationBtn.disabled = false;
+                    return;
+                }
+                
                 // Map OpenStreetMap address components to our form fields
                 const formData = {
                     address: fullAddress || '',
@@ -706,19 +1456,61 @@
                     landmark: address.amenity || address.road || ''
                 };
                 
+                console.log('Form data created:');
+                console.log('  address:', formData.address);
+                console.log('  city:', formData.city);
+                console.log('  state:', formData.state);
+                console.log('  pincode:', formData.pincode);
+                console.log('  landmark:', formData.landmark);
+                
+                // Check if form fields exist
+                const addressField = document.getElementById('address');
+                const cityField = document.getElementById('city');
+                const stateField = document.getElementById('state');
+                const pincodeField = document.getElementById('pincode');
+                const landmarkField = document.getElementById('landmark');
+                
+                console.log('Form fields found:', {
+                    address: !!addressField,
+                    city: !!cityField,
+                    state: !!stateField,
+                    pincode: !!pincodeField,
+                    landmark: !!landmarkField
+                });
+                
                 // Fill the form fields
-                document.getElementById('address').value = formData.address;
-                document.getElementById('city').value = formData.city;
-                document.getElementById('state').value = formData.state;
-                document.getElementById('pincode').value = formData.pincode;
-                document.getElementById('landmark').value = formData.landmark;
+                if (addressField) addressField.value = formData.address;
+                if (cityField) cityField.value = formData.city;
+                if (stateField) stateField.value = formData.state;
+                if (pincodeField) pincodeField.value = formData.pincode;
+                if (landmarkField) landmarkField.value = formData.landmark;
+                
+                console.log('Form fields filled');
+                
+                // Update coordinates info display with complete address instead of coordinates
+                const addressDisplay = `✅ <strong>${formData.city}, ${formData.state} ${formData.pincode}</strong><br>✓ Address confirmed`;
+                coordsInfo.innerHTML = addressDisplay;
                 
                 // Show success message
                 showLocationStatus('Address detected successfully! You can edit the fields if needed.', 'success');
+
+                // Check serviceability based on detected city/state/pincode
+                try {
+                    updateServiceability(formData.city, formData.state, formData.pincode);
+                } catch (e) {
+                    console.warn('Serviceability check failed', e);
+                }
                 
-                // Reset button
-                detectAddressBtn.textContent = 'Detect My Location';
+                // Reset button and close modal
+                confirmLocationBtn.textContent = 'Confirm Location';
+                confirmLocationBtn.disabled = false;
+                detectAddressBtn.textContent = 'Select on Map';
                 detectAddressBtn.disabled = false;
+                
+                // Close modal immediately (no delay) since address is already displayed
+                mapModal.classList.remove('active');
+                
+                console.log('fillAddressForm completed successfully');
             }
             
             // Show location status messages
