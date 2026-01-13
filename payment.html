@@ -679,10 +679,16 @@
                 <input type="email" id="email" placeholder="Enter your email" required>
                 <div class="error" id="email-error">Please enter a valid email address</div>
             </div>
+
+            <div class="input-group">
+                <label for="door-number">Door/House Number</label>
+                <input type="text" id="door-number" placeholder="Enter door/house number (e.g., 123, Apt 4B)" required>
+                <div class="error" id="door-number-error">Please enter your door/house number</div>
+            </div>
             
             <div class="input-group">
                 <label for="address">Street Address</label>
-                <textarea id="address" placeholder="Enter your complete address" required></textarea>
+                <textarea id="address" placeholder="Enter your complete street address" required></textarea>
                 <div class="error" id="address-error">Please enter your address</div>
             </div>
             
@@ -1435,8 +1441,6 @@
                 console.log('fillAddressForm called');
                 console.log('address param:', address);
                 console.log('fullAddress param:', fullAddress);
-                console.log('address type:', typeof address);
-                console.log('fullAddress type:', typeof fullAddress);
                 
                 // Ensure address object exists
                 if (!address || typeof address !== 'object') {
@@ -1449,6 +1453,7 @@
                 
                 // Map OpenStreetMap address components to our form fields
                 const formData = {
+                    doorNumber: '',
                     address: fullAddress || '',
                     city: address.city || address.town || address.village || address.county || '',
                     state: address.state || '',
@@ -1461,24 +1466,17 @@
                 console.log('  city:', formData.city);
                 console.log('  state:', formData.state);
                 console.log('  pincode:', formData.pincode);
-                console.log('  landmark:', formData.landmark);
                 
                 // Check if form fields exist
+                const doorField = document.getElementById('door-number');
                 const addressField = document.getElementById('address');
                 const cityField = document.getElementById('city');
                 const stateField = document.getElementById('state');
                 const pincodeField = document.getElementById('pincode');
                 const landmarkField = document.getElementById('landmark');
                 
-                console.log('Form fields found:', {
-                    address: !!addressField,
-                    city: !!cityField,
-                    state: !!stateField,
-                    pincode: !!pincodeField,
-                    landmark: !!landmarkField
-                });
-                
                 // Fill the form fields
+                if (doorField) doorField.value = formData.doorNumber;
                 if (addressField) addressField.value = formData.address;
                 if (cityField) cityField.value = formData.city;
                 if (stateField) stateField.value = formData.state;
@@ -1487,7 +1485,7 @@
                 
                 console.log('Form fields filled');
                 
-                // Update coordinates info display with complete address instead of coordinates
+                // Update coordinates info display
                 const addressDisplay = `✅ <strong>${formData.city}, ${formData.state} ${formData.pincode}</strong><br>✓ Address confirmed`;
                 coordsInfo.innerHTML = addressDisplay;
                 
@@ -1507,11 +1505,61 @@
                 detectAddressBtn.textContent = 'Select on Map';
                 detectAddressBtn.disabled = false;
                 
-                // Close modal immediately (no delay) since address is already displayed
+                // Close modal
                 mapModal.classList.remove('active');
                 
                 console.log('fillAddressForm completed successfully');
             }
+            
+            // Geocode manual address to get latitude/longitude
+            function geocodeManualAddress(doorNumber, street, city, state, pincode) {
+                const fullAddress = `${doorNumber}, ${street}, ${city}, ${state}, ${pincode}, India`;
+                console.log('Geocoding address:', fullAddress);
+                
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: fullAddress }, function(results, status) {
+                    if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
+                        const location = results[0].geometry.location;
+                        selectedLat = location.lat();
+                        selectedLng = location.lng();
+                        console.log('Geocoded location:', selectedLat, selectedLng);
+                        showLocationStatus(`✓ Address geocoded successfully! Lat: ${selectedLat.toFixed(4)}, Lng: ${selectedLng.toFixed(4)}`, 'success');
+                        checkGeofenceStatus();
+                    } else {
+                        console.warn('Geocoding failed:', status);
+                        showLocationStatus('Could not geocode the address. Please check and try again or use the map.', 'error');
+                    }
+                });
+            }
+
+            // Listen for manual address changes and geocode
+            window.addEventListener('load', function() {
+                const doorField = document.getElementById('door-number');
+                const addressField = document.getElementById('address');
+                const cityField = document.getElementById('city');
+                const stateField = document.getElementById('state');
+                const pincodeField = document.getElementById('pincode');
+
+                function handleAddressChange() {
+                    const door = doorField ? doorField.value.trim() : '';
+                    const street = addressField ? addressField.value.trim() : '';
+                    const city = cityField ? cityField.value.trim() : '';
+                    const state = stateField ? stateField.value.trim() : '';
+                    const pincode = pincodeField ? pincodeField.value.trim() : '';
+
+                    // Only geocode if all required fields are filled
+                    if (door && street && city && state && pincode) {
+                        geocodeManualAddress(door, street, city, state, pincode);
+                    }
+                }
+
+                // Geocode on blur for each field
+                if (doorField) doorField.addEventListener('blur', handleAddressChange);
+                if (addressField) addressField.addEventListener('blur', handleAddressChange);
+                if (cityField) cityField.addEventListener('blur', handleAddressChange);
+                if (stateField) stateField.addEventListener('blur', handleAddressChange);
+                if (pincodeField) pincodeField.addEventListener('blur', handleAddressChange);
+            });
             
             // Show location status messages
             function showLocationStatus(message, type) {

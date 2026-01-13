@@ -683,23 +683,49 @@
             <div class="form-step" id="consumer-step-3">
                 <h3 class="section-title">Step 3: Verification</h3>
 
-                <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send a verification code to your mobile number</p>
-                
-                <div class="otp-container">
-                    <input type="text" class="otp-input" id="consumer-otp-1" maxlength="1">
-                    <input type="text" class="otp-input" id="consumer-otp-2" maxlength="1">
-                    <input type="text" class="otp-input" id="consumer-otp-3" maxlength="1">
-                    <input type="text" class="otp-input" id="consumer-otp-4" maxlength="1">
-                    <input type="text" class="otp-input" id="consumer-otp-5" maxlength="1">
-                    <input type="text" class="otp-input" id="consumer-otp-6" maxlength="1">
-                </div>
-                
-                <div class="button-container">
-                    <button type="button" id="consumer-send-otp" class="secondary-button">Send Code</button>
-                    <button type="button" id="consumer-verify-otp" class="secondary-button">Verify Code</button>
+                <!-- Email OTP Section -->
+                <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #ddd;">
+                    <h4 style="color: #2e7d32; margin-bottom: 10px;">📧 Email Verification</h4>
+                    <p style="margin: 10px 0; font-size: 14px; color: #666;">We'll send a verification code to your email</p>
+                    
+                    <div class="otp-container">
+                        <input type="text" class="otp-input" id="consumer-email-otp-1" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-email-otp-2" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-email-otp-3" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-email-otp-4" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-email-otp-5" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-email-otp-6" maxlength="1">
+                    </div>
+                    
+                    <div class="button-container">
+                        <button type="button" id="consumer-send-email-otp" class="secondary-button">Send Email Code</button>
+                        <button type="button" id="consumer-verify-email-otp" class="secondary-button">Verify Email</button>
+                    </div>
+
+                    <div id="consumer-email-otp-status"></div>
                 </div>
 
-                <div id="consumer-otp-status"></div>
+                <!-- Mobile OTP Section -->
+                <div>
+                    <h4 style="color: #2e7d32; margin-bottom: 10px;">📱 Mobile Verification</h4>
+                    <p style="margin: 10px 0; font-size: 14px; color: #666;">We'll send a verification code to your mobile number</p>
+                    
+                    <div class="otp-container">
+                        <input type="text" class="otp-input" id="consumer-otp-1" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-otp-2" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-otp-3" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-otp-4" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-otp-5" maxlength="1">
+                        <input type="text" class="otp-input" id="consumer-otp-6" maxlength="1">
+                    </div>
+                    
+                    <div class="button-container">
+                        <button type="button" id="consumer-send-otp" class="secondary-button">Send Mobile Code</button>
+                        <button type="button" id="consumer-verify-otp" class="secondary-button">Verify Mobile</button>
+                    </div>
+
+                    <div id="consumer-otp-status"></div>
+                </div>
                 
                 <div class="form-navigation">
                     <button type="button" class="secondary-button" id="consumer-prev-3">Previous</button>
@@ -896,9 +922,26 @@
             <div class="form-step" id="farmer-step-5">
                 <h3 class="section-title">Step 5: Verification & Security</h3>
 
-                <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send verification codes to your Aadhaar-registered mobile number</p>
+                <p style="margin: 15px 0; font-size: 14px; color: #666;">We'll send verification codes to your email and mobile number</p>
                 
-                <h4 style="margin: 15px 0 10px; color: #555;">Aadhaar Verification</h4>
+                <h4 style="margin: 15px 0 10px; color: #555;">📧 Email Verification</h4>
+                <div class="otp-container">
+                    <input type="text" class="otp-input" id="farmer-email-otp-1" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-email-otp-2" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-email-otp-3" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-email-otp-4" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-email-otp-5" maxlength="1">
+                    <input type="text" class="otp-input" id="farmer-email-otp-6" maxlength="1">
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" id="farmer-send-email-otp" class="secondary-button">Send Email Code</button>
+                    <button type="button" id="farmer-verify-email-otp" class="secondary-button">Verify Email</button>
+                </div>
+
+                <div id="farmer-email-otp-status"></div>
+
+                <h4 style="margin: 20px 0 10px; color: #555;">🆔 Aadhaar Verification</h4>
                 <div class="otp-container">
                     <input type="text" class="otp-input" id="farmer-aadhaar-otp-1" maxlength="1">
                     <input type="text" class="otp-input" id="farmer-aadhaar-otp-2" maxlength="1">
@@ -915,7 +958,7 @@
 
                 <div id="farmer-aadhaar-otp-status"></div>
 
-                <h4 style="margin: 20px 0 10px; color: #555;">Mobile Verification</h4>
+                <h4 style="margin: 20px 0 10px; color: #555;">📱 Mobile Verification</h4>
                 <div class="otp-container">
                     <input type="text" class="otp-input" id="farmer-mobile-otp-1" maxlength="1">
                     <input type="text" class="otp-input" id="farmer-mobile-otp-2" maxlength="1">
@@ -1700,6 +1743,91 @@ function setupOTP() {
         }
     });
     
+    // Consumer Email OTP
+    document.getElementById('consumer-send-email-otp').addEventListener('click', async function() {
+        const email = document.getElementById('consumer-email').value;
+        if (!isValidEmail(email)) {
+            alert('Please enter a valid email address first');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Sending...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/email/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, userType: 'consumer' })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                let statusMessage = '✅ Verification code sent to your email';
+                
+                if (result.debug_otp) {
+                    statusMessage = `📧 OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('consumer-email', result.debug_otp);
+                }
+                
+                document.getElementById('consumer-email-otp-status').textContent = statusMessage;
+                document.getElementById('consumer-email-otp-status').className = 'verification-pending';
+                
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Email OTP error:', error);
+            document.getElementById('consumer-email-otp-status').textContent = '❌ Error: ' + error.message;
+            document.getElementById('consumer-email-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    document.getElementById('consumer-verify-email-otp').addEventListener('click', async function() {
+        const email = document.getElementById('consumer-email').value;
+        const otp = getOTPValue('consumer-email');
+        
+        if (otp.length !== 6) {
+            alert('Please enter the complete 6-digit code');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Verifying...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/email/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, otp: otp })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('consumer-email-otp-status').textContent = '✅ Email verified successfully';
+                document.getElementById('consumer-email-otp-status').className = 'verification-success';
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Email OTP verification error:', error);
+            document.getElementById('consumer-email-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('consumer-email-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
     // Farmer Aadhaar OTP
     document.getElementById('farmer-send-aadhaar-otp').addEventListener('click', async function() {
         const aadhaar = document.getElementById('farmer-aadhaar').value;
@@ -1877,6 +2005,91 @@ function setupOTP() {
             console.error('Mobile verification error:', error);
             document.getElementById('farmer-mobile-otp-status').textContent = '❌ ' + error.message;
             document.getElementById('farmer-mobile-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    // Farmer Email OTP
+    document.getElementById('farmer-send-email-otp').addEventListener('click', async function() {
+        const email = document.getElementById('farmer-email').value;
+        if (!isValidEmail(email)) {
+            alert('Please enter a valid email address first');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Sending...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/email/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, userType: 'farmer' })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                let statusMessage = '✅ Verification code sent to your email';
+                
+                if (result.debug_otp) {
+                    statusMessage = `📧 OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('farmer-email', result.debug_otp);
+                }
+                
+                document.getElementById('farmer-email-otp-status').textContent = statusMessage;
+                document.getElementById('farmer-email-otp-status').className = 'verification-pending';
+                
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Email OTP error:', error);
+            document.getElementById('farmer-email-otp-status').textContent = '❌ Error: ' + error.message;
+            document.getElementById('farmer-email-otp-status').className = 'verification-failed';
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+    
+    document.getElementById('farmer-verify-email-otp').addEventListener('click', async function() {
+        const email = document.getElementById('farmer-email').value;
+        const otp = getOTPValue('farmer-email');
+        
+        if (otp.length !== 6) {
+            alert('Please enter the complete 6-digit code');
+            return;
+        }
+        
+        const button = this;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Verifying...';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/email/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, otp: otp })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('farmer-email-otp-status').textContent = '✅ Email verified successfully';
+                document.getElementById('farmer-email-otp-status').className = 'verification-success';
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Email OTP verification error:', error);
+            document.getElementById('farmer-email-otp-status').textContent = '❌ ' + error.message;
+            document.getElementById('farmer-email-otp-status').className = 'verification-failed';
         } finally {
             button.disabled = false;
             button.textContent = originalText;
