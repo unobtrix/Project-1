@@ -1768,11 +1768,6 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Verification code sent to your email';
                 
-                if (result.debug_otp) {
-                    statusMessage = `📧 OTP for testing: ${result.debug_otp}`;
-                    autoFillOTP('consumer-email', result.debug_otp);
-                }
-                
                 document.getElementById('consumer-email-otp-status').textContent = statusMessage;
                 document.getElementById('consumer-email-otp-status').className = 'verification-pending';
                 
@@ -1863,11 +1858,6 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Aadhaar verification code sent';
                 
-                if (result.debug_otp) {
-                    statusMessage = `🆔 Aadhaar OTP for testing: ${result.debug_otp}`;
-                    autoFillOTP('farmer-aadhaar', result.debug_otp);
-                }
-                
                 document.getElementById('farmer-aadhaar-otp-status').textContent = statusMessage;
                 document.getElementById('farmer-aadhaar-otp-status').className = 'verification-pending';
                 
@@ -1951,11 +1941,6 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Verification code sent successfully';
                 
-                if (result.debug_otp) {
-                    statusMessage = `📱 OTP for testing: ${result.debug_otp}`;
-                    autoFillOTP('farmer-mobile', result.debug_otp);
-                }
-                
                 document.getElementById('farmer-mobile-otp-status').textContent = statusMessage;
                 document.getElementById('farmer-mobile-otp-status').className = 'verification-pending';
                 
@@ -2035,11 +2020,6 @@ function setupOTP() {
             
             if (result.success) {
                 let statusMessage = '✅ Verification code sent to your email';
-                
-                if (result.debug_otp) {
-                    statusMessage = `📧 OTP for testing: ${result.debug_otp}`;
-                    autoFillOTP('farmer-email', result.debug_otp);
-                }
                 
                 document.getElementById('farmer-email-otp-status').textContent = statusMessage;
                 document.getElementById('farmer-email-otp-status').className = 'verification-pending';
