@@ -1210,7 +1210,7 @@
                         <i class="fas fa-clipboard-list"></i>
                         <span>Orders</span>
                     </a>
-                    <a href="profile.html" class="desktop-nav-item" id="navProfile">
+                    <a href="#" class="desktop-nav-item" id="navProfile">
                         <i class="fas fa-user"></i>
                         <span>Profile</span>
                     </a>
@@ -1552,7 +1552,7 @@
             <i class="fas fa-clipboard-list"></i>
             <span>Orders</span>
         </a>
-        <a href="profile.html" class="nav-item" id="bottomProfile">
+        <a href="#" class="nav-item" id="bottomProfile">
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </a>
@@ -1602,6 +1602,32 @@
             { id: 'beverages', name: 'Beverages', icon: 'fas fa-wine-bottle', description: 'Fresh juices and drinks', color: '#9C27B0' }
         ];
 
+        // Resolve current user id from URL, session, or storage
+        function getResolvedUserId() {
+            const params = new URLSearchParams(window.location.search);
+            const queryId = params.get('user_id') || params.get('userId') || params.get('id');
+            if (queryId) return queryId;
+
+            const storedDirect = localStorage.getItem('userId') || localStorage.getItem('currentUserId') || sessionStorage.getItem('currentUserId');
+            if (storedDirect) return storedDirect;
+
+            const storedUser = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser') || localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const parsed = JSON.parse(storedUser);
+                    if (parsed && (parsed.id || parsed.userId || parsed.consumer_id)) {
+                        return parsed.id || parsed.userId || parsed.consumer_id;
+                    }
+                } catch (err) {
+                    console.warn('Failed to parse stored user payload:', err);
+                }
+            }
+
+            return null;
+        }
+
+        const RESOLVED_USER_ID = getResolvedUserId();
+
         // Global State Management
         const AppState = {
             cartItems: JSON.parse(localStorage.getItem('cartItems')) || [],
@@ -1615,7 +1641,7 @@
                 pincode: localStorage.getItem('userPincode') || null,
                 deliveryAvailable: localStorage.getItem('deliveryAvailable') === 'true' || false
             },
-            currentUserId: 'user123',
+            currentUserId: RESOLVED_USER_ID || 'user123',
             categoriesVisible: false,
             userProfile: null,
             searchTimeout: null,
@@ -1689,6 +1715,24 @@
 
         // API Service Class
         class CustomerAPIService {
+            static getApiBaseUrl() {
+                const params = new URLSearchParams(window.location.search);
+                const queryApi = params.get('apiUrl') || params.get('api') || params.get('backend');
+                if (queryApi) return queryApi;
+
+                if (window.CONFIG?.API_URL) return window.CONFIG.API_URL;
+                if (window.CONFIG?.API_BASE_URL) return window.CONFIG.API_BASE_URL;
+
+                const storedApi = localStorage.getItem('API_URL') || localStorage.getItem('apiUrl') || localStorage.getItem('backendUrl');
+                if (storedApi) return storedApi;
+
+                if (window.location.origin && window.location.origin !== 'file://') {
+                    return window.location.origin;
+                }
+
+                return 'http://localhost:5000';
+            }
+
             static async getProducts(category = null, search = null, limit = 20) {
                 try {
                     // Build query parameters
@@ -1697,7 +1741,7 @@
                     if (search && search.length >= 2) params.append('search', search);
                     params.append('limit', limit);
 
-                    const API_BASE_URL = window.CONFIG ? window.CONFIG.API_BASE_URL : 'https://unobtrix-project-backend.onrender.com';
+                    const API_BASE_URL = this.getApiBaseUrl();
                     const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
                         method: 'GET',
                         headers: {
@@ -1725,7 +1769,7 @@
                     if (search && search.length >= 2) params.append('search', search);
                     params.append('limit', limit);
 
-                    const API_BASE_URL = window.CONFIG ? window.CONFIG.API_BASE_URL : 'https://unobtrix-project-backend.onrender.com';
+                    const API_BASE_URL = this.getApiBaseUrl();
                     const response = await fetch(`${API_BASE_URL}/api/tours?${params}`, {
                         method: 'GET',
                         headers: {
@@ -1977,17 +2021,41 @@
 
             static async getUserProfile(userId) {
                 try {
+                    if (!userId) return null;
+
+                    // Primary: backend API backed by consumers table
+                    const apiBase = this.getApiBaseUrl();
+                    try {
+                        const response = await fetch(`${apiBase}/api/consumer/profile/${encodeURIComponent(userId)}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.success && result.profile) {
+                                return result.profile;
+                            }
+                        } else {
+                            console.error('Consumer profile API failed:', response.status, response.statusText);
+                        }
+                    } catch (apiError) {
+                        console.error('Error fetching consumer profile from API:', apiError);
+                    }
+
+                    // Fallback: direct Supabase query to consumers table
                     const { data, error } = await supabase
-                        .from('profiles')
+                        .from('consumers')
                         .select('*')
                         .eq('id', userId)
                         .single();
 
                     if (error) throw error;
                     return data;
-
                 } catch (error) {
-                    console.error('Error fetching profile:', error);
+                    console.error('Error fetching consumer profile:', error);
                     return null;
                 }
             }
@@ -2090,16 +2158,16 @@
                 elements.bottomOrders.addEventListener('click', (e) => { e.preventDefault(); this.openModal('orders'); });
                 elements.closeOrders.addEventListener('click', () => this.closeModal('orders'));
                 
-                // Profile navigation - removed modal opening, now it will navigate to profile.html
-                elements.navProfile.addEventListener('click', (e) => {
+                // Profile navigation - open inline profile modal
+                elements.navProfile.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    // Navigate to profile page instead of opening modal
-                    window.location.href = 'profile.html';
+                    await this.loadUserProfile();
+                    this.openModal('profile');
                 });
-                elements.bottomProfile.addEventListener('click', (e) => {
+                elements.bottomProfile.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    // Navigate to profile page instead of opening modal
-                    window.location.href = 'profile.html';
+                    await this.loadUserProfile();
+                    this.openModal('profile');
                 });
                 elements.closeProfile.addEventListener('click', () => this.closeModal('profile'));
 
@@ -2210,6 +2278,11 @@
 
             static async loadUserProfile() {
                 try {
+                    if (!AppState.currentUserId) {
+                        this.displayProfile(this.getDefaultProfile());
+                        return;
+                    }
+
                     const profile = await CustomerAPIService.getUserProfile(AppState.currentUserId);
                     AppState.userProfile = profile;
                     this.displayProfile(profile);
@@ -2221,11 +2294,15 @@
 
             static getDefaultProfile() {
                 return {
+                    username: 'Customer',
                     full_name: 'Guest User',
                     email: 'guest@example.com',
-                    location: 'Update your location',
+                    mobile: '--',
+                    status: 'active',
+                    location: 'Not provided',
                     joined_date: new Date().getFullYear().toString(),
-                    orders_count: 0
+                    orders_count: 0,
+                    profile_photo_url: ''
                 };
             }
 
@@ -2333,8 +2410,8 @@
                         this.loadOrders();
                         break;
                     case 'profile':
-                        // Don't open profile modal anymore - navigate to profile.html instead
-                        return;
+                        elements.profileModal.classList.add('open');
+                        break;
                     case 'invoice':
                         elements.invoiceModal.classList.add('open');
                         break;
@@ -3171,16 +3248,37 @@
                 if (!profile) {
                     profile = this.getDefaultProfile();
                 }
-                
-                elements.userName.textContent = profile.full_name || 'Guest User';
-                elements.userEmail.textContent = profile.email || 'guest@example.com';
+
+                const displayName = profile.username || profile.full_name || profile.name || 'Customer';
+                const email = profile.email || 'guest@example.com';
+                const location = profile.location || 'Not provided';
+                const mobile = profile.mobile || profile.phone || null;
+                const status = profile.status || 'active';
+                const joined = profile.joined_date
+                    || (profile.created_at ? new Date(profile.created_at).getFullYear() : null)
+                    || new Date().getFullYear();
+                const avatar = profile.profile_photo_url || profile.avatar_url || '';
+
+                elements.userName.textContent = displayName;
+                elements.userEmail.textContent = email;
                 elements.userLocation.innerHTML = `
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>${profile.location || 'Update your location'}</span>
+                    <span>${location}</span>${mobile ? ` · ${mobile}` : ''}${status ? ` · ${status}` : ''}
                 `;
                 elements.ordersCount.textContent = profile.orders_count || 0;
                 elements.cartItemsCount.textContent = AppState.cartItems.reduce((total, item) => total + item.quantity, 0);
-                elements.joinedDate.textContent = profile.joined_date || new Date().getFullYear();
+                elements.joinedDate.textContent = joined;
+
+                const avatarEl = document.querySelector('.profile-avatar');
+                if (avatarEl) {
+                    if (avatar) {
+                        avatarEl.style.background = `url('${avatar}') center/cover no-repeat`;
+                        avatarEl.innerHTML = '';
+                    } else {
+                        avatarEl.style.background = 'var(--primary)';
+                        avatarEl.innerHTML = '<i class="fas fa-user"></i>';
+                    }
+                }
             }
 
             // Utility Methods
@@ -3305,6 +3403,147 @@
                 await AppController.loadTours();
             }, 1800000);
         });
+    </script>
+    <script>
+        // Lightweight location detection + serviceability check
+        (function(){
+            const currentLocationSection = document.getElementById('currentLocationSection');
+            const locationSection = document.getElementById('locationSection');
+            const locationLoading = document.getElementById('locationLoading');
+            const manualLocationInput = document.getElementById('manualLocationInput');
+            const locationActionButtons = document.getElementById('locationActionButtons');
+            const currentLocationText = document.getElementById('currentLocationText');
+            const deliveryWarning = document.getElementById('deliveryWarning');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            function isServiceable(city, state, pincode) {
+                if (!city && !pincode) return false;
+                const c = (city || '').toLowerCase();
+                const s = (state || '').toLowerCase();
+                const p = (pincode || '').toString();
+
+                if (c.includes('hyderabad') || c.includes('secunderabad')) return true;
+                if (s.includes('telangana') && p.startsWith('50')) return true;
+                if (p && p.startsWith('50')) return true;
+
+                // Also check SERVICE_AREAS prefixes if defined
+                try {
+                    if (window.SERVICE_AREAS) {
+                        const prefixes = Object.values(window.SERVICE_AREAS).flat();
+                        for (const pref of prefixes) {
+                            if (p.startsWith(pref)) return true;
+                        }
+                    }
+                } catch(e) { }
+
+                return false;
+            }
+
+            function setLocationUI(city, state, pincode) {
+                const parts = [city, state, pincode].filter(Boolean).join(', ');
+                currentLocationText.textContent = parts || 'Unknown location';
+                currentLocationSection.style.display = 'block';
+                locationLoading.style.display = 'none';
+                manualLocationInput.style.display = 'block';
+                locationActionButtons.style.display = 'flex';
+
+                const ok = isServiceable(city, state, pincode);
+                // If city exists and is not Hyderabad, show exact message requested
+                const cityStr = (city || '').toLowerCase();
+                if (cityStr && !cityStr.includes('hyderabad') && !cityStr.includes('secunderabad')) {
+                    deliveryWarning.style.display = 'flex';
+                    deliveryWarning.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><strong>Delivery Not Available</strong><p>we are currently not delivering the products outside the hyderabad</p></div>`;
+                    if (checkoutBtn) checkoutBtn.disabled = true;
+                    return;
+                }
+
+                if (!ok) {
+                    deliveryWarning.style.display = 'flex';
+                    deliveryWarning.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><strong>Delivery Not Available</strong><p>We currently deliver only within Hyderabad and surrounding areas. Please check your location.</p></div>`;
+                    if (checkoutBtn) checkoutBtn.disabled = true;
+                } else {
+                    deliveryWarning.style.display = 'none';
+                    if (checkoutBtn) checkoutBtn.disabled = false;
+                }
+            }
+
+            function ipFallback() {
+                fetch('https://ipapi.co/json/')
+                    .then(r => r.json())
+                    .then(data => {
+                        const city = data.city || '';
+                        const state = data.region || '';
+                        const pincode = data.postal || '';
+                        setLocationUI(city, state, pincode);
+                    })
+                    .catch(err => {
+                        console.warn('IP fallback failed', err);
+                        locationLoading.style.display = 'none';
+                        manualLocationInput.style.display = 'block';
+                        locationActionButtons.style.display = 'flex';
+                    });
+            }
+
+            // Try browser geolocation first
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos){
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    // reverse geocode via ipapi (simple) or nominatim
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const addr = data && data.address ? data.address : {};
+                            const city = addr.city || addr.town || addr.village || addr.county || '';
+                            const state = addr.state || '';
+                            const pincode = addr.postcode || '';
+                            setLocationUI(city, state, pincode);
+                        })
+                        .catch(() => ipFallback());
+                }, function(err){
+                    console.warn('Geolocation failed, using IP fallback', err);
+                    ipFallback();
+                }, { enableHighAccuracy: true, timeout: 8000 });
+            } else {
+                ipFallback();
+            }
+
+            // Provide minimal AppController helpers that may be referenced elsewhere
+            window.AppController = window.AppController || {};
+            window.AppController.changeLocation = function(){
+                document.getElementById('locationSection').style.display = 'block';
+            };
+            window.AppController.retryLocation = function(){
+                locationLoading.style.display = 'block';
+                manualLocationInput.style.display = 'none';
+                locationActionButtons.style.display = 'none';
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(pos){
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                            .then(r => r.json())
+                            .then(data => {
+                                const addr = data && data.address ? data.address : {};
+                                setLocationUI(addr.city || addr.town || addr.village || '', addr.state || '', addr.postcode || '');
+                            })
+                            .catch(() => ipFallback());
+                    }, function(){ ipFallback(); });
+                } else {
+                    ipFallback();
+                }
+            };
+            window.AppController.cancelLocation = function(){
+                document.getElementById('locationSection').style.display = 'none';
+            };
+            window.AppController.checkManualLocation = function(){
+                const raw = document.getElementById('locationInput').value.trim();
+                if (!raw) return alert('Please enter a location');
+                // crude split: try to use first token as city
+                const city = raw.split(',')[0];
+                setLocationUI(city, '', '');
+            };
+        })();
     </script>
 </body>
 </html>
