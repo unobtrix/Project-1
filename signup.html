@@ -1658,6 +1658,26 @@ function updateProgressText(formType, step) {
 
 // OTP functionality
 function setupOTP() {
+    // Resend cooldown helper: disables button and shows countdown
+    function startResendCooldown(button, seconds = 30) {
+        let remaining = seconds;
+        const original = button.getAttribute('data-original-text') || button.textContent;
+        button.setAttribute('data-original-text', original);
+        const finalLabel = original.replace(/^Send/i, 'Resend');
+        const setText = () => { button.textContent = `Resend in ${remaining}s`; };
+        button.disabled = true;
+        setText();
+        const timer = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                clearInterval(timer);
+                button.disabled = false;
+                button.textContent = finalLabel || 'Resend Code';
+            } else {
+                setText();
+            }
+        }, 1000);
+    }
     // Consumer Mobile OTP
     document.getElementById('consumer-send-otp').addEventListener('click', async function() {
         const mobile = document.getElementById('consumer-mobile').value;
@@ -1668,6 +1688,7 @@ function setupOTP() {
         
         const button = this;
         const originalText = button.textContent;
+        let cooldownStarted = false;
         button.disabled = true;
         button.textContent = 'Sending...';
         
@@ -1690,6 +1711,8 @@ function setupOTP() {
                 
                 document.getElementById('consumer-otp-status').textContent = statusMessage;
                 document.getElementById('consumer-otp-status').className = 'verification-pending';
+                cooldownStarted = true;
+                startResendCooldown(button, 30);
                 
             } else {
                 throw new Error(result.message);
@@ -1699,8 +1722,10 @@ function setupOTP() {
             document.getElementById('consumer-otp-status').textContent = '❌ Error: ' + error.message;
             document.getElementById('consumer-otp-status').className = 'verification-failed';
         } finally {
-            button.disabled = false;
-            button.textContent = originalText;
+            if (!cooldownStarted) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
     });
     
@@ -1753,6 +1778,7 @@ function setupOTP() {
         
         const button = this;
         const originalText = button.textContent;
+        let cooldownStarted = false;
         button.disabled = true;
         button.textContent = 'Sending...';
         
@@ -1770,6 +1796,8 @@ function setupOTP() {
                 
                 document.getElementById('consumer-email-otp-status').textContent = statusMessage;
                 document.getElementById('consumer-email-otp-status').className = 'verification-pending';
+                cooldownStarted = true;
+                startResendCooldown(button, 30);
                 
             } else {
                 throw new Error(result.message);
@@ -1779,8 +1807,10 @@ function setupOTP() {
             document.getElementById('consumer-email-otp-status').textContent = '❌ Error: ' + error.message;
             document.getElementById('consumer-email-otp-status').className = 'verification-failed';
         } finally {
-            button.disabled = false;
-            button.textContent = originalText;
+            if (!cooldownStarted) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
     });
     
@@ -1840,6 +1870,7 @@ function setupOTP() {
         
         const button = this;
         const originalText = button.textContent;
+        let cooldownStarted = false;
         button.disabled = true;
         button.textContent = 'Sending...';
         
@@ -1858,8 +1889,15 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Aadhaar verification code sent';
                 
+                if (result.debug_otp) {
+                    statusMessage = `🆔 Aadhaar OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('farmer-aadhaar', result.debug_otp);
+                }
+                
                 document.getElementById('farmer-aadhaar-otp-status').textContent = statusMessage;
                 document.getElementById('farmer-aadhaar-otp-status').className = 'verification-pending';
+                cooldownStarted = true;
+                startResendCooldown(button, 30);
                 
             } else {
                 throw new Error(result.message);
@@ -1869,8 +1907,10 @@ function setupOTP() {
             document.getElementById('farmer-aadhaar-otp-status').textContent = '❌ ' + error.message;
             document.getElementById('farmer-aadhaar-otp-status').className = 'verification-failed';
         } finally {
-            button.disabled = false;
-            button.textContent = originalText;
+            if (!cooldownStarted) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
     });
     
@@ -1926,6 +1966,7 @@ function setupOTP() {
         
         const button = this;
         const originalText = button.textContent;
+        let cooldownStarted = false;
         button.disabled = true;
         button.textContent = 'Sending...';
         
@@ -1941,8 +1982,15 @@ function setupOTP() {
             if (result.success) {
                 let statusMessage = '✅ Verification code sent successfully';
                 
+                if (result.debug_otp) {
+                    statusMessage = `📱 OTP for testing: ${result.debug_otp}`;
+                    autoFillOTP('farmer-mobile', result.debug_otp);
+                }
+                
                 document.getElementById('farmer-mobile-otp-status').textContent = statusMessage;
                 document.getElementById('farmer-mobile-otp-status').className = 'verification-pending';
+                cooldownStarted = true;
+                startResendCooldown(button, 30);
                 
             } else {
                 throw new Error(result.message);
@@ -1952,8 +2000,10 @@ function setupOTP() {
             document.getElementById('farmer-mobile-otp-status').textContent = '❌ ' + error.message;
             document.getElementById('farmer-mobile-otp-status').className = 'verification-failed';
         } finally {
-            button.disabled = false;
-            button.textContent = originalText;
+            if (!cooldownStarted) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
     });
     
@@ -2006,6 +2056,7 @@ function setupOTP() {
         
         const button = this;
         const originalText = button.textContent;
+        let cooldownStarted = false;
         button.disabled = true;
         button.textContent = 'Sending...';
         
@@ -2023,6 +2074,8 @@ function setupOTP() {
                 
                 document.getElementById('farmer-email-otp-status').textContent = statusMessage;
                 document.getElementById('farmer-email-otp-status').className = 'verification-pending';
+                cooldownStarted = true;
+                startResendCooldown(button, 30);
                 
             } else {
                 throw new Error(result.message);
@@ -2032,8 +2085,10 @@ function setupOTP() {
             document.getElementById('farmer-email-otp-status').textContent = '❌ Error: ' + error.message;
             document.getElementById('farmer-email-otp-status').className = 'verification-failed';
         } finally {
-            button.disabled = false;
-            button.textContent = originalText;
+            if (!cooldownStarted) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
     });
     
