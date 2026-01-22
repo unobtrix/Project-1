@@ -318,6 +318,278 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+
+    /* Forgot Password Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: #0d883a;
+      font-size: 20px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-step {
+      display: none;
+    }
+
+    .modal-step.active {
+      display: block;
+    }
+
+    .modal-step h4 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .step-description {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .otp-input-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+
+    .otp-input {
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      transition: border 0.3s;
+    }
+
+    .otp-input:focus {
+      border-color: #0d883a;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(13, 136, 58, 0.2);
+    }
+
+    .otp-timer {
+      text-align: center;
+      color: #e74c3c;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .modal-btn-primary {
+      background-color: #0d883a;
+      color: white;
+    }
+
+    .modal-btn-primary:hover {
+      background-color: #00b365;
+    }
+
+    .modal-btn-primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .modal-btn-secondary {
+      background-color: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    .modal-btn-secondary:hover {
+      background-color: #e9e9e9;
+    }
+
+    .success-icon {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .modal-message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .modal-message.success {
+      background-color: #e9f7ef;
+      color: #0d883a;
+      border: 1px solid #c3e6cb;
+    }
+
+    .modal-message.error {
+      background-color: #fdecea;
+      color: #e74c3c;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Resend OTP Button */
+    .resend-otp-container {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .resend-otp-btn {
+      background: none;
+      border: none;
+      color: #0d883a;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .resend-otp-btn:hover:not(:disabled) {
+      color: #00b365;
+    }
+
+    .resend-otp-btn:disabled {
+      color: #999;
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+
+    .resend-timer {
+      color: #666;
+    }
+
+    /* Password Strength Indicator */
+    .password-strength {
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .strength-bar {
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      transition: width 0.3s, background-color 0.3s;
+      width: 0;
+    }
+
+    .strength-weak .strength-fill {
+      width: 33%;
+      background-color: #e74c3c;
+    }
+
+    .strength-medium .strength-fill {
+      width: 66%;
+      background-color: #f39c12;
+    }
+
+    .strength-strong .strength-fill {
+      width: 100%;
+      background-color: #27ae60;
+    }
+
+    .strength-text {
+      margin-top: 5px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .strength-weak .strength-text {
+      color: #e74c3c;
+    }
+
+    .strength-medium .strength-text {
+      color: #f39c12;
+    }
+
+    .strength-strong .strength-text {
+      color: #27ae60;
+    }
   </style>
 </head>
 <body>
@@ -376,6 +648,99 @@
       Don't have an account? <a href="signup.html">Sign up</a>
     </div>
     
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal" id="forgotPasswordModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Reset Password</h3>
+        <button class="modal-close" id="closeModal">&times;</button>
+      </div>
+
+      <!-- Step 1: Email Input -->
+      <div class="modal-step active" id="step1">
+        <h4>Step 1: Verify Email</h4>
+        <p class="step-description">Enter your registered email address to receive an OTP.</p>
+        <div id="step1Message" class="modal-message" style="display: none;"></div>
+        <div class="form-group">
+          <label for="resetEmail">Email Address</label>
+          <input type="email" id="resetEmail" placeholder="example@domain.com" required />
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary" type="button" id="cancelStep1">Cancel</button>
+          <button class="modal-btn modal-btn-primary" type="button" id="sendOtpBtn">Send OTP</button>
+        </div>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div class="modal-step" id="step2">
+        <h4>Step 2: Verify OTP</h4>
+        <p class="step-description">Enter the 6-digit OTP sent to your email.</p>
+        <div id="step2Message" class="modal-message" style="display: none;"></div>
+        <div class="otp-input-container">
+          <input type="text" class="otp-input" id="otp1" maxlength="1" inputmode="numeric" />
+          <input type="text" class="otp-input" id="otp2" maxlength="1" inputmode="numeric" />
+          <input type="text" class="otp-input" id="otp3" maxlength="1" inputmode="numeric" />
+          <input type="text" class="otp-input" id="otp4" maxlength="1" inputmode="numeric" />
+          <input type="text" class="otp-input" id="otp5" maxlength="1" inputmode="numeric" />
+          <input type="text" class="otp-input" id="otp6" maxlength="1" inputmode="numeric" />
+        </div>
+        <div class="otp-timer" id="otpTimer" style="display: none;">OTP expires in: <span id="timerValue">600</span>s</div>
+        <div class="resend-otp-container">
+          <button class="resend-otp-btn" type="button" id="resendOtpBtn" disabled>
+            Resend OTP <span class="resend-timer" id="resendTimer">(30s)</span>
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary" type="button" id="backToStep1">Back</button>
+          <button class="modal-btn modal-btn-primary" type="button" id="verifyOtpBtn">Verify OTP</button>
+        </div>
+      </div>
+
+      <!-- Step 3: New Password -->
+      <div class="modal-step" id="step3">
+        <h4>Step 3: Create New Password</h4>
+        <p class="step-description">Enter a strong new password for your account.</p>
+        <div id="step3Message" class="modal-message" style="display: none;"></div>
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <div class="password-container">
+            <input type="password" id="newPassword" placeholder="Enter new password" required minlength="6" />
+            <button type="button" class="toggle-password" id="toggleNewPassword">👁️</button>
+          </div>
+          <div class="password-strength" id="passwordStrength">
+            <div class="strength-bar">
+              <div class="strength-fill"></div>
+            </div>
+            <div class="strength-text"></div>
+          </div>
+          <div class="error-message" id="newPassword-error">Password must be at least 6 characters</div>
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="password-container">
+            <input type="password" id="confirmPassword" placeholder="Confirm new password" required minlength="6" />
+            <button type="button" class="toggle-password" id="toggleConfirmPassword">👁️</button>
+          </div>
+          <div class="error-message" id="confirmPassword-error">Passwords do not match</div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary" type="button" id="backToStep2">Back</button>
+          <button class="modal-btn modal-btn-primary" type="button" id="resetPasswordBtn">Reset Password</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Success -->
+      <div class="modal-step" id="step4">
+        <div class="success-icon">✅</div>
+        <h4 style="text-align: center; color: #0d883a;">Password Reset Successful</h4>
+        <p class="step-description" style="text-align: center;">Your password has been successfully updated. You can now log in with your new password.</p>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-primary" type="button" id="backToLogin" style="flex: 1;">Back to Login</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -445,8 +810,7 @@
       // Forgot password
       forgotPassword.addEventListener('click', function(e) {
         e.preventDefault();
-        showMessage('Password reset feature coming soon!', 'error');
-        // You can implement password reset functionality here
+        showForgotPasswordModal();
       });
       
       // Toggle password visibility
@@ -712,9 +1076,460 @@
       
       // Run check on page load
       checkExistingLogin();
+
+      // ==================== FORGOT PASSWORD MODAL FUNCTIONS ====================
+      
+      const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+      const closeModalBtn = document.getElementById('closeModal');
+      const resetEmail = document.getElementById('resetEmail');
+      const sendOtpBtn = document.getElementById('sendOtpBtn');
+      const cancelStep1 = document.getElementById('cancelStep1');
+      const backToStep1 = document.getElementById('backToStep1');
+      const backToStep2 = document.getElementById('backToStep2');
+      const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+      const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+      const backToLogin = document.getElementById('backToLogin');
+      const toggleNewPassword = document.getElementById('toggleNewPassword');
+      const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+      const newPassword = document.getElementById('newPassword');
+      const confirmPassword = document.getElementById('confirmPassword');
+      const resendOtpBtn = document.getElementById('resendOtpBtn');
+      const resendTimer = document.getElementById('resendTimer');
+      const passwordStrength = document.getElementById('passwordStrength');
+      
+      let resetState = {
+        email: '',
+        otp: '',
+        userType: 'consumer',
+        otpTimer: null,
+        resendTimer: null,
+        resendCooldown: 30
+      };
+
+      function showForgotPasswordModal() {
+        forgotPasswordModal.classList.add('active');
+        goToStep(1);
+        resetState = {
+          email: '',
+          otp: '',
+          userType: 'consumer',
+          otpTimer: null,
+          resendAttempts: 0
+        };
+      }
+
+      function closeForgotPasswordModal() {
+        forgotPasswordModal.classList.remove('active');
+        resetState = {
+          email: '',
+          otp: '',
+          userType: 'consumer',
+          otpTimer: null,
+          resendTimer: null,
+          resendCooldown: 30
+        };
+        clearOTPInputs();
+        if (resetState.otpTimer) clearInterval(resetState.otpTimer);
+        if (resetState.resendTimer) clearInterval(resetState.resendTimer);
+        resetPasswordStrength();
+      }
+
+      function goToStep(step) {
+        document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step${step}`).classList.add('active');
+      }
+
+      function showModalMessage(step, message, type) {
+        const messageEl = document.getElementById(`step${step}Message`);
+        messageEl.textContent = message;
+        messageEl.className = `modal-message ${type}`;
+        messageEl.style.display = 'block';
+      }
+
+      function hideModalMessage(step) {
+        const messageEl = document.getElementById(`step${step}Message`);
+        messageEl.style.display = 'none';
+      }
+
+      function clearOTPInputs() {
+        for (let i = 1; i <= 6; i++) {
+          document.getElementById(`otp${i}`).value = '';
+        }
+      }
+
+      function getOTPValue() {
+        let otp = '';
+        for (let i = 1; i <= 6; i++) {
+          otp += document.getElementById(`otp${i}`).value;
+        }
+        return otp;
+      }
+
+      function startOTPTimer() {
+        let timeLeft = 600; // 10 minutes
+        const timerElement = document.getElementById('timerValue');
+        const timerContainer = document.getElementById('otpTimer');
+        timerContainer.style.display = 'block';
+
+        if (resetState.otpTimer) clearInterval(resetState.otpTimer);
+        
+        resetState.otpTimer = setInterval(() => {
+          timeLeft--;
+          timerElement.textContent = timeLeft;
+
+          if (timeLeft <= 0) {
+            clearInterval(resetState.otpTimer);
+            timerContainer.style.display = 'none';
+            showModalMessage(2, 'OTP expired. Please request a new OTP.', 'error');
+            verifyOtpBtn.disabled = true;
+          }
+        }, 1000);
+
+        // Start resend cooldown
+        startResendCooldown();
+      }
+
+      function startResendCooldown() {
+        let countdown = 30;
+        resendOtpBtn.disabled = true;
+        resendTimer.textContent = `(${countdown}s)`;
+
+        if (resetState.resendTimer) clearInterval(resetState.resendTimer);
+
+        resetState.resendTimer = setInterval(() => {
+          countdown--;
+          resendTimer.textContent = `(${countdown}s)`;
+
+          if (countdown <= 0) {
+            clearInterval(resetState.resendTimer);
+            resendOtpBtn.disabled = false;
+            resendTimer.textContent = '';
+          }
+        }, 1000);
+      }
+
+      function checkPasswordStrength(password) {
+        let strength = 0;
+        let feedback = '';
+
+        if (password.length === 0) {
+          return { strength: 0, feedback: '' };
+        }
+
+        // Length check
+        if (password.length >= 8) strength += 1;
+        if (password.length >= 12) strength += 1;
+
+        // Complexity checks
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+
+        // Determine strength level
+        if (strength <= 2) {
+          return { strength: 'weak', feedback: 'Weak - Add more characters, numbers or symbols' };
+        } else if (strength <= 4) {
+          return { strength: 'medium', feedback: 'Medium - Good but could be stronger' };
+        } else {
+          return { strength: 'strong', feedback: 'Strong - Great password!' };
+        }
+      }
+
+      function updatePasswordStrength(password) {
+        const result = checkPasswordStrength(password);
+        const strengthBar = passwordStrength.querySelector('.strength-bar');
+        const strengthText = passwordStrength.querySelector('.strength-text');
+
+        // Remove all strength classes
+        passwordStrength.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+
+        if (result.strength) {
+          passwordStrength.classList.add(`strength-${result.strength}`);
+          strengthText.textContent = result.feedback;
+        } else {
+          strengthText.textContent = '';
+        }
+      }
+
+      function resetPasswordStrength() {
+        passwordStrength.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+        passwordStrength.querySelector('.strength-text').textContent = '';
+      }
+
+      // OTP Input auto-advance
+      for (let i = 1; i <= 6; i++) {
+        const input = document.getElementById(`otp${i}`);
+        input.addEventListener('input', function(e) {
+          if (e.target.value && i < 6) {
+            document.getElementById(`otp${i + 1}`).focus();
+          }
+        });
+
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && !e.target.value && i > 1) {
+            document.getElementById(`otp${i - 1}`).focus();
+          }
+        });
+      }
+
+      // Step 1: Send OTP
+      sendOtpBtn.addEventListener('click', async function() {
+        await sendOTPToEmail();
+      });
+
+      // Resend OTP
+      resendOtpBtn.addEventListener('click', async function() {
+        showModalMessage(2, 'Resending OTP...', 'success');
+        clearOTPInputs();
+        await sendOTPToEmail(true);
+      });
+
+      async function sendOTPToEmail(isResend = false) {
+        const email = resetEmail.value.trim().toLowerCase();
+        
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          showModalMessage(1, 'Please enter a valid email address.', 'error');
+          return;
+        }
+
+        if (isResend) {
+          resendOtpBtn.disabled = true;
+        } else {
+          sendOtpBtn.disabled = true;
+        }
+        
+        showModalMessage(isResend ? 2 : 1, '', '');
+
+        try {
+          // Step 1: Check if email exists (skip if resending)
+          if (!isResend) {
+            const checkResponse = await fetch(`${API_URL}/api/forgot-password/check-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                email: email,
+                userType: resetState.userType
+              })
+            });
+
+            const checkData = await checkResponse.json();
+
+            if (!checkResponse.ok || !checkData.success) {
+              showModalMessage(1, checkData.message || 'Email not found. Please check and try again.', 'error');
+              sendOtpBtn.disabled = false;
+              return;
+            }
+          }
+
+          // Step 2: Send OTP
+          const sendResponse = await fetch(`${API_URL}/api/forgot-password/send-otp`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: email,
+              userType: resetState.userType
+            })
+          });
+
+          const sendData = await sendResponse.json();
+
+          if (!sendResponse.ok || !sendData.success) {
+            showModalMessage(isResend ? 2 : 1, 'Failed to send OTP. Please try again.', 'error');
+            if (isResend) {
+              resendOtpBtn.disabled = false;
+            } else {
+              sendOtpBtn.disabled = false;
+            }
+            return;
+          }
+
+          showModalMessage(isResend ? 2 : 1, 'OTP sent successfully! Check your email.', 'success');
+          
+          if (!isResend) {
+            setTimeout(() => {
+              hideModalMessage(1);
+              clearOTPInputs();
+              goToStep(2);
+              startOTPTimer();
+              document.getElementById('otp1').focus();
+            }, 1000);
+          } else {
+            // Restart timer if resending
+            if (resetState.otpTimer) clearInterval(resetState.otpTimer);
+            startOTPTimer();
+            document.getElementById('otp1').focus();
+          }
+
+        } catch (error) {
+          console.error('Error sending OTP:', error);
+          showModalMessage(isResend ? 2 : 1, 'Network error. Please try again.', 'error');
+          if (isResend) {
+            resendOtpBtn.disabled = false;
+          } else {
+            sendOtpBtn.disabled = false;
+          }
+        }
+      }
+
+      // Step 2: Verify OTP
+      verifyOtpBtn.addEventListener('click', async function() {
+        const otp = getOTPValue();
+        
+        if (otp.length !== 6) {
+          showModalMessage(2, 'Please enter a valid 6-digit OTP.', 'error');
+          return;
+        }
+
+        verifyOtpBtn.disabled = true;
+        showModalMessage(2, '', '');
+
+        try {
+          const response = await fetch(`${API_URL}/api/forgot-password/verify-otp`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: resetState.email,
+              otp: otp,
+              userType: resetState.userType
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            showModalMessage(2, data.message || 'Invalid OTP. Please try again.', 'error');
+            verifyOtpBtn.disabled = false;
+            return;
+          }
+
+          resetState.otp = otp;
+          showModalMessage(2, 'OTP verified successfully!', 'success');
+          setTimeout(() => {
+            hideModalMessage(2);
+            goToStep(3);
+            if (resetState.otpTimer) clearInterval(resetState.otpTimer);
+          }, 1000);
+
+        } catch (error) {
+          console.error('Error verifying OTP:', error);
+          showModalMessage(2, 'Network error. Please try again.', 'error');
+          verifyOtpBtn.disabled = false;
+        }
+      });
+
+      // Step 3: Reset Password
+      resetPasswordBtn.addEventListener('click', async function() {
+        const newPwd = newPassword.value;
+        const confirmPwd = confirmPassword.value;
+
+        if (newPwd.length < 6) {
+          showModalMessage(3, 'Password must be at least 6 characters.', 'error');
+          return;
+        }
+
+        if (newPwd !== confirmPwd) {
+          showModalMessage(3, 'Passwords do not match. Please try again.', 'error');
+          return;
+        }
+
+        resetPasswordBtn.disabled = true;
+        showModalMessage(3, '', '');
+
+        try {
+          const response = await fetch(`${API_URL}/api/forgot-password/reset`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: resetState.email,
+              newPassword: newPwd,
+              userType: resetState.userType
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            showModalMessage(3, data.message || 'Failed to reset password. Please try again.', 'error');
+            resetPasswordBtn.disabled = false;
+            return;
+          }
+
+          // ✅ SESSION INVALIDATION: Clear all session data
+          localStorage.clear();
+          sessionStorage.clear();
+          console.log('🔒 All sessions cleared after password reset');
+
+          goToStep(4);
+
+        } catch (error) {
+          console.error('Error resetting password:', error);
+          showModalMessage(3, 'Network error. Please try again.', 'error');
+          resetPasswordBtn.disabled = false;
+        }
+      });
+
+      // Password strength checker on input
+      newPassword.addEventListener('input', function() {
+        updatePasswordStrength(newPassword.value);
+      });
+
+      // Toggle password visibility
+      toggleNewPassword.addEventListener('click', function() {
+        if (newPassword.type === 'password') {
+          newPassword.type = 'text';
+          toggleNewPassword.textContent = '🔒';
+        } else {
+          newPassword.type = 'password';
+          toggleNewPassword.textContent = '👁️';
+        }
+      });
+
+      toggleConfirmPassword.addEventListener('click', function() {
+        if (confirmPassword.type === 'password') {
+          confirmPassword.type = 'text';
+          toggleConfirmPassword.textContent = '🔒';
+        } else {
+          confirmPassword.type = 'password';
+          toggleConfirmPassword.textContent = '👁️';
+        }
+      });
+
+      // Modal navigation
+      closeModalBtn.addEventListener('click', closeForgotPasswordModal);
+      cancelStep1.addEventListener('click', closeForgotPasswordModal);
+      
+      backToStep1.addEventListener('click', function() {
+        goToStep(1);
+        clearOTPInputs();
+        if (resetState.otpTimer) clearInterval(resetState.otpTimer);
+        if (resetState.resendTimer) clearInterval(resetState.resendTimer);
+        document.getElementById('otpTimer').style.display = 'none';
+        sendOtpBtn.disabled = false;
+        resendOtpBtn.disabled = true;
+        resendTimer.textContent = '(30s)';
+      });
+
+      backToStep2.addEventListener('click', function() {
+        goToStep(2);
+        newPassword.value = '';
+        confirmPassword.value = '';
+        resetPasswordStrength();
+        resetPasswordBtn.disabled = false;
+      });
+
+      backToLogin.addEventListener('click', function() {
+        closeForgotPasswordModal();
+        showMessage('Password reset successful! Please log in with your new password.', 'success');
+      });
     });
   </script>
 </body>
 </html>
-
-

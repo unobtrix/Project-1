@@ -671,14 +671,46 @@
 
                 // Initialize UI
                 renderProductDetails();
-
-                // We do NOT call loadSimilarProducts as requested to only touch Reviews/Product logic
-                // But we will populate the reviews section
+                // Load reviews
                 initReviews();
+                // Load related products
+                loadRelatedProducts(currentProduct.category, currentProduct.id);
 
             } catch (error) {
                 console.error('Error loading product:', error);
                 showError(error.message);
+            }
+        }
+
+        // Fetch and display related products from the same category (excluding current)
+        async function loadRelatedProducts(category, excludeId) {
+            if (!category) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products?category=${encodeURIComponent(category)}&limit=6`);
+                if (!response.ok) return;
+                const data = await response.json();
+                let products = (data.products || data.data || []);
+                // Exclude current product
+                products = products.filter(p => String(p.id) !== String(excludeId));
+                if (products.length === 0) {
+                    document.getElementById('similarSection').style.display = 'none';
+                    return;
+                }
+                document.getElementById('similarSection').style.display = 'block';
+                document.getElementById('similarProducts').innerHTML = products.map(product => {
+                    const img = Array.isArray(product.image_url) ? product.image_url[0] : (product.image_url || 'https://via.placeholder.com/300x200?text=Product+Image');
+                    return `
+                        <a href="product-details.html?id=${product.id}" class="similar-product-card" style="text-decoration:none;color:inherit;">
+                            <div class="similar-product-img"><img src="${img}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=Product+Image'"></div>
+                            <div class="similar-product-content">
+                                <div class="similar-product-name">${product.name}</div>
+                                <div class="similar-product-price">₹${product.price}</div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            } catch (e) {
+                document.getElementById('similarSection').style.display = 'none';
             }
         }
 

@@ -301,6 +301,208 @@
             color: white;
             transform: translateY(-2px);
         }
+
+        /* Change Password Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 35px 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #777;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .modal-btn-primary:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .modal-btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .modal-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .modal-message.success {
+            background-color: #e9f7ef;
+            color: var(--primary);
+            border: 1px solid #c3e6cb;
+        }
+
+        .modal-message.error {
+            background-color: #fdecea;
+            color: #e74c3c;
+            border: 1px solid #f5c6cb;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: width 0.3s, background-color 0.3s;
+            width: 0;
+        }
+
+        .strength-weak .strength-fill {
+            width: 33%;
+            background-color: #e74c3c;
+        }
+
+        .strength-medium .strength-fill {
+            width: 66%;
+            background-color: #f39c12;
+        }
+
+        .strength-strong .strength-fill {
+            width: 100%;
+            background-color: #27ae60;
+        }
+
+        .strength-text {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .strength-weak .strength-text { color: #e74c3c; }
+        .strength-medium .strength-text { color: #f39c12; }
+        .strength-strong .strength-text { color: #27ae60; }
         
         .btn-accent {
             background-color: var(--accent);
@@ -504,9 +706,57 @@
                 
                 <div class="action-buttons">
                     <a href="#" class="btn btn-primary"><i class="fas fa-edit"></i> Edit Profile</a>
+                    <button class="btn btn-secondary" id="changePasswordBtn"><i class="fas fa-key"></i> Change Password</button>
                     <a href="login.html" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> Change Password</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            
+            <div id="modalMessage" class="modal-message" style="display: none;"></div>
+
+            <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <div class="password-container">
+                    <input type="password" id="currentPassword" placeholder="Enter current password" required />
+                    <button type="button" class="toggle-password" data-target="currentPassword">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <div class="password-container">
+                    <input type="password" id="newPassword" placeholder="Enter new password" required minlength="6" />
+                    <button type="button" class="toggle-password" data-target="newPassword">👁️</button>
+                </div>
+                <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar">
+                        <div class="strength-fill"></div>
+                    </div>
+                    <div class="strength-text"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm New Password</label>
+                <div class="password-container">
+                    <input type="password" id="confirmPassword" placeholder="Confirm new password" required minlength="6" />
+                    <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" type="button" id="cancelChangePassword">Cancel</button>
+                <button class="modal-btn modal-btn-primary" type="button" id="submitChangePassword">Update Password</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         (function() {

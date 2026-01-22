@@ -1366,6 +1366,7 @@
                     <i class="fas fa-edit"></i> Change
                 </button>
             </div>
+            <div id="detectedLocationDetails" style="margin-top:6px;font-size:1em;color:#444;"></div>
         </div>
     </section>
     
@@ -1571,16 +1572,51 @@
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Service areas (cities and their PINCODE prefixes)
-        const SERVICE_AREAS = {
-            'Hyderabad': ['500', '501', '502', '503', '509'],
-            'Secunderabad': ['500', '501', '502', '503'],
-            'Cyberabad': ['500', '501', '502', '503'],
-            'Rangareddy': ['501', '502', '509'],
-            'Medchal': ['501', '502'],
-            'Sangareddy': ['502'],
-            'Vikarabad': ['501']
-        };
+
+        // Hyderabad ORR (Outer Ring Road) geofence logic
+        const HYDERABAD_CENTER = { lat: 17.385044, lng: 78.486671 };
+        const ORR_POLYGON_COORDS = [
+            [17.198497, 78.390372],
+            [17.208230, 78.439333],
+            [17.208414, 78.550771],
+            [17.276809, 78.656423],
+            [17.338635, 78.659286],
+            [17.392153, 78.686791],
+            [17.477744, 78.705016],
+            [17.562024, 78.620846],
+            [17.573154, 78.572809],
+            [17.600461, 78.447827],
+            [17.554635, 78.380576],
+            [17.539855, 78.230554],
+            [17.418365, 78.270638],
+            [17.381684, 78.347533],
+            [17.194121, 78.377669],
+            [17.198497, 78.390372]
+        ];
+
+        // Calculate distance between two coordinates in meters
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Point-in-polygon geofence check
+        function isWithinGeofence(lat, lng) {
+            let inside = false;
+            for (let i = 0, j = ORR_POLYGON_COORDS.length - 1; i < ORR_POLYGON_COORDS.length; j = i++) {
+                const xi = ORR_POLYGON_COORDS[i][0], yi = ORR_POLYGON_COORDS[i][1];
+                const xj = ORR_POLYGON_COORDS[j][0], yj = ORR_POLYGON_COORDS[j][1];
+                const intersect = ((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
 
         // Location suggestions data
         const LOCATION_SUGGESTIONS = [
@@ -1939,17 +1975,14 @@
                         reject(new Error('Geolocation is not supported by this browser'));
                         return;
                     }
-
                     const options = {
                         enableHighAccuracy: true,
                         timeout: 10000, // 10 seconds
                         maximumAge: 600000 // 10 minutes
                     };
-
                     navigator.geolocation.getCurrentPosition(
                         async (position) => {
                             const { latitude, longitude } = position.coords;
-                            
                             try {
                                 // Get location name from coordinates
                                 const locationName = await CustomerAPIService.reverseGeocode(latitude, longitude);
@@ -1960,28 +1993,16 @@
                                     success: true
                                 });
                             } catch (error) {
-                                reject(new Error('Could not determine location name from coordinates'));
+                                resolve({
+                                    latitude,
+                                    longitude,
+                                    locationName: null,
+                                    success: false
+                                });
                             }
                         },
                         (error) => {
-                            let errorMessage = 'Unable to retrieve your location';
-                            
-                            switch (error.code) {
-                                case error.PERMISSION_DENIED:
-                                    errorMessage = 'Location access denied. Please allow location access or enter manually.';
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    errorMessage = 'Location information unavailable. Please try again or enter manually.';
-                                    break;
-                                case error.TIMEOUT:
-                                    errorMessage = 'Location request timed out. Please try again or enter manually.';
-                                    break;
-                                default:
-                                    errorMessage = 'An unknown error occurred while getting location.';
-                                    break;
-                            }
-                            
-                            reject(new Error(errorMessage));
+                            reject(error);
                         },
                         options
                     );
@@ -2477,7 +2498,7 @@
                     
                     if (locationData.success && locationData.locationName) {
                         // Successfully got location
-                        await this.processDetectedLocation(locationData.locationName);
+                        await this.processDetectedLocation(locationData.locationName, locationData.latitude, locationData.longitude);
                     } else {
                         throw new Error('Could not determine location name');
                     }
@@ -2488,38 +2509,42 @@
                 }
             }
 
-            static async processDetectedLocation(locationName) {
+            static async processDetectedLocation(locationName, latitude = null, longitude = null) {
                 this.showNotification(`Location detected: ${locationName}`);
-                
                 // Check delivery availability for detected location
-                const { isAvailable, pincode } = await CustomerAPIService.checkDelivery(locationName);
-                
+                const { isAvailable, pincode } = await CustomerAPIService.checkDelivery(locationName, null, latitude, longitude);
                 AppState.userLocation = {
                     location: locationName,
                     pincode: pincode,
                     deliveryAvailable: isAvailable
                 };
-
                 // Save to localStorage
                 localStorage.setItem('userLocation', locationName);
                 localStorage.setItem('userPincode', pincode);
                 localStorage.setItem('deliveryAvailable', isAvailable);
-
                 // Update UI
                 this.showCurrentLocation();
                 this.updateDeliveryWarning();
-
+                this.updateDetectedLocationDetails(locationName, latitude, longitude);
                 if (isAvailable) {
                     this.showNotification(`🎉 Delivery available in ${locationName}!`);
                 } else {
                     this.showNotification(`⚠️ Delivery not available in ${locationName}. We serve Hyderabad and surrounding areas.`);
                 }
-
                 // Log activity
                 await CustomerAPIService.logUserActivity(AppState.currentUserId, 'auto_location_detected', {
                     location: locationName,
                     is_available: isAvailable
                 });
+            }
+
+            static updateDetectedLocationDetails(locationName, latitude = null, longitude = null) {
+                let details = `<strong>Detected Location:</strong> ${locationName}`;
+                if (latitude !== null && longitude !== null) {
+                    details += `<br><span style='font-size:0.95em;color:#666'>Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}</span>`;
+                }
+                const el = document.getElementById('detectedLocationDetails');
+                if (el) el.innerHTML = details;
             }
 
             static showManualLocationInput(errorMessage = null) {
@@ -3098,15 +3123,14 @@
                     elements.productsContainer.innerHTML = this.getNoResultsHTML('No Products Available', 'Try adjusting your search terms or browse categories');
                     return;
                 }
-                
                 elements.productsContainer.innerHTML = products.map(product => {
                     const isOutOfStock = product.stock === 0;
                     const isLowStock = product.stock > 0 && product.stock < 10;
                     const cardClass = isOutOfStock ? 'card out-of-stock' : 'card';
                     const category = CATEGORIES.find(cat => cat.id === product.category);
-                    
+                    // Link to product-details.html?id=PRODUCT_ID
                     return `
-                    <div class="${cardClass}" onclick="AppController.viewProductDetails('${product.id}')">
+                    <a href="product-details.html?id=${product.id}" class="${cardClass}" style="text-decoration:none;color:inherit;">
                         <div class="card-img">
                             <img src="${product.images?.[0] || 'https://via.placeholder.com/300x200?text=Product+Image'}" 
                                  alt="${product.name}" 
@@ -3123,9 +3147,9 @@
                             </div>
                             ${isLowStock ? `<div class="stock-low">Only ${product.stock} left in stock!</div>` : ''}
                             <div class="card-actions">
-                                <button class="btn btn-outline" onclick="event.stopPropagation(); AppController.viewProductDetails('${product.id}')">Details</button>
+                                <button class="btn btn-outline" onclick="event.preventDefault(); AppController.viewProductDetails('${product.id}')">Details</button>
                                 <button class="btn btn-primary" 
-                                        onclick="event.stopPropagation(); AppController.addToCart({
+                                        onclick="event.preventDefault(); AppController.addToCart({
                                             id: '${product.id}',
                                             name: '${product.name.replace(/'/g, "\\'")}',
                                             price: ${product.price},
@@ -3137,7 +3161,7 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     `;
                 }).join('');
             }

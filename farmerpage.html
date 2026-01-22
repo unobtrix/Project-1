@@ -1111,6 +1111,208 @@
             color: var(--gray);
             font-size: 0.9rem;
         }
+
+        /* Change Password Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 35px 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #777;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: var(--dark);
+        }
+
+        .modal-btn-primary:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .modal-btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .modal-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .modal-message.success {
+            background-color: #e9f7ef;
+            color: var(--primary);
+            border: 1px solid #c3e6cb;
+        }
+
+        .modal-message.error {
+            background-color: #fdecea;
+            color: #e74c3c;
+            border: 1px solid #f5c6cb;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: width 0.3s, background-color 0.3s;
+            width: 0;
+        }
+
+        .strength-weak .strength-fill {
+            width: 33%;
+            background-color: #e74c3c;
+        }
+
+        .strength-medium .strength-fill {
+            width: 66%;
+            background-color: #f39c12;
+        }
+
+        .strength-strong .strength-fill {
+            width: 100%;
+            background-color: #27ae60;
+        }
+
+        .strength-text {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .strength-weak .strength-text { color: #e74c3c; }
+        .strength-medium .strength-text { color: #f39c12; }
+        .strength-strong .strength-text { color: #27ae60; }
     </style>
 </head>
 <body>
@@ -1538,7 +1740,7 @@
                             </div>
                             <div>
                                 <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Security</h4>
-                                <button class="btn btn-primary" style="margin-bottom: 0.5rem;">Change Password</button>
+                                <button class="btn btn-primary" id="changePasswordBtn" style="margin-bottom: 0.5rem;">Change Password</button>
                                 <button class="btn btn-outline" style="margin-bottom: 0.5rem;">Two-Factor Authentication</button>
                                 <button class="btn btn-outline">Connected Devices</button>
                             </div>
@@ -2934,6 +3136,215 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
+        }
+
+        // ==================== CHANGE PASSWORD FUNCTIONALITY ====================
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        if (changePasswordBtn) {
+            const modalHTML = `
+                <div class="modal" id="changePasswordModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-key"></i> Change Password</h3>
+                            <button class="modal-close" id="closePasswordModal">&times;</button>
+                        </div>
+                        <div id="modalMessage" class="modal-message" style="display: none;"></div>
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <div class="password-container">
+                                <input type="password" id="currentPassword" placeholder="Enter current password" required />
+                                <button type="button" class="toggle-password" data-target="currentPassword">👁️</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPasswordChange">New Password</label>
+                            <div class="password-container">
+                                <input type="password" id="newPasswordChange" placeholder="Enter new password" required minlength="6" />
+                                <button type="button" class="toggle-password" data-target="newPasswordChange">👁️</button>
+                            </div>
+                            <div class="password-strength" id="passwordStrengthChange">
+                                <div class="strength-bar"><div class="strength-fill"></div></div>
+                                <div class="strength-text"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPasswordChange">Confirm New Password</label>
+                            <div class="password-container">
+                                <input type="password" id="confirmPasswordChange" placeholder="Confirm new password" required minlength="6" />
+                                <button type="button" class="toggle-password" data-target="confirmPasswordChange">👁️</button>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn-secondary" type="button" id="cancelChangePassword">Cancel</button>
+                            <button class="modal-btn modal-btn-primary" type="button" id="submitChangePassword">Update Password</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (!document.getElementById('changePasswordModal')) {
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+
+            const changePasswordModal = document.getElementById('changePasswordModal');
+            const closeModal = document.getElementById('closePasswordModal');
+            const cancelChangePassword = document.getElementById('cancelChangePassword');
+            const submitChangePassword = document.getElementById('submitChangePassword');
+            const currentPassword = document.getElementById('currentPassword');
+            const newPasswordChange = document.getElementById('newPasswordChange');
+            const confirmPasswordChange = document.getElementById('confirmPasswordChange');
+            const modalMessage = document.getElementById('modalMessage');
+            const passwordStrengthChange = document.getElementById('passwordStrengthChange');
+
+            changePasswordBtn.addEventListener('click', function() {
+                changePasswordModal.classList.add('active');
+                clearPasswordFields();
+            });
+
+            function closePasswordModal() {
+                changePasswordModal.classList.remove('active');
+                clearPasswordFields();
+                hideModalMessage();
+            }
+
+            if (closeModal) closeModal.addEventListener('click', closePasswordModal);
+            if (cancelChangePassword) cancelChangePassword.addEventListener('click', closePasswordModal);
+
+            function clearPasswordFields() {
+                currentPassword.value = '';
+                newPasswordChange.value = '';
+                confirmPasswordChange.value = '';
+                resetPasswordStrengthIndicator();
+            }
+
+            function showModalMessage(message, type) {
+                modalMessage.textContent = message;
+                modalMessage.className = `modal-message ${type}`;
+                modalMessage.style.display = 'block';
+            }
+
+            function hideModalMessage() {
+                modalMessage.style.display = 'none';
+            }
+
+            function checkPasswordStrength(password) {
+                let strength = 0;
+                if (password.length === 0) return { strength: 0, feedback: '' };
+                if (password.length >= 8) strength += 1;
+                if (password.length >= 12) strength += 1;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+                if (/[0-9]/.test(password)) strength += 1;
+                if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+
+                if (strength <= 2) return { strength: 'weak', feedback: 'Weak' };
+                else if (strength <= 4) return { strength: 'medium', feedback: 'Medium' };
+                else return { strength: 'strong', feedback: 'Strong!' };
+            }
+
+            function updatePasswordStrengthIndicator(password) {
+                const result = checkPasswordStrength(password);
+                const strengthText = passwordStrengthChange.querySelector('.strength-text');
+                passwordStrengthChange.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+                if (result.strength) {
+                    passwordStrengthChange.classList.add(`strength-${result.strength}`);
+                    strengthText.textContent = result.feedback;
+                } else {
+                    strengthText.textContent = '';
+                }
+            }
+
+            function resetPasswordStrengthIndicator() {
+                passwordStrengthChange.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+                passwordStrengthChange.querySelector('.strength-text').textContent = '';
+            }
+
+            newPasswordChange.addEventListener('input', function() {
+                updatePasswordStrengthIndicator(newPasswordChange.value);
+            });
+
+            document.querySelectorAll('.toggle-password').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const input = document.getElementById(targetId);
+                    if (input && input.type === 'password') {
+                        input.type = 'text';
+                        this.textContent = '🔒';
+                    } else if (input) {
+                        input.type = 'password';
+                        this.textContent = '👁️';
+                    }
+                });
+            });
+
+            if (submitChangePassword) {
+                submitChangePassword.addEventListener('click', async function() {
+                    const current = currentPassword.value;
+                    const newPwd = newPasswordChange.value;
+                    const confirm = confirmPasswordChange.value;
+
+                    if (!current) {
+                        showModalMessage('Please enter your current password', 'error');
+                        return;
+                    }
+                    if (newPwd.length < 6) {
+                        showModalMessage('New password must be at least 6 characters', 'error');
+                        return;
+                    }
+                    if (newPwd !== confirm) {
+                        showModalMessage('New passwords do not match', 'error');
+                        return;
+                    }
+
+                    submitChangePassword.disabled = true;
+                    showModalMessage('Updating password...', 'success');
+
+                    try {
+                        const userEmail = localStorage.getItem('userEmail') || '';
+                        const userType = 'farmer';
+
+                        const loginResponse = await fetch(`${API_URL}/api/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: userEmail, password: current, userType: userType })
+                        });
+
+                        const loginData = await loginResponse.json();
+
+                        if (!loginResponse.ok || !loginData.success) {
+                            showModalMessage('Current password is incorrect', 'error');
+                            submitChangePassword.disabled = false;
+                            return;
+                        }
+
+                        const response = await fetch(`${API_URL}/api/change-password`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: userEmail, currentPassword: current, newPassword: newPwd, userType: userType })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            showModalMessage(data.message || 'Failed to change password', 'error');
+                            submitChangePassword.disabled = false;
+                            return;
+                        }
+
+                        showModalMessage('Password changed successfully!', 'success');
+                        
+                        setTimeout(() => {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.href = 'index.html';
+                        }, 2000);
+
+                    } catch (error) {
+                        console.error('Error changing password:', error);
+                        showModalMessage('Network error. Please try again.', 'error');
+                        submitChangePassword.disabled = false;
+                    }
+                });
+            }
         }
     </script>
 </body>
