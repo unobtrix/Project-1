@@ -1778,7 +1778,7 @@
                     params.append('limit', limit);
 
                     const API_BASE_URL = this.getApiBaseUrl();
-                    const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
+                    const response = await fetch(`${API_BASE_URL}/api/public/products?${params}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1790,7 +1790,8 @@
                     }
 
                     const result = await response.json();
-                    return result.success ? result.data : [];
+                    // The backend returns { success, count, products }
+                    return result.success ? (result.products || []) : [];
 
                 } catch (error) {
                     console.error('Error fetching products from API:', error);
