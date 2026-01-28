@@ -1566,13 +1566,15 @@
     </nav>
 
     <script>
-        // Supabase Configuration
-        const SUPABASE_URL = 'https://ribehublefecccabzwkv.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpYmVodWJsZWZlY2NjYWJ6d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMzg1ODksImV4cCI6MjA3NjkxNDU4OX0.4i6yQOCAisuFnElBKzCf_kdfl1SV5t6OknEVmPfySYc';
-        
-        // Initialize Supabase client
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+        // Supabase Configuration (use env-config.js or config.js values)
+        const SUPABASE_URL = window.CONFIG && window.CONFIG.SUPABASE_URL ? window.CONFIG.SUPABASE_URL : '';
+        const SUPABASE_ANON_KEY = window.CONFIG && window.CONFIG.SUPABASE_ANON_KEY ? window.CONFIG.SUPABASE_ANON_KEY : '';
+        // Initialize Supabase client only if not already declared
+        var supabase = window.supabaseClientInstance;
+        if (!supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window.supabaseClientInstance = supabase;
+        }
 
         // Hyderabad ORR (Outer Ring Road) geofence logic
         const HYDERABAD_CENTER = { lat: 17.385044, lng: 78.486671 };
