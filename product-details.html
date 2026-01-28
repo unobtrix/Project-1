@@ -640,31 +640,13 @@
 
                 const data = await response.json();
 
-                // Handle response structure { success: true, product: {} }
-                if (data.success && data.product) {
-                    currentProduct = data.product;
-                } else {
-                    currentProduct = data; // Fallback
-                }
-
-                // Data Normalization for Frontend Compatibility
-                currentProduct._id = currentProduct.id; // Normalize ID
-
-                // Map Backend 'farmers' relation to Frontend 'farmer' object
-                if (currentProduct.farmers) {
-                    currentProduct.farmer = currentProduct.farmers;
-                }
-
-                // Map Backend 'image_url' (string/array) to Frontend 'images' array
-                if (currentProduct.image_url) {
-                    if (Array.isArray(currentProduct.image_url)) {
-                        currentProduct.images = currentProduct.image_url;
-                        currentProduct.image = currentProduct.image_url[0];
-                    } else {
-                        currentProduct.images = [currentProduct.image_url];
-                        currentProduct.image = currentProduct.image_url;
-                    }
-                }
+                // Normalize product from backend response
+                let product = (data.product || data.data || data) || {};
+                product._id = product.id;
+                product.farmer = product.farmers || product.farmer || null;
+                product.images = Array.isArray(product.image_url) ? product.image_url : (product.image_url ? [product.image_url] : []);
+                product.image = product.images[0] || '';
+                currentProduct = product;
 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('productSection').style.display = 'block';

@@ -1762,6 +1762,11 @@
                 const storedApi = localStorage.getItem('API_URL') || localStorage.getItem('apiUrl') || localStorage.getItem('backendUrl');
                 if (storedApi) return storedApi;
 
+                // Force localhost:5000 for local dev on 127.0.0.1:5500 or localhost:5500
+                if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+                    return 'http://localhost:5000';
+                }
+
                 if (window.location.origin && window.location.origin !== 'file://') {
                     return window.location.origin;
                 }
@@ -1778,7 +1783,7 @@
                     params.append('limit', limit);
 
                     const API_BASE_URL = this.getApiBaseUrl();
-                    const response = await fetch(`${API_BASE_URL}/api/public/products?${params}`, {
+                    const response = await fetch(`${API_BASE_URL}/api/products?${params}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1790,8 +1795,14 @@
                     }
 
                     const result = await response.json();
-                    // The backend returns { success, count, products }
-                    return result.success ? (result.products || []) : [];
+                    // Normalize products for frontend
+                    const products = (result.products || result.data || []);
+                    return products.map(p => ({
+                        ...p,
+                        images: Array.isArray(p.image_url) ? p.image_url : (p.image_url ? [p.image_url] : []),
+                        image: Array.isArray(p.image_url) ? p.image_url[0] : (p.image_url || ''),
+                        farmer: p.farmers || p.farmer || null
+                    }));
 
                 } catch (error) {
                     console.error('Error fetching products from API:', error);
@@ -1819,7 +1830,16 @@
                     }
 
                     const result = await response.json();
-                    return result.success ? result.data : [];
+                    // Normalize tours for frontend
+                    const tours = (result.tours || result.data || []);
+                    return tours.map(t => ({
+                        ...t,
+                        images: Array.isArray(t.tour_url) ? t.tour_url : (t.tour_url ? [t.tour_url] : []),
+                        image: Array.isArray(t.tour_url) ? t.tour_url[0] : (t.tour_url || ''),
+                        price: t.price_per_person || t.price,
+                        duration: t.duration_hours ? `${t.duration_hours} hours` : (t.duration || ''),
+                        farmer: t.farmers || t.farmer || null
+                    }));
 
                 } catch (error) {
                     console.error('Error fetching tours from API:', error);
@@ -3129,40 +3149,30 @@
                     const isLowStock = product.stock > 0 && product.stock < 10;
                     const cardClass = isOutOfStock ? 'card out-of-stock' : 'card';
                     const category = CATEGORIES.find(cat => cat.id === product.category);
-                    // Link to product-details.html?id=PRODUCT_ID
+                    const imgSrc = (product.images && product.images[0]) ? product.images[0] : 'https://placehold.co/300x200?text=Product+Image';
                     return `
-                    <a href="product-details.html?id=${product.id}" class="${cardClass}" style="text-decoration:none;color:inherit;">
-                        <div class="card-img">
-                            <img src="${product.images?.[0] || 'https://via.placeholder.com/300x200?text=Product+Image'}" 
-                                 alt="${product.name}" 
-                                 onerror="this.src='https://via.placeholder.com/300x200?text=Product+Image'">
-                            ${category ? `<div class="card-badge" style="background: ${category.color}">${category.name}</div>` : ''}
-                        </div>
-                        <div class="card-content">
-                            <h3>${product.name}</h3>
-                            <p>${product.description.substring(0, 100)}...</p>
-                            <div class="card-price">₹${product.price} / ${product.unit}</div>
-                            <div class="card-meta">
-                                <span><i class="fas fa-store"></i> ${product.farmer?.farm || 'Local Farm'}</span>
-                                <span><i class="fas fa-box"></i> ${product.stock} in stock</span>
+                        <a href="product-details.html?id=${product.id}" class="${cardClass}" style="text-decoration:none;color:inherit;">
+                            <div class="card-img">
+                                <img src="${imgSrc}" alt="${product.name.replace(/"/g, '&quot;')}" onerror="this.src='https://placehold.co/300x200?text=Product+Image'">
+                                ${category ? `<div class=\"card-badge\" style=\"background: ${category.color}\">${category.name}</div>` : ''}
                             </div>
-                            ${isLowStock ? `<div class="stock-low">Only ${product.stock} left in stock!</div>` : ''}
-                            <div class="card-actions">
-                                <button class="btn btn-outline" onclick="event.preventDefault(); AppController.viewProductDetails('${product.id}')">Details</button>
-                                <button class="btn btn-primary" 
-                                        onclick="event.preventDefault(); AppController.addToCart({
-                                            id: '${product.id}',
-                                            name: '${product.name.replace(/'/g, "\\'")}',
-                                            price: ${product.price},
-                                            image: '${product.images?.[0] || 'https://via.placeholder.com/300x200?text=Product+Image'}',
-                                            type: 'product'
-                                        })" 
-                                        ${isOutOfStock ? 'disabled' : ''}>
-                                    ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-                                </button>
+                            <div class="card-content">
+                                <h3>${product.name}</h3>
+                                <p>${product.description ? product.description.substring(0, 100) : ''}...</p>
+                                <div class="card-price">₹${product.price} / ${product.unit || ''}</div>
+                                <div class="card-meta">
+                                    <span><i class="fas fa-store"></i> ${product.farmer?.farm || 'Local Farm'}</span>
+                                    <span><i class="fas fa-box"></i> ${product.stock} in stock</span>
+                                </div>
+                                ${isLowStock ? `<div class=\"stock-low\">Only ${product.stock} left in stock!</div>` : ''}
+                                <div class="card-actions">
+                                    <button class="btn btn-outline" onclick="event.preventDefault(); AppController.viewProductDetails('${product.id}')">Details</button>
+                                    <button class="btn btn-primary" onclick="event.preventDefault(); AppController.addToCart({id: '${product.id}', name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${imgSrc}', type: 'product'})" ${isOutOfStock ? 'disabled' : ''}>
+                                        ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </a>
+                        </a>
                     `;
                 }).join('');
             }
@@ -3172,38 +3182,30 @@
                     elements.toursContainer.innerHTML = this.getNoResultsHTML('No Tours Available', 'Try adjusting your search terms or check back later');
                     return;
                 }
-                
-                elements.toursContainer.innerHTML = tours.map(tour => `
-                    <div class="card" onclick="AppController.viewTourDetails('${tour.id}')">
-                        <div class="card-img">
-                            <img src="${tour.images?.[0] || 'https://via.placeholder.com/300x200?text=Tour+Image'}" 
-                                 alt="${tour.name}"
-                                 onerror="this.src='https://via.placeholder.com/300x200?text=Tour+Image'">
-                            <div class="card-badge" style="background: var(--secondary)">Farm Tour</div>
-                        </div>
-                        <div class="card-content">
-                            <h3>${tour.name}</h3>
-                            <p>${tour.description.substring(0, 100)}...</p>
-                            <div class="card-price">₹${tour.price} / person</div>
-                            <div class="card-meta">
-                                <span><i class="fas fa-clock"></i> ${tour.duration}</span>
-                                <span><i class="fas fa-users"></i> ${tour.capacity}</span>
+                elements.toursContainer.innerHTML = tours.map(tour => {
+                    const imgSrc = (tour.images && tour.images[0]) ? tour.images[0] : 'https://placehold.co/300x200?text=Tour+Image';
+                    return `
+                        <div class="card" onclick="AppController.viewTourDetails('${tour.id}')">
+                            <div class="card-img">
+                                <img src="${imgSrc}" alt="${tour.name.replace(/"/g, '&quot;')}" onerror="this.src='https://placehold.co/300x200?text=Tour+Image'">
+                                <div class="card-badge" style="background: var(--secondary)">Farm Tour</div>
                             </div>
-                            <div class="card-actions">
-                                <button class="btn btn-outline" onclick="event.stopPropagation(); AppController.viewTourDetails('${tour.id}')">Details</button>
-                                <button class="btn btn-primary" onclick="event.stopPropagation(); AppController.addToCart({
-                                    id: '${tour.id}',
-                                    name: '${tour.name.replace(/'/g, "\\'")}',
-                                    price: ${tour.price},
-                                    image: '${tour.images?.[0] || 'https://via.placeholder.com/300x200?text=Tour+Image'}',
-                                    type: 'tour'
-                                })">
-                                    Book Now
-                                </button>
+                            <div class="card-content">
+                                <h3>${tour.name}</h3>
+                                <p>${tour.description ? tour.description.substring(0, 100) : ''}...</p>
+                                <div class="card-price">₹${tour.price} / person</div>
+                                <div class="card-meta">
+                                    <span><i class="fas fa-clock"></i> ${tour.duration || ''}</span>
+                                    <span><i class="fas fa-users"></i> ${tour.capacity || ''}</span>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn btn-outline" onclick="event.stopPropagation(); AppController.viewTourDetails('${tour.id}')">Details</button>
+                                    <button class="btn btn-primary" onclick="event.stopPropagation(); AppController.addToCart({id: '${tour.id}', name: '${tour.name.replace(/'/g, "\\'")}', price: ${tour.price}, image: '${imgSrc}', type: 'tour'})">Book Now</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             static displayOrders(orders) {
@@ -3248,15 +3250,18 @@
                             </div>
                             <div class="order-status ${statusClass}">${statusText}</div>
                         </div>
-                        ${order.items ? order.items.map(item => `
-                            <div class="order-details">
-                                <img src="${item.image}" alt="${item.name}" class="order-product-img">
-                                <div class="order-product-info">
-                                    <div class="order-product-name">${item.name}</div>
-                                    <div class="order-product-price">₹${item.price} x ${item.quantity}</div>
+                        ${order.items ? order.items.map(item => {
+                            const img = item.image || 'https://placehold.co/60x60?text=Image';
+                            return `
+                                <div class="order-details">
+                                    <img src="${img}" alt="${item.name.replace(/"/g, '&quot;')}" class="order-product-img" onerror="this.src='https://placehold.co/60x60?text=Image'">
+                                    <div class="order-product-info">
+                                        <div class="order-product-name">${item.name}</div>
+                                        <div class="order-product-price">₹${item.price} x ${item.quantity}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        `).join('') : ''}
+                            `;
+                        }).join('') : ''}
                         <div class="order-total">Total: ₹${order.total}</div>
                         <div style="margin-top: 10px; text-align: center;">
                             <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="AppController.viewInvoice('${order.id}')">
