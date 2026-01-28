@@ -586,7 +586,8 @@
     </footer>
 
     <script>
-        const API_BASE_URL = "http://localhost:5000";
+        // Use API_BASE_URL from config.js/env-config.js if available
+        const API_BASE_URL = (window.CONFIG && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:5000";
         let currentProduct = null;
         let reviewsOffset = 0;
         const reviewsLimit = 10;
