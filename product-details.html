@@ -16,6 +16,125 @@
         })(window, document, "clarity", "script", "tu6s87m19d");
     </script>
     <style>
+        /* Cart Icon & Modal Styles */
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            margin-left: 18px;
+        }
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: var(--secondary);
+            color: var(--white);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.35);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: #fff;
+            border-radius: var(--radius);
+            max-width: 400px;
+            width: 95vw;
+            padding: 1.5rem 1rem 1rem 1rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+        }
+        .cart-items {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-img img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .cart-item-details { flex: 1; }
+        .cart-item-name { font-weight: 600; font-size: 1rem; }
+        .cart-item-price { color: var(--secondary); font-size: 0.95rem; }
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .cart-item-quantity button {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            width: 22px;
+            height: 22px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .checkout-btn {
+            width: 100%;
+            background: var(--secondary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            padding: 12px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .empty-state {
+            text-align: center;
+            color: var(--gray);
+            padding: 1.5rem 0 1rem 0;
+        }
                 /* Swipeable Gallery Styles */
                 .swipe-gallery {
                     position: relative;
@@ -140,9 +259,12 @@
         .container {
             width: 100%;
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 16px;
+            padding-right: 16px;
             animation: var(--fade-in);
+            box-sizing: border-box;
         }
 
         /* Header Styles */
@@ -234,7 +356,7 @@
 
         /* Product Details Section */
         .product-details-section {
-            padding: 2rem 0.5rem 1rem 0.5rem;
+            padding: 2.5rem 0 1.5rem 0;
         }
 
         .product-details {
@@ -243,7 +365,7 @@
             gap: 2rem;
             background: var(--white);
             border-radius: var(--radius);
-            padding: 2rem 1rem;
+            padding: 2rem 1.5rem;
             box-shadow: var(--shadow);
             animation: var(--fade-in);
         }
@@ -251,7 +373,7 @@
             .product-details {
                 flex-direction: row;
                 gap: 3rem;
-                padding: 2.5rem 2rem;
+                padding: 2.5rem 2.5rem;
             }
         }
 
@@ -265,6 +387,7 @@
             .product-layout-grid {
                 flex-direction: row;
                 gap: 3rem;
+                align-items: flex-start;
             }
         }
 
@@ -753,8 +876,12 @@
 
         /* Responsive Tweaks */
         @media (max-width: 600px) {
+            .container {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
             .product-details-section {
-                padding: 0.5rem 0.1rem;
+                padding: 0.5rem 0;
             }
             .product-details {
                 padding: 1rem 0.2rem;
@@ -773,66 +900,8 @@
                 padding: 12px 0;
             }
         }
-    </style>
-</head>
 
-<body>
-    <!-- Header -->
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <img src='https://ribehublefecccabzwkv.supabase.co/storage/v1/object/sign/assets/ximfy%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNzY4NzkxOC1hNjdkLTQ3MTItYjlmZi1jYzBiNTBkM2JmOTciLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMveGltZnkgKDEpLnBuZyIsImlhdCI6MTc2Nzg1NTEzNSwiZXhwIjozMTU1MzY3ODU1MTM1fQ.d53c3b9ER-846cAb4nhOcLp5nqhFITCmh4tNmCz5r24'
-                    alt='FarmTrails' style='height: 30px;'>
-            </div>
-            <button class="back-btn" onclick="window.history.back()">
-                <i class="fas fa-arrow-left"></i>
-                Back
-            </button>
-        </div>
-    </header>
-
-    <!-- Loading Spinner -->
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <p>Loading product details...</p>
-    </div>
-
-    <!-- Product Details Section -->
-    <section class="product-details-section" id="productSection" style="display: none;">
-        <div class="container">
-            <div class="product-details" id="productDetails">
-                <!-- Product details will be loaded here -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Similar Products Section -->
-    <section class="similar-products" id="similarSection" style="display: none;">
-        <div class="container">
-            <h2>Similar Products</h2>
-            <div class="similar-products-container" id="similarProducts">
-                <!-- Similar products will be loaded here -->
-            </div>
-        </div>
-    </section>
-
-
-    <!-- Sticky Bottom Green Bar -->
-    <div class="sticky-green-bar">
-        <span class="sticky-green-bar-text">FarmTrails: Fresh from the farm, delivered to your door!</span>
-    </div>
-
-    <!-- Bottom Action Buttons -->
-    <div class="bottom-actions" id="bottomActions" style="display: none;">
-        <button class="action-btn add-to-cart-btn" id="addToCartBtn">
-            <i class="fas fa-shopping-cart"></i>
-            Add to Cart
-        </button>
-        <button class="action-btn buy-now-btn" id="buyNowBtn">
-            <i class="fas fa-bolt"></i>
-            Buy Now
-        </button>
-    </div>
+        /* Sticky Green Bar (fixed at bottom, above bottom-actions) */
         .sticky-green-bar {
             position: fixed;
             left: 0;
@@ -863,10 +932,104 @@
                 padding: 0.4rem 0.5rem;
             }
         }
+        /* Ensure .bottom-actions sits above sticky bar and does not overlap */
         .bottom-actions {
-            margin-bottom: 38px; /* Height of sticky bar */
+            margin-bottom: 48px; /* Height of sticky bar + spacing */
         }
+    </style>
+</head>
 
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <img src='https://ribehublefecccabzwkv.supabase.co/storage/v1/object/sign/assets/ximfy%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNzY4NzkxOC1hNjdkLTQ3MTItYjlmZi1jYzBiNTBkM2JmOTciLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMveGltZnkgKDEpLnBuZyIsImlhdCI6MTc2Nzg1NTEzNSwiZXhwIjozMTU1MzY3ODU1MTM1fQ.d53c3b9ER-846cAb4nhOcLp5nqhFITCmh4tNmCz5r24'
+                    alt='FarmTrails' style='height: 30px;'>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="back-btn" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </button>
+                <div class="cart-icon" id="cartIcon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+            </div>
+        </div>
+        <!-- Cart Modal -->
+        <div class="modal" id="cartModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Your Cart</h3>
+                    <button class="close-modal" id="closeCart">&times;</button>
+                </div>
+                <div class="cart-items" id="cartItems">
+                    <div class="empty-state" id="emptyCart">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                        <p>Your cart is empty</p>
+                    </div>
+                </div>
+                <div class="cart-total" id="cartTotal" style="display: none;">
+                    <span>Total:</span>
+                    <span id="totalAmount">₹0</span>
+                </div>
+                <button class="checkout-btn" id="checkoutBtn" style="display: none;">Proceed to Checkout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Loading Spinner -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Loading product details...</p>
+    </div>
+
+    <!-- Product Details Section -->
+    <section class="product-details-section" id="productSection" style="display: none;">
+        <div class="container">
+            <div class="product-details" id="productDetails">
+                <!-- Product details will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section (Testimonials) -->
+    <section class="reviews-section" id="testimonialsSection" style="display: none;">
+        <div class="container">
+            <h2>Customer Reviews</h2>
+            <div id="testimonialsGrid"></div>
+        </div>
+    </section>
+
+    <!-- Similar Products Section -->
+    <section class="similar-products" id="similarSection" style="display: none;">
+        <div class="container">
+            <h2>Similar Products</h2>
+            <div class="similar-products-container" id="similarProducts">
+                <!-- Similar products will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Bottom Action Buttons -->
+    <div class="bottom-actions" id="bottomActions" style="display: none;">
+        <button class="action-btn add-to-cart-btn" id="addToCartBtn">
+            <i class="fas fa-shopping-cart"></i>
+            Add to Cart
+        </button>
+        <button class="action-btn buy-now-btn" id="buyNowBtn">
+            <i class="fas fa-bolt"></i>
+            Buy Now
+        </button>
+    </div>
+
+    <!-- Sticky Bottom Green Bar -->
+    <div class="sticky-green-bar">
+        <span class="sticky-green-bar-text">FarmTrails: Fresh from the farm, delivered to your door!</span>
+    </div>
     <!-- Notification -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle"></i>
@@ -876,8 +1039,6 @@
     <!-- Footer -->
     <footer>
         <div class="container">
-
-
             <div class="copyright">
                 <p>&copy; 2025 FarmTrails. All rights reserved.</p>
             </div>
@@ -1393,14 +1554,81 @@
             return html;
         }
 
+        // Cart Mechanism (from customer.html)
+        function getCartItems() {
+            return JSON.parse(localStorage.getItem('cartItems')) || [];
+        }
+        function setCartItems(items) {
+            localStorage.setItem('cartItems', JSON.stringify(items));
+        }
+        function updateCartCount() {
+            const items = getCartItems();
+            const count = items.reduce((sum, item) => sum + item.quantity, 0);
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) cartCount.textContent = count;
+        }
+        function renderCartModal() {
+            const items = getCartItems();
+            const cartItemsDiv = document.getElementById('cartItems');
+            const emptyCart = document.getElementById('emptyCart');
+            const cartTotal = document.getElementById('cartTotal');
+            const totalAmount = document.getElementById('totalAmount');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (!cartItemsDiv) return;
+            cartItemsDiv.innerHTML = '';
+            if (items.length === 0) {
+                emptyCart.style.display = '';
+                cartTotal.style.display = 'none';
+                checkoutBtn.style.display = 'none';
+                cartItemsDiv.appendChild(emptyCart);
+                return;
+            }
+            emptyCart.style.display = 'none';
+            let total = 0;
+            items.forEach((item, idx) => {
+                total += item.price * item.quantity;
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div class="cart-item-img"><img src="${item.image || 'https://via.placeholder.com/48'}" alt="${item.name}"></div>
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">₹${item.price}</div>
+                        <div class="cart-item-quantity">
+                            <button onclick="changeCartQty(${idx},-1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="changeCartQty(${idx},1)">+</button>
+                        </div>
+                    </div>
+                    <button style="background:none;border:none;color:var(--secondary);font-size:1.2rem;cursor:pointer;" onclick="removeCartItem(${idx})">&times;</button>
+                `;
+                cartItemsDiv.appendChild(div);
+            });
+            cartTotal.style.display = '';
+            totalAmount.textContent = `₹${total}`;
+            checkoutBtn.style.display = '';
+        }
+        function changeCartQty(idx, delta) {
+            let items = getCartItems();
+            if (!items[idx]) return;
+            items[idx].quantity += delta;
+            if (items[idx].quantity <= 0) items.splice(idx, 1);
+            setCartItems(items);
+            updateCartCount();
+            renderCartModal();
+        }
+        function removeCartItem(idx) {
+            let items = getCartItems();
+            items.splice(idx, 1);
+            setCartItems(items);
+            updateCartCount();
+            renderCartModal();
+        }
         function addToCart() {
             if (!currentProduct) return;
-
-            let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-            // Use _id for consistency
+            let cartItems = getCartItems();
             const pId = currentProduct._id || currentProduct.id;
             const existingItemIndex = cartItems.findIndex(item => item.productId === pId);
-
             if (existingItemIndex !== -1) {
                 cartItems[existingItemIndex].quantity += 1;
             } else {
@@ -1412,10 +1640,37 @@
                     quantity: 1
                 });
             }
-
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
+            setCartItems(cartItems);
+            updateCartCount();
+            renderCartModal();
             showNotification(`${currentProduct.name} added to cart!`);
         }
+        // Modal logic
+        document.addEventListener('DOMContentLoaded', function () {
+            updateCartCount();
+            renderCartModal();
+            const cartIcon = document.getElementById('cartIcon');
+            const cartModal = document.getElementById('cartModal');
+            const closeCart = document.getElementById('closeCart');
+            if (cartIcon && cartModal) {
+                cartIcon.onclick = () => { cartModal.classList.add('show'); renderCartModal(); };
+            }
+            if (closeCart && cartModal) {
+                closeCart.onclick = () => cartModal.classList.remove('show');
+            }
+            // Hide modal on outside click
+            window.onclick = function(event) {
+                if (event.target === cartModal) cartModal.classList.remove('show');
+            };
+            // Checkout button
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutBtn) {
+                checkoutBtn.onclick = function() {
+                    cartModal.classList.remove('show');
+                    window.location.href = 'payment.html';
+                };
+            }
+        });
 
         function buyNow() {
             if (!currentProduct) return;

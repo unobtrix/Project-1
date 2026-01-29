@@ -2034,16 +2034,20 @@
             }
 
             static async logUserActivity(userId, activityType, details = {}) {
-                try {
-                    await supabase.from('user_activities').insert({
-                        user_id: userId,
-                        activity_type: activityType,
-                        details: details,
-                        created_at: new Date().toISOString()
-                    });
-                } catch (error) {
-                    console.error('Error logging activity:', error);
-                }
+                    try {
+                        if (!supabase) {
+                            console.error('Supabase client is not initialized. Cannot log user activity.');
+                            return;
+                        }
+                        await supabase.from('user_activities').insert({
+                            user_id: userId,
+                            activity_type: activityType,
+                            details: details,
+                            created_at: new Date().toISOString()
+                        });
+                    } catch (error) {
+                        console.error('Error logging activity:', error);
+                    }
             }
 
             static async logoutUser(userId) {
@@ -2091,6 +2095,10 @@
                     }
 
                     // Fallback: direct Supabase query to consumers table
+                    if (!supabase) {
+                        console.error('Supabase client is not initialized. Cannot fetch user profile.');
+                        return null;
+                    }
                     const { data, error } = await supabase
                         .from('consumers')
                         .select('*')
