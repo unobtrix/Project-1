@@ -2270,6 +2270,31 @@
                 await this.loadProducts();
                 await this.loadTours();
                 await this.loadUserProfile();
+                // --- Load cart from Supabase ---
+                try {
+                    if (supabase && AppState.currentUserId) {
+                        const { data, error } = await supabase
+                            .from('cart_items')
+                            .select('*')
+                            .eq('user_id', AppState.currentUserId);
+                        if (!error && Array.isArray(data)) {
+                            // Map DB fields to local cart item structure
+                            AppState.cartItems = data.map(row => ({
+                                id: row.product_id,
+                                name: row.name || '',
+                                price: row.price,
+                                image: row.image || '',
+                                type: row.type || 'product',
+                                quantity: row.quantity,
+                                price_snapshot: row.price,
+                                added_at: row.added_at
+                            }));
+                            this.saveCartToLocalStorage();
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error loading cart from database:', err);
+                }
                 this.updateCartUI();
             }
 
@@ -2898,27 +2923,47 @@
                 CustomerAPIService.logUserActivity(AppState.currentUserId, 'clear_search');
             }
 
-            static addToCart(item) {
+            static async addToCart(item) {
                 const existingItemIndex = AppState.cartItems.findIndex(cartItem => 
                     cartItem.id === item.id && cartItem.type === item.type
                 );
-                
+                const now = new Date().toISOString();
+                let quantity = 1;
                 if (existingItemIndex !== -1) {
                     AppState.cartItems[existingItemIndex].quantity += 1;
+                    quantity = AppState.cartItems[existingItemIndex].quantity;
                 } else {
-                    AppState.cartItems.push({ ...item, quantity: 1 });
+                    AppState.cartItems.push({
+                        ...item,
+                        quantity: 1,
+                        price_snapshot: item.price,
+                        added_at: now
+                    });
                 }
-                
                 this.updateCartUI();
                 this.saveCartToLocalStorage();
                 this.showNotification(`${item.name} added to cart!`);
-                
                 CustomerAPIService.logUserActivity(AppState.currentUserId, 'add_to_cart', {
                     product_name: item.name,
                     product_id: item.id,
                     type: item.type
                 });
-                
+                // --- Persist to Supabase cart_items table ---
+                try {
+                    if (supabase && AppState.currentUserId) {
+                        // Upsert (insert or update) the cart item for this user and product
+                        await supabase.from('cart_items').upsert({
+                            user_id: AppState.currentUserId,
+                            product_id: item.id,
+                            quantity: quantity,
+                            price: item.price,
+                            added_at: now
+                        }, { onConflict: ['user_id', 'product_id'] });
+                    }
+                } catch (err) {
+                    console.error('Error saving cart item to database:', err);
+                }
+                // --- End persist ---
                 if (window.innerWidth > 768) {
                     this.openModal('cart');
                 }
@@ -2926,32 +2971,40 @@
 
             static updateCartUI() {
                 const totalItems = AppState.cartItems.reduce((total, item) => total + item.quantity, 0);
-                
                 elements.cartCount.textContent = totalItems;
                 elements.bottomCartCount.textContent = totalItems;
                 elements.bottomCartCount.style.display = totalItems > 0 ? 'flex' : 'none';
-                
                 elements.cartItems.innerHTML = '';
-                
                 if (AppState.cartItems.length === 0) {
                     elements.emptyCart.style.display = 'block';
                     elements.cartTotal.style.display = 'none';
                     elements.checkoutBtn.style.display = 'none';
                 } else {
                     elements.emptyCart.style.display = 'none';
-                    
                     let total = 0;
+                    const now = Date.now();
+                    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
                     AppState.cartItems.forEach((item, index) => {
-                        const itemTotal = item.price * item.quantity;
+                        let priceToShow = item.price;
+                        let expired = false;
+                        if (item.price_snapshot && item.added_at) {
+                            const addedAt = new Date(item.added_at).getTime();
+                            if (now - addedAt > THREE_HOURS_MS) {
+                                priceToShow = item.price; // fallback, ideally fetch latest price
+                                expired = true;
+                            } else {
+                                priceToShow = item.price_snapshot;
+                            }
+                        }
+                        const itemTotal = priceToShow * item.quantity;
                         total += itemTotal;
-                        
                         const cartItemElement = document.createElement('div');
                         cartItemElement.className = 'cart-item';
                         cartItemElement.innerHTML = `
                             <img src="${item.image}" alt="${item.name}" class="cart-item-img">
                             <div class="cart-item-details">
                                 <div class="cart-item-name">${item.name}</div>
-                                <div class="cart-item-price">₹${item.price}</div>
+                                <div class="cart-item-price">₹${priceToShow}${expired ? ' <span style=\"color:red;font-size:0.9em;\">(updated)</span>' : ''}</div>
                                 <div class="cart-item-type" style="font-size: 0.8rem; color: var(--gray);">${item.type === 'tour' ? 'Tour' : 'Product'}</div>
                                 <div class="cart-item-quantity">
                                     <button class="quantity-btn" onclick="AppController.changeQuantity(${index}, -1)">-</button>
@@ -2965,26 +3018,63 @@
                         `;
                         elements.cartItems.appendChild(cartItemElement);
                     });
-                    
                     elements.totalAmount.textContent = `₹${total}`;
                     elements.cartTotal.style.display = 'flex';
                     elements.checkoutBtn.style.display = 'block';
                 }
             }
 
-            static changeQuantity(index, change) {
+            static async changeQuantity(index, change) {
                 AppState.cartItems[index].quantity += change;
-                
-                if (AppState.cartItems[index].quantity <= 0) {
+                const item = AppState.cartItems[index];
+                if (item.quantity <= 0) {
+                    // Remove from local cart
                     AppState.cartItems.splice(index, 1);
+                    // Remove from Supabase
+                    try {
+                        if (supabase && AppState.currentUserId) {
+                            await supabase.from('cart_items')
+                                .delete()
+                                .eq('user_id', AppState.currentUserId)
+                                .eq('product_id', item.id);
+                        }
+                    } catch (err) {
+                        console.error('Error removing cart item from database:', err);
+                    }
+                } else {
+                    // Update quantity in Supabase
+                    try {
+                        if (supabase && AppState.currentUserId) {
+                            await supabase.from('cart_items').upsert({
+                                user_id: AppState.currentUserId,
+                                product_id: item.id,
+                                quantity: item.quantity,
+                                price: item.price,
+                                added_at: item.added_at
+                            }, { onConflict: ['user_id', 'product_id'] });
+                        }
+                    } catch (err) {
+                        console.error('Error updating cart item in database:', err);
+                    }
                 }
-                
                 this.updateCartUI();
                 this.saveCartToLocalStorage();
             }
 
-            static removeItem(index) {
+            static async removeItem(index) {
+                const item = AppState.cartItems[index];
                 AppState.cartItems.splice(index, 1);
+                // Remove from Supabase
+                try {
+                    if (supabase && AppState.currentUserId) {
+                        await supabase.from('cart_items')
+                            .delete()
+                            .eq('user_id', AppState.currentUserId)
+                            .eq('product_id', item.id);
+                    }
+                } catch (err) {
+                    console.error('Error removing cart item from database:', err);
+                }
                 this.updateCartUI();
                 this.saveCartToLocalStorage();
             }

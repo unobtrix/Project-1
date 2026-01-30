@@ -9,6 +9,15 @@
     <title>Product Details - FarmTrails</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="text/javascript">
+        // --- Supabase Cart Sync Setup ---
+        const SUPABASE_URL = window.CONFIG && window.CONFIG.SUPABASE_URL ? window.CONFIG.SUPABASE_URL : '';
+        const SUPABASE_ANON_KEY = window.CONFIG && window.CONFIG.SUPABASE_ANON_KEY ? window.CONFIG.SUPABASE_ANON_KEY : '';
+        var supabase = window.supabaseClientInstance;
+        if (!supabase && SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window.supabaseClientInstance = supabase;
+        }
+
         (function (c, l, a, r, i, t, y) {
             c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
             t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
@@ -1585,15 +1594,29 @@
             }
             emptyCart.style.display = 'none';
             let total = 0;
+            const now = Date.now();
+            const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
             items.forEach((item, idx) => {
-                total += item.price * item.quantity;
+                let priceToShow = item.price;
+                let expired = false;
+                if (item.price_snapshot && item.added_at) {
+                    const addedAt = new Date(item.added_at).getTime();
+                    if (now - addedAt > THREE_HOURS_MS) {
+                        // Price snapshot expired, use current price
+                        priceToShow = item.price; // fallback, ideally fetch latest price
+                        expired = true;
+                    } else {
+                        priceToShow = item.price_snapshot;
+                    }
+                }
+                total += priceToShow * item.quantity;
                 const div = document.createElement('div');
                 div.className = 'cart-item';
                 div.innerHTML = `
                     <div class="cart-item-img"><img src="${item.image || 'https://via.placeholder.com/48'}" alt="${item.name}"></div>
                     <div class="cart-item-details">
                         <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">₹${item.price}</div>
+                        <div class="cart-item-price">₹${priceToShow}${expired ? ' <span style=\"color:red;font-size:0.9em;\">(updated)</span>' : ''}</div>
                         <div class="cart-item-quantity">
                             <button onclick="changeCartQty(${idx},-1)">-</button>
                             <span>${item.quantity}</span>
@@ -1612,29 +1635,77 @@
             let items = getCartItems();
             if (!items[idx]) return;
             items[idx].quantity += delta;
-            if (items[idx].quantity <= 0) items.splice(idx, 1);
+            const item = items[idx];
+            const userId = getUserId();
+            if (item.quantity <= 0) {
+                items.splice(idx, 1);
+                // Remove from Supabase
+                try {
+                    if (supabase && userId) {
+                        supabase.from('cart_items')
+                            .delete()
+                            .eq('user_id', userId)
+                            .eq('product_id', item.productId);
+                    }
+                } catch (err) {
+                    console.error('Error removing cart item from database:', err);
+                }
+            } else {
+                // Update quantity in Supabase
+                try {
+                    if (supabase && userId) {
+                        supabase.from('cart_items').upsert({
+                            user_id: userId,
+                            product_id: item.productId,
+                            quantity: item.quantity,
+                            price: item.price,
+                            added_at: item.added_at
+                        }, { onConflict: ['user_id', 'product_id'] });
+                    }
+                } catch (err) {
+                    console.error('Error updating cart item in database:', err);
+                }
+            }
             setCartItems(items);
             updateCartCount();
             renderCartModal();
         }
         function removeCartItem(idx) {
             let items = getCartItems();
+            const item = items[idx];
             items.splice(idx, 1);
+            const userId = getUserId();
+            // Remove from Supabase
+            try {
+                if (supabase && userId) {
+                    supabase.from('cart_items')
+                        .delete()
+                        .eq('user_id', userId)
+                        .eq('product_id', item.productId);
+                }
+            } catch (err) {
+                console.error('Error removing cart item from database:', err);
+            }
             setCartItems(items);
             updateCartCount();
             renderCartModal();
         }
-        function addToCart() {
+        async function addToCart() {
             if (!currentProduct) return;
             let cartItems = getCartItems();
             const pId = currentProduct._id || currentProduct.id;
             const existingItemIndex = cartItems.findIndex(item => item.productId === pId);
+            const now = new Date().toISOString();
+            let quantity = 1;
             if (existingItemIndex !== -1) {
                 cartItems[existingItemIndex].quantity += 1;
+                quantity = cartItems[existingItemIndex].quantity;
             } else {
                 cartItems.push({
                     name: currentProduct.name,
                     price: currentProduct.price,
+                    price_snapshot: currentProduct.price,
+                    added_at: now,
                     image: currentProduct.image,
                     productId: pId,
                     quantity: 1
@@ -1644,6 +1715,22 @@
             updateCartCount();
             renderCartModal();
             showNotification(`${currentProduct.name} added to cart!`);
+            // --- Persist to Supabase cart_items table ---
+            try {
+                const userId = getUserId();
+                if (supabase && userId) {
+                    await supabase.from('cart_items').upsert({
+                        user_id: userId,
+                        product_id: pId,
+                        quantity: quantity,
+                        price: currentProduct.price,
+                        added_at: now
+                    }, { onConflict: ['user_id', 'product_id'] });
+                }
+            } catch (err) {
+                console.error('Error saving cart item to database:', err);
+            }
+            // --- End persist ---
         }
         // Modal logic
         document.addEventListener('DOMContentLoaded', function () {
@@ -1724,4 +1811,3 @@
 </body>
 
 </html>
-```
