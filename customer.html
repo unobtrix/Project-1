@@ -1946,10 +1946,10 @@
 
             static async reverseGeocode(latitude, longitude) {
                 try {
-                    // Using OpenStreetMap Nominatim API for reverse geocoding
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-                    );
+                    // Using CORS proxy to access OpenStreetMap Nominatim API
+                    const corsProxy = 'https://api.allorigins.win/raw?url=';
+                    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
+                    const response = await fetch(corsProxy + encodeURIComponent(nominatimUrl));
                     
                     if (!response.ok) {
                         throw new Error('Reverse geocoding failed');
@@ -2035,11 +2035,12 @@
 
             static async logUserActivity(userId, activityType, details = {}) {
                     try {
-                        if (!supabase) {
-                            console.error('Supabase client is not initialized. Cannot log user activity.');
+                        if (!window.supabaseClientInstance && !supabase) {
+                            console.warn('Supabase client not accessible. Skipping activity log.');
                             return;
                         }
-                        await supabase.from('user_activities').insert({
+                        const client = window.supabaseClientInstance || supabase;
+                        await client.from('user_activities').insert({
                             user_id: userId,
                             activity_type: activityType,
                             details: details,
@@ -2075,7 +2076,7 @@
                     // Primary: backend API backed by consumers table
                     const apiBase = this.getApiBaseUrl();
                     try {
-                        const response = await fetch(`${apiBase}/api/consumer/profile/${encodeURIComponent(userId)}`, {
+                        const response = await fetch(`${apiBase}/customer/${encodeURIComponent(userId)}`, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -2084,8 +2085,9 @@
 
                         if (response.ok) {
                             const result = await response.json();
-                            if (result.success && result.profile) {
-                                return result.profile;
+                            // Backend returns {customer: data}
+                            if (result.customer) {
+                                return result.customer;
                             }
                         } else {
                             console.error('Consumer profile API failed:', response.status, response.statusText);
@@ -2095,11 +2097,12 @@
                     }
 
                     // Fallback: direct Supabase query to consumers table
-                    if (!supabase) {
-                        console.error('Supabase client is not initialized. Cannot fetch user profile.');
+                    const client = window.supabaseClientInstance || supabase;
+                    if (!client) {
+                        console.warn('Supabase client not accessible. Cannot use fallback profile query.');
                         return null;
                     }
-                    const { data, error } = await supabase
+                    const { data, error } = await client
                         .from('consumers')
                         .select('*')
                         .eq('id', userId)
@@ -3620,8 +3623,10 @@
                 navigator.geolocation.getCurrentPosition(function(pos){
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    // reverse geocode via ipapi (simple) or nominatim
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                    // reverse geocode via ipapi (simple) or nominatim with CORS proxy
+                    const corsProxy = 'https://api.allorigins.win/raw?url=';
+                    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+                    fetch(corsProxy + encodeURIComponent(nominatimUrl))
                         .then(r => r.json())
                         .then(data => {
                             const addr = data && data.address ? data.address : {};
@@ -3652,7 +3657,9 @@
                     navigator.geolocation.getCurrentPosition(function(pos){
                         const lat = pos.coords.latitude;
                         const lon = pos.coords.longitude;
-                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                        const corsProxy = 'https://api.allorigins.win/raw?url=';
+                        const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+                        fetch(corsProxy + encodeURIComponent(nominatimUrl))
                             .then(r => r.json())
                             .then(data => {
                                 const addr = data && data.address ? data.address : {};
