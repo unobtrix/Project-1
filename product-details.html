@@ -1308,7 +1308,8 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews?limit=${reviewsLimit}&offset=${reviewsOffset}`);
+                // Use the simple /reviews endpoint that doesn't require auth
+                const response = await fetch(`${API_BASE_URL}/reviews/${productId}`);
 
                 // Handle both successful responses and 401 unauthorized (guest mode)
                 let data;
