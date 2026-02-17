@@ -1569,12 +1569,13 @@
         // Supabase Configuration (use env-config.js or config.js values)
         const SUPABASE_URL = window.CONFIG && window.CONFIG.SUPABASE_URL ? window.CONFIG.SUPABASE_URL : '';
         const SUPABASE_ANON_KEY = window.CONFIG && window.CONFIG.SUPABASE_ANON_KEY ? window.CONFIG.SUPABASE_ANON_KEY : '';
-        // Initialize Supabase client only if not already declared
-        var supabase = window.supabaseClientInstance;
-        if (!supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            window.supabaseClientInstance = supabase;
+        // Initialize Supabase client - use global window reference for consistency
+        if (!window.supabaseClientInstance && SUPABASE_URL && SUPABASE_ANON_KEY) {
+            window.supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase client initialized');
         }
+        // Always use window.supabaseClientInstance for consistency
+        var supabase = window.supabaseClientInstance;
 
         // Hyderabad ORR (Outer Ring Road) geofence logic
         const HYDERABAD_CENTER = { lat: 17.385044, lng: 78.486671 };
@@ -1947,9 +1948,8 @@
             static async reverseGeocode(latitude, longitude) {
                 try {
                     // Using CORS proxy to access OpenStreetMap Nominatim API
-                    const corsProxy = 'https://api.allorigins.win/raw?url=';
                     const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
-                    const response = await fetch(corsProxy + encodeURIComponent(nominatimUrl));
+                    const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(nominatimUrl)}`);
                     
                     if (!response.ok) {
                         throw new Error('Reverse geocoding failed');
@@ -2035,11 +2035,11 @@
 
             static async logUserActivity(userId, activityType, details = {}) {
                     try {
-                        if (!window.supabaseClientInstance && !supabase) {
-                            console.warn('Supabase client not accessible. Skipping activity log.');
+                        const client = window.supabaseClientInstance;
+                        if (!client || !userId) {
+                            // Silently skip if unavailable - activity logging is optional
                             return;
                         }
-                        const client = window.supabaseClientInstance || supabase;
                         await client.from('user_activities').insert({
                             user_id: userId,
                             activity_type: activityType,
@@ -2089,17 +2089,21 @@
                             if (result.customer) {
                                 return result.customer;
                             }
+                        } else if (response.status === 404) {
+                            // User doesn't exist yet - return null to use default profile
+                            console.log('User profile not found, using default profile');
+                            return null;
                         } else {
-                            console.error('Consumer profile API failed:', response.status, response.statusText);
+                            console.error('Consumer profile API failed:', response.status);
                         }
                     } catch (apiError) {
                         console.error('Error fetching consumer profile from API:', apiError);
                     }
 
                     // Fallback: direct Supabase query to consumers table
-                    const client = window.supabaseClientInstance || supabase;
+                    const client = window.supabaseClientInstance;
                     if (!client) {
-                        console.warn('Supabase client not accessible. Cannot use fallback profile query.');
+                        // No Supabase available, return null to use default profile
                         return null;
                     }
                     const { data, error } = await client
@@ -3623,10 +3627,9 @@
                 navigator.geolocation.getCurrentPosition(function(pos){
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    // reverse geocode via ipapi (simple) or nominatim with CORS proxy
-                    const corsProxy = 'https://api.allorigins.win/raw?url=';
+                    // reverse geocode via nominatim with CORS proxy
                     const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-                    fetch(corsProxy + encodeURIComponent(nominatimUrl))
+                    fetch(`https://corsproxy.io/?${encodeURIComponent(nominatimUrl)}`)
                         .then(r => r.json())
                         .then(data => {
                             const addr = data && data.address ? data.address : {};
@@ -3657,9 +3660,8 @@
                     navigator.geolocation.getCurrentPosition(function(pos){
                         const lat = pos.coords.latitude;
                         const lon = pos.coords.longitude;
-                        const corsProxy = 'https://api.allorigins.win/raw?url=';
                         const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-                        fetch(corsProxy + encodeURIComponent(nominatimUrl))
+                        fetch(`https://corsproxy.io/?${encodeURIComponent(nominatimUrl)}`)
                             .then(r => r.json())
                             .then(data => {
                                 const addr = data && data.address ? data.address : {};
