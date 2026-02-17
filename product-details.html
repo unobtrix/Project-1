@@ -251,12 +251,33 @@
             scroll-behavior: smooth;
         }
 
+        html {
+            height: 100%;
+        }
+
         body {
             background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%);
             color: var(--text);
             line-height: 1.6;
-            padding-bottom: 80px;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+
+        body > header {
+            flex-shrink: 0;
+        }
+
+        body > section,
+        body > div:not(.notification) {
+            flex: 1;
+        }
+
+        body > footer {
+            flex-shrink: 0;
+            margin-top: auto;
         }
 
         .container {
@@ -527,17 +548,19 @@
             box-shadow: 0 4px 16px rgba(255,152,0,0.13);
         }
 
+        .action-grid {
+            display: flex;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
         .product-meta {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-action-grid {
-            display: flex;
-            gap: 15px;
-            margin-top: 2rem;
-        }
+
         .meta-item {
             display: flex;
             flex-direction: column;
@@ -908,39 +931,8 @@ action-grid {
             }
         }
 
-        /* Sticky Green Bar (fixed at bottom, above bottom-actions) */
-        .sticky-green-bar {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--primary);
-            color: #fff;
-            z-index: 120;
-            min-height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            box-shadow: 0 -2px 10px rgba(76,175,80,0.08);
-            padding: 0.5rem 1rem;
-            transition: font-size 0.2s;
-        }
-        .sticky-green-bar-text {
-            width: 100%;
-            text-align: center;
-            white-space: pre-line;
-        }
-        @media (max-width: 600px) {
-            .sticky-green-bar {
-                font-size: 0.95rem;
-                padding: 0.4rem 0.5rem;
-            }
-        }
-        /* Ensure .bottom-actions sits above sticky bar and does not overlap */
-        .bottom-actions {
+        /* Notification */
+        .notification {
             margin-bottom: 48px; /* Height of sticky bar + spacing */
         }
     </style>
@@ -1033,10 +1025,6 @@ action-grid {
         </button>
     </div>
 
-    <!-- Sticky Bottom Green Bar -->
-    <div class="sticky-green-bar">
-        <span class="sticky-green-bar-text">FarmTrails: Fresh from the farm, delivered to your door!</span>
-    </div>
     <!-- Notification -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle"></i>
@@ -1322,19 +1310,16 @@ action-grid {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews?limit=${reviewsLimit}&offset=${reviewsOffset}`);
 
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        // Handle unauthorized - show login prompt
-                        const listContainer = document.getElementById('reviews-list-container');
-                        if (reset) {
-                            listContainer.innerHTML = '<p style="text-align:center; color:var(--gray); padding: 1rem;">Please <a href="/signup.html" style="color:var(--secondary); text-decoration: underline;">sign in</a> to view reviews.</p>';
-                        }
-                        return;
-                    }
+                // Handle both successful responses and 401 unauthorized (guest mode)
+                let data;
+                if (response.ok) {
+                    data = await response.json();
+                } else if (response.status === 401) {
+                    // In guest mode, show empty reviews message
+                    data = { reviews: [] };
+                } else {
                     throw new Error('Failed to load reviews');
                 }
-
-                const data = await response.json();
                 const reviews = data.reviews || [];
                 const listContainer = document.getElementById('reviews-list-container');
                 const currentUserId = getUserId();
