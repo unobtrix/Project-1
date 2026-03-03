@@ -1432,11 +1432,7 @@
             
             <!-- Delivery Warning -->
             <div id="deliveryWarning" class="delivery-warning" style="display: none;">
-                <i class="fas fa-exclamation-triangle"></i>
-                <div>
-                    <strong>Delivery Not Available</strong>
-                    <p>We currently deliver only within Hyderabad and surrounding areas. Please check your location.</p>
-                </div>
+                <!-- content inserted dynamically based on geofence or location -->
             </div>
             
             <!-- Search Results Info -->
@@ -1679,7 +1675,9 @@
             userLocation: {
                 location: localStorage.getItem('userLocation') || null,
                 pincode: localStorage.getItem('userPincode') || null,
-                deliveryAvailable: localStorage.getItem('deliveryAvailable') === 'true' || false
+                deliveryAvailable: localStorage.getItem('deliveryAvailable') === 'true' || false,
+                latitude: localStorage.getItem('userLatitude') ? parseFloat(localStorage.getItem('userLatitude')) : null,
+                longitude: localStorage.getItem('userLongitude') ? parseFloat(localStorage.getItem('userLongitude')) : null
             },
             currentUserId: RESOLVED_USER_ID || 'user123',
             categoriesVisible: false,
@@ -1902,30 +1900,39 @@
                 }
             }
 
-            static async checkDelivery(location, pincode = null) {
+            static async checkDelivery(location, pincode = null, latitude = null, longitude = null) {
                 try {
                     let isAvailable = false;
                     let detectedPincode = pincode;
-                    
-                    // Check if location is in service areas
-                    for (const [area, pincodes] of Object.entries(SERVICE_AREAS)) {
-                        if (location.toLowerCase().includes(area.toLowerCase())) {
-                            isAvailable = true;
-                            if (!detectedPincode && pincodes.length > 0) {
-                                detectedPincode = pincodes[0] + 'XXX'; // Placeholder pincode
-                            }
-                            break;
-                        }
+
+                    // if geographic coordinates were provided use geofence logic first
+                    if (latitude !== null && longitude !== null) {
+                        // the helper isWithinGeofence is defined earlier in the file
+                        isAvailable = isWithinGeofence(latitude, longitude);
                     }
-                    
-                    // If no area match, check if it's a pincode
-                    if (!isAvailable && location.match(/^\d{6}$/)) {
-                        const pincodePrefix = location.substring(0, 3);
-                        for (const pincodes of Object.values(SERVICE_AREAS)) {
-                            if (pincodes.includes(pincodePrefix)) {
+
+                    // fall back to area/pincode checks if we still don't know availability
+                    if (!isAvailable) {
+                        // Check if location is in service areas
+                        for (const [area, pincodes] of Object.entries(SERVICE_AREAS)) {
+                            if (location && location.toLowerCase().includes(area.toLowerCase())) {
                                 isAvailable = true;
-                                detectedPincode = location;
+                                if (!detectedPincode && pincodes.length > 0) {
+                                    detectedPincode = pincodes[0] + 'XXX'; // Placeholder pincode
+                                }
                                 break;
+                            }
+                        }
+
+                        // If no area match, check if it's a pincode
+                        if (!isAvailable && location && location.match(/^\d{6}$/)) {
+                            const pincodePrefix = location.substring(0, 3);
+                            for (const pincodes of Object.values(SERVICE_AREAS)) {
+                                if (pincodes.includes(pincodePrefix)) {
+                                    isAvailable = true;
+                                    detectedPincode = location;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1933,6 +1940,8 @@
                     await supabase.from('delivery_checks').insert({
                         location: location,
                         pincode: detectedPincode,
+                        latitude: latitude,
+                        longitude: longitude,
                         is_available: isAvailable,
                         checked_at: new Date().toISOString()
                     });
@@ -2575,17 +2584,23 @@
 
             static async processDetectedLocation(locationName, latitude = null, longitude = null) {
                 this.showNotification(`Location detected: ${locationName}`);
-                // Check delivery availability for detected location
+                // Check delivery availability for detected location using coordinates if supplied
                 const { isAvailable, pincode } = await CustomerAPIService.checkDelivery(locationName, null, latitude, longitude);
                 AppState.userLocation = {
                     location: locationName,
                     pincode: pincode,
-                    deliveryAvailable: isAvailable
+                    deliveryAvailable: isAvailable,
+                    latitude: latitude,
+                    longitude: longitude
                 };
                 // Save to localStorage
                 localStorage.setItem('userLocation', locationName);
                 localStorage.setItem('userPincode', pincode);
                 localStorage.setItem('deliveryAvailable', isAvailable);
+                if (latitude !== null && longitude !== null) {
+                    localStorage.setItem('userLatitude', latitude);
+                    localStorage.setItem('userLongitude', longitude);
+                }
                 // Update UI
                 this.showCurrentLocation();
                 this.updateDeliveryWarning();
@@ -2647,12 +2662,16 @@
                 AppState.userLocation = {
                     location: location,
                     pincode: pincode,
-                    deliveryAvailable: isAvailable
+                    deliveryAvailable: isAvailable,
+                    latitude: null,
+                    longitude: null
                 };
 
                 localStorage.setItem('userLocation', location);
                 localStorage.setItem('userPincode', pincode);
                 localStorage.setItem('deliveryAvailable', isAvailable);
+                localStorage.removeItem('userLatitude');
+                localStorage.removeItem('userLongitude');
 
                 this.updateDeliveryWarning();
                 this.showCurrentLocation();
@@ -2679,9 +2698,13 @@
                 // Clear current location and show location selector
                 AppState.userLocation.location = null;
                 AppState.userLocation.deliveryAvailable = false;
+                AppState.userLocation.latitude = null;
+                AppState.userLocation.longitude = null;
                 localStorage.removeItem('userLocation');
                 localStorage.removeItem('userPincode');
                 localStorage.removeItem('deliveryAvailable');
+                localStorage.removeItem('userLatitude');
+                localStorage.removeItem('userLongitude');
                 
                 this.showLocationSelector();
                 this.detectCurrentLocation();
@@ -2743,11 +2766,32 @@
             }
 
             static updateDeliveryWarning() {
+                const warningEl = elements.deliveryWarning;
                 if (AppState.userLocation.deliveryAvailable) {
-                    elements.deliveryWarning.style.display = 'none';
-                } else {
-                    elements.deliveryWarning.style.display = 'flex';
+                    warningEl.style.display = 'none';
+                    return;
                 }
+
+                // build the warning message
+                let msg = `<i class="fas fa-exclamation-triangle"></i><div><strong>Delivery Not Available</strong><p>`;
+                msg += `We currently deliver only within Hyderabad and surrounding areas.`;
+
+                const lat = AppState.userLocation.latitude;
+                const lng = AppState.userLocation.longitude;
+                if (lat !== null && lng !== null) {
+                    // calculate nearest distance to ORR polygon
+                    let minDist = Infinity;
+                    for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
+                        const d = calculateDistance(lat, lng, ORR_POLYGON_COORDS[i][0], ORR_POLYGON_COORDS[i][1]);
+                        if (d < minDist) minDist = d;
+                    }
+                    const km = (minDist / 1000).toFixed(2);
+                    msg += ` You are ${km} km away from our delivery zone.`;
+                }
+
+                msg += `</p></div>`;
+                warningEl.innerHTML = msg;
+                warningEl.style.display = 'flex';
             }
 
             static handleSearchInput(e) {
@@ -3577,7 +3621,8 @@
                 return false;
             }
 
-            function setLocationUI(city, state, pincode) {
+            // modified to accept optional coordinates for geofence-based checks
+            function setLocationUI(city, state, pincode, lat = null, lon = null) {
                 const parts = [city, state, pincode].filter(Boolean).join(', ');
                 currentLocationText.textContent = parts || 'Unknown location';
                 currentLocationSection.style.display = 'block';
@@ -3585,8 +3630,34 @@
                 manualLocationInput.style.display = 'block';
                 locationActionButtons.style.display = 'flex';
 
-                const ok = isServiceable(city, state, pincode);
-                // If city exists and is not Hyderabad, show exact message requested
+                let ok = isServiceable(city, state, pincode);
+
+                // if we have coordinates, override availability using ORR geofence
+                if (lat !== null && lon !== null) {
+                    const within = isWithinGeofence(lat, lon);
+                    if (!within) {
+                        ok = false;
+                    } else {
+                        ok = true;
+                    }
+                }
+
+                // If we have coordinates and are outside geofence, show distance message
+                if (lat !== null && lon !== null && !isWithinGeofence(lat, lon)) {
+                    // calculate minimum distance to polygon
+                    let minDist = Infinity;
+                    for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
+                        const d = calculateDistance(lat, lon, ORR_POLYGON_COORDS[i][0], ORR_POLYGON_COORDS[i][1]);
+                        if (d < minDist) minDist = d;
+                    }
+                    const km = (minDist / 1000).toFixed(2);
+                    deliveryWarning.style.display = 'flex';
+                    deliveryWarning.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><strong>Delivery Not Available</strong><p>Outside delivery zone (${km} km away). We currently deliver only within Hyderabad ORR.</p></div>`;
+                    if (checkoutBtn) checkoutBtn.disabled = true;
+                    return;
+                }
+
+                // Otherwise fall back to city/pincode based checks
                 const cityStr = (city || '').toLowerCase();
                 if (cityStr && !cityStr.includes('hyderabad') && !cityStr.includes('secunderabad')) {
                     deliveryWarning.style.display = 'flex';
@@ -3612,7 +3683,7 @@
                         const city = data.city || '';
                         const state = data.region || '';
                         const pincode = data.postal || '';
-                        setLocationUI(city, state, pincode);
+                        setLocationUI(city, state, pincode, null, null);
                     })
                     .catch(err => {
                         console.warn('IP fallback failed', err);
@@ -3636,7 +3707,7 @@
                             const city = addr.city || addr.town || addr.village || addr.county || '';
                             const state = addr.state || '';
                             const pincode = addr.postcode || '';
-                            setLocationUI(city, state, pincode);
+                            setLocationUI(city, state, pincode, lat, lon);
                         })
                         .catch(() => ipFallback());
                 }, function(err){
