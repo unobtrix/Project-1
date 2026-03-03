@@ -841,6 +841,55 @@
             border-top: 1px solid #e0e0e0;
             justify-content: flex-end;
         }
+
+        /* Shipping label modal specific sizing */
+        #shippingLabelModal .modal-content {
+            width: min(92vw, 520px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #shippingLabelModal .modal-header,
+        #shippingLabelModal .modal-body,
+        #shippingLabelModal .modal-footer {
+            padding: 1rem;
+        }
+
+        /* Shipping modal buttons - static colors */
+        #shippingLabelModal .modal-footer .btn {
+            transition: none;
+        }
+
+        #shippingLabelModal .modal-footer .btn:hover,
+        #shippingLabelModal .modal-footer .btn:focus {
+            transform: none;
+        }
+
+        #shippingLabelModal .modal-footer .btn.btn-outline {
+            background: #f1f1f1;
+            border-color: #d9d9d9;
+            color: #333;
+        }
+
+        #shippingLabelModal .modal-footer .btn.btn-outline:hover,
+        #shippingLabelModal .modal-footer .btn.btn-outline:focus {
+            background: #f1f1f1;
+            border-color: #d9d9d9;
+            color: #333;
+        }
+
+        #shippingLabelModal .modal-footer .btn.btn-primary {
+            background: #28a745;
+            color: #fff;
+            border: 1px solid #28a745;
+        }
+
+        #shippingLabelModal .modal-footer .btn.btn-primary:hover,
+        #shippingLabelModal .modal-footer .btn.btn-primary:focus {
+            background: #28a745;
+            color: #fff;
+            border-color: #28a745;
+        }
         
         .product-status {
             display: inline-block;
