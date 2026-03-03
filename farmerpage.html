@@ -1582,8 +1582,8 @@
                             <button class="modal-close" onclick="closeShippingModal()">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <div id="labelPreview" style="background: #f5f5f5; padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                                <div id="shippingLabelCard" style="border: 2px solid #333; padding: 2rem; background: white; font-family: monospace;">
+                            <div id="labelPreview" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <div id="shippingLabelCard" style="border: 2px solid #333; padding: 1rem; background: white; font-family: monospace; max-width: 420px; margin: 0 auto; font-size: 0.9rem; line-height: 1.45;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                                         <img id="labelCompanyLogo" src="" alt="Company Logo" style="height: 34px; max-width: 120px; object-fit: contain;">
                                         <strong id="labelCompanyName">FarmTrails</strong>
@@ -1601,16 +1601,16 @@
                                     </div>
                                     <div style="border-top: 1px solid #ddd; padding-top: 1rem;">
                                         <p style="text-align: center;"><strong>Reference ID:</strong></p>
-                                        <p id="labelRefId" style="text-align: center; font-size: 1.2rem; font-weight: bold;">--</p>
+                                        <p id="labelRefId" style="text-align: center; font-size: 1rem; font-weight: bold; word-break: break-all;">--</p>
                                     </div>
                                 </div>
                             </div>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">The warehouse will track this shipment using the reference ID above.</p>
+                            <p id="shippingLabelHint" style="color: #666; font-size: 0.85rem; margin-bottom: 0.75rem;">The warehouse will track this shipment using the reference ID above.</p>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-outline" onclick="closeShippingModal()">Close Label</button>
-                            <button class="btn btn-outline" onclick="downloadShippingLabel()">Download Label</button>
-                            <button class="btn btn-primary" onclick="confirmSendToWarehouse()">Confirm & Send to Warehouse</button>
+                            <button class="btn btn-outline" id="downloadShippingBtn" onclick="downloadShippingLabel()">Download Label</button>
+                            <button class="btn btn-primary" id="confirmShippingBtn" onclick="confirmSendToWarehouse()">Confirm & Send to Warehouse</button>
                         </div>
                     </div>
                 </div>
@@ -2016,6 +2016,11 @@
                                     <i class="fas fa-truck"></i> Send to Warehouse
                                 </button>
                             ` : ''}
+                            ${(product.warehouse_ref_id || product.warehouseRefId || product.status === 'sent' || product.fulfillment_status === 'in-transit' || product.fulfillment_status === 'in-warehouse') ? `
+                                <button class="action-btn btn-view" onclick="openShippingModal(${product.id}, '${encodeURIComponent(product.name || '')}', ${Number(product.stock) || 0}, '${encodeURIComponent(product.unit || 'kg')}', '${encodeURIComponent(product.warehouse_ref_id || product.warehouseRefId || '')}', true)">
+                                    <i class="fas fa-download"></i> Shipping Label
+                                </button>
+                            ` : ''}
                             <button class="action-btn btn-delete" onclick="deleteProduct(${product.id})">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
@@ -2349,11 +2354,11 @@
             };
         }
 
-        function openShippingModal(productId, productName, quantity, unit) {
+        function openShippingModal(productId, productName, quantity, unit, existingRefId = '', isReadOnly = false) {
             currentWarehouseProductId = productId;
             
             // Generate a UUID for the reference ID
-            const refId = generateUUID();
+            const refId = safeDecodeURIComponent(existingRefId) || generateUUID();
 
             const decodedProductName = safeDecodeURIComponent(productName) || 'Product';
             const decodedUnit = safeDecodeURIComponent(unit) || 'kg';
@@ -2376,6 +2381,17 @@
                     this.src = DEFAULT_COMPANY_LOGO;
                 };
             }
+
+            const confirmBtn = document.getElementById('confirmShippingBtn');
+            const hintEl = document.getElementById('shippingLabelHint');
+            if (confirmBtn) {
+                confirmBtn.style.display = isReadOnly ? 'none' : 'inline-block';
+            }
+            if (hintEl) {
+                hintEl.textContent = isReadOnly
+                    ? 'This is your saved shipping label. You can download and close it.'
+                    : 'The warehouse will track this shipment using the reference ID above.';
+            }
             
             // Store ref ID in modal for later use
             document.getElementById('shippingLabelModal').setAttribute('data-ref-id', refId);
@@ -2387,6 +2403,11 @@
         function closeShippingModal() {
             document.getElementById('shippingLabelModal').classList.remove('show');
             currentWarehouseProductId = null;
+
+            const confirmBtn = document.getElementById('confirmShippingBtn');
+            if (confirmBtn) {
+                confirmBtn.style.display = 'inline-block';
+            }
         }
 
         async function confirmSendToWarehouse() {
@@ -2415,7 +2436,15 @@
                 const data = await response.json();
                 if (data.success) {
                     showNotification('Product sent to warehouse successfully! Reference ID: ' + refId);
-                    closeShippingModal();
+                    const confirmBtn = document.getElementById('confirmShippingBtn');
+                    const hintEl = document.getElementById('shippingLabelHint');
+                    if (confirmBtn) {
+                        confirmBtn.style.display = 'none';
+                    }
+                    if (hintEl) {
+                        hintEl.textContent = 'Shipping request submitted. You can now download this label and close it.';
+                    }
+                    currentWarehouseProductId = null;
                     loadProducts(); // Reload products to update status
                 } else {
                     showNotification('Failed to update product status: ' + (data.message || 'Unknown error'));
