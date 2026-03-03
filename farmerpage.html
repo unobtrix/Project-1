@@ -1634,7 +1634,7 @@
                             <div id="labelPreview" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                                 <div id="shippingLabelCard" style="border: 2px solid #333; padding: 1rem; background: white; font-family: monospace; max-width: 420px; margin: 0 auto; font-size: 0.9rem; line-height: 1.45;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                                        <img id="labelCompanyLogo" src="" alt="Company Logo" style="height: 34px; max-width: 120px; object-fit: contain;">
+                                        <img id="labelCompanyLogo" src="https://ribehublefecccabzwkv.supabase.co/storage/v1/object/sign/assets/ximfy%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNzY4NzkxOC1hNjdkLTQ3MTItYjlmZi1jYzBiNTBkM2JmOTciLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMveGltZnkgKDEpLnBuZyIsImlhdCI6MTc2Nzg1NTEzNSwiZXhwIjozMTU1MzY3ODU1MTM1fQ.d53c3b9ER-846cAb4nhOcLp5nqhFITCmh4tNmCz5r24" alt="Company Logo" style="height: 34px; max-width: 120px; object-fit: contain;">
                                         <strong id="labelCompanyName">FarmTrails</strong>
                                     </div>
                                     <h4 style="text-align: center; margin-bottom: 1rem;">SHIPPING LABEL</h4>
@@ -1924,7 +1924,7 @@
 
         const currentUserId = getCurrentUserId();
         let currentFarmerProfile = null;
-        const DEFAULT_COMPANY_LOGO = "https://ribehublefecccabzwkv.supabase.co/storage/v1/object/sign/assets/ximfy%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNzY4NzkxOC1hNjdkLTQ3MTItYjlmZi1jYzBiNTBkM2JmOTciLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMveGltZnkgKDEpLnBuZyIsImlhdCI6MTc2Nzg1NTEzNSwiZXhwIjozMTU1MzY3ODU1MTM1fQ.d53c3b9ER-846cAb4nhOcLp5nqhFITCmh4tNmCz5r24";
+        const SHIPMENT_LABEL_LOGO = "https://ribehublefecccabzwkv.supabase.co/storage/v1/object/sign/assets/ximfy%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNzY4NzkxOC1hNjdkLTQ3MTItYjlmZi1jYzBiNTBkM2JmOTciLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMveGltZnkgKDEpLnBuZyIsImlhdCI6MTc2Nzg1NTEzNSwiZXhwIjozMTU1MzY3ODU1MTM1fQ.d53c3b9ER-846cAb4nhOcLp5nqhFITCmh4tNmCz5r24";
 
         // Resolve API base URL (prefer config, query string, or stored value; avoid localhost in production)
         function getApiUrl() {
@@ -2388,12 +2388,7 @@
             const location = profile.location || [profile.village, profile.taluka, profile.district, profile.state, profile.pin_code].filter(Boolean).join(', ');
             const fromAddress = [farmName, location].filter(Boolean).join(' · ') || 'Farm Address';
 
-            const companyLogo =
-                profile.company_logo_url ||
-                profile.logo_url ||
-                profile.avatar_url ||
-                profile.profile_photo_url ||
-                DEFAULT_COMPANY_LOGO;
+            const companyLogo = SHIPMENT_LABEL_LOGO;
 
             return {
                 farmerName,
@@ -2427,7 +2422,7 @@
                 logoEl.src = labelMeta.companyLogo;
                 logoEl.onerror = function() {
                     this.onerror = null;
-                    this.src = DEFAULT_COMPANY_LOGO;
+                    this.src = SHIPMENT_LABEL_LOGO;
                 };
             }
 
