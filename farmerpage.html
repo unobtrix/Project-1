@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -1582,7 +1583,11 @@
                         </div>
                         <div class="modal-body">
                             <div id="labelPreview" style="background: #f5f5f5; padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                                <div style="border: 2px solid #333; padding: 2rem; background: white; font-family: monospace;">
+                                <div id="shippingLabelCard" style="border: 2px solid #333; padding: 2rem; background: white; font-family: monospace;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                        <img id="labelCompanyLogo" src="" alt="Company Logo" style="height: 34px; max-width: 120px; object-fit: contain;">
+                                        <strong id="labelCompanyName">FarmTrails</strong>
+                                    </div>
                                     <h4 style="text-align: center; margin-bottom: 1rem;">SHIPPING LABEL</h4>
                                     <div style="margin-bottom: 1rem;">
                                         <p><strong>From:</strong></p>
@@ -1603,7 +1608,8 @@
                             <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">The warehouse will track this shipment using the reference ID above.</p>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-outline" onclick="closeShippingModal()">Cancel</button>
+                            <button class="btn btn-outline" onclick="closeShippingModal()">Close Label</button>
+                            <button class="btn btn-outline" onclick="downloadShippingLabel()">Download Label</button>
                             <button class="btn btn-primary" onclick="confirmSendToWarehouse()">Confirm & Send to Warehouse</button>
                         </div>
                     </div>
@@ -1868,6 +1874,8 @@
         }
 
         const currentUserId = getCurrentUserId();
+        let currentFarmerProfile = null;
+        const DEFAULT_COMPANY_LOGO = "https://ribehublefecccabzwkv.supabase.co/storage/v1/object/sign/assets/ximfy%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNzY4NzkxOC1hNjdkLTQ3MTItYjlmZi1jYzBiNTBkM2JmOTciLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMveGltZnkgKDEpLnBuZyIsImlhdCI6MTc2Nzg1NTEzNSwiZXhwIjozMTU1MzY3ODU1MTM1fQ.d53c3b9ER-846cAb4nhOcLp5nqhFITCmh4tNmCz5r24";
 
         // Resolve API base URL (prefer config, query string, or stored value; avoid localhost in production)
         function getApiUrl() {
@@ -2004,7 +2012,7 @@
                                 </button>
                             ` : ''}
                             ${(product.status === 'active' || !product.status || product.fulfillment_status === 'not_sent') ? `
-                                <button class="action-btn btn-warehouse" onclick="openShippingModal(${product.id}, '${product.name}', ${product.stock}, '${product.unit || 'kg'}')">
+                                <button class="action-btn btn-warehouse" onclick="openShippingModal(${product.id}, '${encodeURIComponent(product.name || '')}', ${Number(product.stock) || 0}, '${encodeURIComponent(product.unit || 'kg')}')">
                                     <i class="fas fa-truck"></i> Send to Warehouse
                                 </button>
                             ` : ''}
@@ -2304,17 +2312,70 @@
             });
         }
 
+        function safeDecodeURIComponent(value) {
+            if (typeof value !== 'string') return value;
+            try {
+                return decodeURIComponent(value);
+            } catch (error) {
+                return value;
+            }
+        }
+
+        function resolveShippingLabelMeta() {
+            const profile = currentFarmerProfile || {};
+            const farmerName =
+                profile.full_name ||
+                profile.name ||
+                profile.username ||
+                document.getElementById('farmerName')?.textContent ||
+                'Farmer';
+
+            const farmName = profile.farm_name || profile.company_name || '';
+            const location = profile.location || [profile.village, profile.taluka, profile.district, profile.state, profile.pin_code].filter(Boolean).join(', ');
+            const fromAddress = [farmName, location].filter(Boolean).join(' · ') || 'Farm Address';
+
+            const companyLogo =
+                profile.company_logo_url ||
+                profile.logo_url ||
+                profile.avatar_url ||
+                profile.profile_photo_url ||
+                DEFAULT_COMPANY_LOGO;
+
+            return {
+                farmerName,
+                fromAddress,
+                companyLogo,
+                companyName: farmName || 'FarmTrails'
+            };
+        }
+
         function openShippingModal(productId, productName, quantity, unit) {
             currentWarehouseProductId = productId;
             
             // Generate a UUID for the reference ID
             const refId = generateUUID();
+
+            const decodedProductName = safeDecodeURIComponent(productName) || 'Product';
+            const decodedUnit = safeDecodeURIComponent(unit) || 'kg';
+            const labelMeta = resolveShippingLabelMeta();
             
             // Populate modal with product details
-            document.getElementById('labelProductName').textContent = productName;
+            document.getElementById('labelProductName').textContent = decodedProductName;
             document.getElementById('labelProductQuantity').textContent = quantity;
-            document.getElementById('labelProductUnit').textContent = unit;
+            document.getElementById('labelProductUnit').textContent = decodedUnit;
             document.getElementById('labelRefId').textContent = refId;
+            document.getElementById('labelFromName').textContent = labelMeta.farmerName;
+            document.getElementById('labelFromAddress').textContent = labelMeta.fromAddress;
+            document.getElementById('labelCompanyName').textContent = labelMeta.companyName;
+
+            const logoEl = document.getElementById('labelCompanyLogo');
+            if (logoEl) {
+                logoEl.src = labelMeta.companyLogo;
+                logoEl.onerror = function() {
+                    this.onerror = null;
+                    this.src = DEFAULT_COMPANY_LOGO;
+                };
+            }
             
             // Store ref ID in modal for later use
             document.getElementById('shippingLabelModal').setAttribute('data-ref-id', refId);
@@ -2365,6 +2426,42 @@
             }
         }
 
+        async function downloadShippingLabel() {
+            const labelCard = document.getElementById('shippingLabelCard');
+            if (!labelCard) {
+                showNotification('Shipping label preview not found');
+                return;
+            }
+
+            const refId = document.getElementById('shippingLabelModal').getAttribute('data-ref-id') || Date.now();
+
+            if (typeof html2canvas !== 'function') {
+                showNotification('Download service unavailable. Please try again.');
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(labelCard, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const imageUrl = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageUrl;
+                downloadLink.download = `shipping-label-${refId}.png`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                showNotification('Shipping label downloaded');
+            } catch (error) {
+                console.error('Error downloading shipping label:', error);
+                showNotification('Failed to download shipping label');
+            }
+        }
+
         // Make functions globally accessible
         window.editProduct = editProduct;
         window.deleteProduct = deleteProduct;
@@ -2373,6 +2470,7 @@
         window.openShippingModal = openShippingModal;
         window.closeShippingModal = closeShippingModal;
         window.confirmSendToWarehouse = confirmSendToWarehouse;
+        window.downloadShippingLabel = downloadShippingLabel;
         
         // Image carousel navigation functions
         window.navigateCarousel = function(productId, direction) {
@@ -2510,6 +2608,7 @@
                 
                 if (data.success && data.profile) {
                     const profile = data.profile;
+                    currentFarmerProfile = profile;
                     const name = profile.full_name || profile.name || profile.username || 'Farmer';
                     const email = profile.email || '--';
                     const phone = profile.mobile || profile.phone || '--';
