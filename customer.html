@@ -1914,6 +1914,7 @@
                     // fall back to area/pincode checks if we still don't know availability
                     if (!isAvailable) {
                         // Check if location is in service areas
+if (typeof SERVICE_AREAS === 'object' && SERVICE_AREAS !== null) {
                         for (const [area, pincodes] of Object.entries(SERVICE_AREAS)) {
                             if (location && location.toLowerCase().includes(area.toLowerCase())) {
                                 isAvailable = true;
@@ -1921,6 +1922,7 @@
                                     detectedPincode = pincodes[0] + 'XXX'; // Placeholder pincode
                                 }
                                 break;
+                            }
                             }
                         }
 
@@ -1937,14 +1939,17 @@
                         }
                     }
 
-                    await supabase.from('delivery_checks').insert({
-                        location: location,
-                        pincode: detectedPincode,
-                        latitude: latitude,
-                        longitude: longitude,
-                        is_available: isAvailable,
-                        checked_at: new Date().toISOString()
-                    });
+                    {
+                        const payload = {
+                            location: location,
+                            pincode: detectedPincode,
+                            is_available: isAvailable,
+                            checked_at: new Date().toISOString()
+                        };
+                        if (latitude !== null) payload.latitude = latitude;
+                        if (longitude !== null) payload.longitude = longitude;
+                        await supabase.from('delivery_checks').insert(payload);
+                    }
 
                     return { isAvailable, pincode: detectedPincode };
 
@@ -2778,15 +2783,17 @@
 
                 const lat = AppState.userLocation.latitude;
                 const lng = AppState.userLocation.longitude;
-                if (lat !== null && lng !== null) {
+                if (lat !== null && lng !== null && typeof calculateDistance === 'function' && Array.isArray(ORR_POLYGON_COORDS)) {
                     // calculate nearest distance to ORR polygon
                     let minDist = Infinity;
                     for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
                         const d = calculateDistance(lat, lng, ORR_POLYGON_COORDS[i][0], ORR_POLYGON_COORDS[i][1]);
                         if (d < minDist) minDist = d;
                     }
-                    const km = (minDist / 1000).toFixed(2);
-                    msg += ` You are ${km} km away from our delivery zone.`;
+                    if (isFinite(minDist)) {
+                        const km = (minDist / 1000).toFixed(2);
+                        msg += ` You are ${km} km away from our delivery zone.`;
+                    }
                 }
 
                 msg += `</p></div>`;
@@ -3597,15 +3604,11 @@
             const currentLocationText = document.getElementById('currentLocationText');
             const deliveryWarning = document.getElementById('deliveryWarning');
             const checkoutBtn = document.getElementById('checkoutBtn');
-
-            function isServiceable(city, state, pincode) {
-                if (!city && !pincode) return false;
-                const c = (city || '').toLowerCase();
-                const s = (state || '').toLowerCase();
-                const p = (pincode || '').toString();
-
-                if (c.includes('hyderabad') || c.includes('secunderabad')) return true;
-                if (s.includes('telangana') && p.startsWith('50')) return true;
+            // bail out if any expected element is missing to prevent null-reference errors
+            if (!currentLocationSection || !locationSection || !locationLoading || !manualLocationInput || !locationActionButtons || !currentLocationText || !deliveryWarning) {
+                console.warn('Location UI script: one or more elements not found, aborting initialization');
+                return;
+            }
                 if (p && p.startsWith('50')) return true;
 
                 // Also check SERVICE_AREAS prefixes if defined
@@ -3632,8 +3635,8 @@
 
                 let ok = isServiceable(city, state, pincode);
 
-                // if we have coordinates, override availability using ORR geofence
-                if (lat !== null && lon !== null) {
+                // if we have coordinates and the geofence helper exists, override availability
+                if (lat !== null && lon !== null && typeof isWithinGeofence === 'function') {
                     const within = isWithinGeofence(lat, lon);
                     if (!within) {
                         ok = false;
@@ -3643,14 +3646,16 @@
                 }
 
                 // If we have coordinates and are outside geofence, show distance message
-                if (lat !== null && lon !== null && !isWithinGeofence(lat, lon)) {
-                    // calculate minimum distance to polygon
+                if (lat !== null && lon !== null && typeof isWithinGeofence === 'function' && !isWithinGeofence(lat, lon)) {
+                    // calculate minimum distance to polygon (skip if coords not set or helper missing)
                     let minDist = Infinity;
-                    for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
-                        const d = calculateDistance(lat, lon, ORR_POLYGON_COORDS[i][0], ORR_POLYGON_COORDS[i][1]);
-                        if (d < minDist) minDist = d;
+                    if (Array.isArray(ORR_POLYGON_COORDS)) {
+                        for (let i = 0; i < ORR_POLYGON_COORDS.length; i++) {
+                            const d = calculateDistance(lat, lon, ORR_POLYGON_COORDS[i][0], ORR_POLYGON_COORDS[i][1]);
+                            if (d < minDist) minDist = d;
+                        }
                     }
-                    const km = (minDist / 1000).toFixed(2);
+                    const km = isFinite(minDist) ? (minDist / 1000).toFixed(2) : 'unknown';
                     deliveryWarning.style.display = 'flex';
                     deliveryWarning.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><strong>Delivery Not Available</strong><p>Outside delivery zone (${km} km away). We currently deliver only within Hyderabad ORR.</p></div>`;
                     if (checkoutBtn) checkoutBtn.disabled = true;
@@ -3699,7 +3704,7 @@
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
                     // reverse geocode via backend proxy
-                    const apiBase = AppController.getApiBaseUrl ? AppController.getApiBaseUrl() : 'https://unobtrix-project-backend.onrender.com';
+                    const apiBase = (window.AppController && typeof window.AppController.getApiBaseUrl === 'function') ? window.AppController.getApiBaseUrl() : 'https://unobtrix-project-backend.onrender.com';
                     fetch(`${apiBase}/api/reverse-geocode?lat=${lat}&lon=${lon}`)
                         .then(r => r.json())
                         .then(data => {
@@ -3731,12 +3736,12 @@
                     navigator.geolocation.getCurrentPosition(function(pos){
                         const lat = pos.coords.latitude;
                         const lon = pos.coords.longitude;
-                        const apiBase = AppController.getApiBaseUrl ? AppController.getApiBaseUrl() : 'https://unobtrix-project-backend.onrender.com';
+                        const apiBase = (window.AppController && typeof window.AppController.getApiBaseUrl === 'function') ? window.AppController.getApiBaseUrl() : 'https://unobtrix-project-backend.onrender.com';
                         fetch(`${apiBase}/api/reverse-geocode?lat=${lat}&lon=${lon}`)
                             .then(r => r.json())
                             .then(data => {
                                 const addr = data && data.address ? data.address : {};
-                                setLocationUI(addr.city || addr.town || addr.village || '', addr.state || '', addr.postcode || '');
+                                setLocationUI(addr.city || addr.town || addr.village || '', addr.state || '', addr.postcode || '', lat, lon);
                             })
                             .catch(() => ipFallback());
                     }, function(){ ipFallback(); });
